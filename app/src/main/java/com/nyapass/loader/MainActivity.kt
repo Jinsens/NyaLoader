@@ -8,6 +8,7 @@ package com.nyapass.loader
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -44,11 +46,13 @@ import com.nyapass.loader.ui.screen.DownloadScreen
 import com.nyapass.loader.ui.screen.LicensesScreen
 import com.nyapass.loader.ui.screen.SettingsScreen
 import com.nyapass.loader.ui.theme.getColorScheme
+import com.nyapass.loader.util.LocaleHelper
 import com.nyapass.loader.util.PermissionUtils
 import com.nyapass.loader.util.UrlValidator
 import com.nyapass.loader.viewmodel.DownloadViewModel
 import com.nyapass.loader.viewmodel.SettingsViewModel
 import com.nyapass.loader.viewmodel.ViewModelFactory
+import com.nyapass.loader.data.preferences.Language
 
 class MainActivity : ComponentActivity() {
     
@@ -153,6 +157,14 @@ class MainActivity : ComponentActivity() {
         }
     }
     
+    override fun attachBaseContext(newBase: Context) {
+        // 在附加基础Context时应用语言设置
+        val preferences = com.nyapass.loader.data.preferences.AppPreferences(newBase)
+        val language = preferences.language.value
+        val context = LocaleHelper.applyLanguage(newBase, language)
+        super.attachBaseContext(context)
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -172,6 +184,27 @@ class MainActivity : ComponentActivity() {
             val customColor by settingsViewModel.customColor.collectAsStateWithLifecycle()
             val defaultSaveLocation by settingsViewModel.defaultSaveLocation.collectAsStateWithLifecycle()
             val customSavePath by settingsViewModel.customSavePath.collectAsStateWithLifecycle()
+            
+            // 监听语言变化
+            val language by settingsViewModel.language.collectAsStateWithLifecycle()
+            var previousLanguage by remember { mutableStateOf<Language?>(null) }
+            
+            // 当语言变化时重启Activity
+            LaunchedEffect(language) {
+                if (previousLanguage != null && previousLanguage != language) {
+                    // 语言已更改，重启Activity以应用新语言
+                    Toast.makeText(
+                        this@MainActivity,
+                        "语言已更改，正在重启...",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    
+                    // 延迟一下再重启，让Toast显示出来
+                    kotlinx.coroutines.delay(500)
+                    recreate()
+                }
+                previousLanguage = language
+            }
             
             // Firebase 设置
             val hasShownFirebaseTip by application.appPreferences.hasShownFirebaseTip.collectAsStateWithLifecycle()
@@ -573,7 +606,7 @@ fun FirebasePermissionDialog(
         },
         title = {
             Text(
-                text = "数据分析服务",
+                text = stringResource(R.string.firebase_permission_title),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -583,16 +616,16 @@ fun FirebasePermissionDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "我们使用 Google Firebase 来收集应用使用数据，帮助我们：",
+                    text = stringResource(R.string.firebase_permission_description),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "• 了解应用崩溃情况并修复问题\n• 分析用户行为以改进功能\n• 提供更好的用户体验",
+                    text = stringResource(R.string.firebase_permission_features),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "您可以随时在设置中更改此选项。",
+                    text = stringResource(R.string.firebase_permission_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
@@ -603,14 +636,14 @@ fun FirebasePermissionDialog(
             Button(
                 onClick = onAccept
             ) {
-                Text("同意并开启")
+                Text(stringResource(R.string.firebase_accept))
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDecline
             ) {
-                Text("暂不开启")
+                Text(stringResource(R.string.firebase_decline))
             }
         }
     )

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- アプリ名 -->
+    <string name="app_name">NyaLoader</string>
+    
+    <!-- 通知 -->
+    <string name="download_notification_channel">ダウンロード通知</string>
+    <string name="download_notification_title">NyaLoader</string>
+    <string name="download_notification_text">ダウンロードサービス実行中</string>
+    
+    <!-- 共通 -->
+    <string name="confirm">確定</string>
+    <string name="cancel">キャンセル</string>
+    <string name="delete">削除</string>
+    <string name="add">追加</string>
+    <string name="back">戻る</string>
+    <string name="save">保存</string>
+    <string name="close">閉じる</string>
+    
+    <!-- 設定画面 -->
+    <string name="settings">設定</string>
+    <string name="appearance">外観</string>
+    <string name="download_settings">ダウンロード設定</string>
+    <string name="data_analytics">データ分析</string>
+    <string name="other">その他</string>
+    
+    <!-- 言語設定 -->
+    <string name="language">言語</string>
+    <string name="language_system">システムに従う</string>
+    <string name="language_chinese_simplified">简体中文</string>
+    <string name="language_chinese_traditional">繁體中文</string>
+    <string name="language_english">English</string>
+    <string name="language_japanese">日本語</string>
+    
+    <!-- テーマ設定 -->
+    <string name="theme_color">テーマカラー</string>
+    <string name="custom_color">カスタムカラー</string>
+    <string name="dark_mode">ダークモード</string>
+    <string name="theme_color_dynamic">ダイナミック</string>
+    <string name="theme_color_blue">ブルー</string>
+    <string name="theme_color_green">グリーン</string>
+    <string name="theme_color_purple">パープル</string>
+    <string name="theme_color_orange">オレンジ</string>
+    <string name="theme_color_red">レッド</string>
+    <string name="theme_color_pink">ピンク</string>
+    <string name="theme_color_teal">ティール</string>
+    <string name="theme_color_custom">カスタム</string>
+    <string name="dark_mode_light">ライト</string>
+    <string name="dark_mode_dark">ダーク</string>
+    <string name="dark_mode_system">システムに従う</string>
+    <string name="custom_color_dialog_title">カスタムカラー</string>
+    <string name="custom_color_hint">#RRGGBB</string>
+    <string name="custom_color_preview">プレビュー</string>
+    <string name="click_to_set">クリックして設定</string>
+    
+    <!-- ダウンロード設定 -->
+    <string name="default_save_location">デフォルト保存場所</string>
+    <string name="custom_directory">カスタムディレクトリ</string>
+    <string name="click_to_select">クリックして選択</string>
+    <string name="default_thread_count">デフォルトスレッド数</string>
+    <string name="default_user_agent">デフォルトUser-Agent</string>
+    <string name="use_webview_ua">WebViewデフォルトUAを使用</string>
+    <string name="clipboard_monitor">クリップボード監視</string>
+    <string name="clipboard_monitor_description">リンクをコピーすると自動的にダイアログを表示し、すぐにダウンロードを開始</string>
+    <string name="save_location_public">公開ダウンロード</string>
+    <string name="save_location_private">アプリプライベート</string>
+    <string name="save_location_custom">カスタム</string>
+    
+    <!-- User-Agent -->
+    <string name="user_agent_dialog_title">デフォルトUser-Agent</string>
+    <string name="user_agent_label">User-Agent</string>
+    <string name="user_agent_show_presets">プリセットを表示</string>
+    <string name="user_agent_hide_presets">プリセットを非表示</string>
+    <string name="user_agent_device">このデバイス</string>
+    <string name="user_agent_custom_presets">カスタムプリセット</string>
+    <string name="user_agent_system_presets">システムプリセット</string>
+    <string name="user_agent_no_custom">カスタムプリセットがありません。+をタップして追加してください</string>
+    <string name="user_agent_add_preset">カスタムプリセットを追加</string>
+    <string name="user_agent_preset_name">プリセット名</string>
+    <string name="user_agent_preset_name_hint">例：マイブラウザ</string>
+    <string name="user_agent_preset_ua_hint">User-Agent文字列を入力</string>
+    <string name="user_agent_preset_name_error">プリセット名を入力してください</string>
+    <string name="user_agent_preset_ua_error">User-Agentを入力してください</string>
+    
+    <!-- Firebase -->
+    <string name="firebase_analytics">Google Firebase 分析</string>
+    <string name="firebase_description">アプリのエクスペリエンス向上にご協力ください（再起動が必要）</string>
+    <string name="firebase_permission_title">分析サービス</string>
+    <string name="firebase_permission_description">使用状況データを収集するためにGoogle Firebaseを使用しています。これにより：</string>
+    <string name="firebase_permission_features">• アプリのクラッシュを把握し修正\n• ユーザー行動を分析し機能を改善\n• より良いユーザーエクスペリエンスを提供</string>
+    <string name="firebase_permission_note">このオプションはいつでも設定で変更できます。</string>
+    <string name="firebase_accept">同意して有効にする</string>
+    <string name="firebase_decline">今はしない</string>
+    
+    <!-- について -->
+    <string name="about_and_licenses">このアプリについて・ライセンス</string>
+    <string name="about_and_licenses_description">アプリ情報とオープンソースライセンスを表示</string>
+    
+    <!-- メイン画面 -->
+    <string name="menu">メニュー</string>
+    <string name="search">検索</string>
+    <string name="new_download">新規ダウンロード</string>
+    <string name="multithreaded_downloader">マルチスレッドダウンローダー</string>
+    <string name="task_filter">タスクフィルター</string>
+    <string name="all">すべて</string>
+    <string name="downloading">ダウンロード中</string>
+    <string name="completed">完了</string>
+    <string name="paused">一時停止</string>
+    <string name="failed">失敗</string>
+    <string name="task_management">タスク管理</string>
+    <string name="clear_completed">完了済みを削除</string>
+    <string name="clear_failed">失敗を削除</string>
+    <string name="more">その他</string>
+    <string name="open_source_licenses">オープンソースライセンス</string>
+    
+    <!-- 空の状態 -->
+    <string name="no_tasks">ダウンロードタスクがありません</string>
+    <string name="no_downloading_tasks">ダウンロード中のタスクがありません</string>
+    <string name="no_completed_tasks">完了したタスクがありません</string>
+    <string name="no_paused_tasks">一時停止中のタスクがありません</string>
+    <string name="no_failed_tasks">失敗したタスクがありません</string>
+    <string name="tap_to_create">右下のボタンをタップして新しいタスクを作成</string>
+    <string name="no_search_results">一致するタスクが見つかりません</string>
+    
+    <!-- 検索 -->
+    <string name="search_placeholder">ファイル名、URL、またはパスを検索</string>
+    <string name="clear">クリア</string>
+    
+    <!-- 合計進行状況 -->
+    <string name="total_download_progress">合計ダウンロード進行状況</string>
+    <string name="tasks_count">%d 個のタスク</string>
+    
+    <!-- ダウンロード追加ダイアログ -->
+    <string name="new_download_task">新規ダウンロードタスク</string>
+    <string name="download_link">ダウンロードリンク</string>
+    <string name="enter_url">URLを入力</string>
+    <string name="enter_valid_url">有効なURLを入力してください</string>
+    <string name="filename_optional">ファイル名（オプション）</string>
+    <string name="auto_extract_from_url">URLから自動抽出</string>
+    <string name="thread_count">スレッド数</string>
+    <string name="thread_count_error">スレッド数は1～256の範囲で指定してください</string>
+    <string name="thread_count_hint">推奨は32スレッド、最大256</string>
+    <string name="advanced_options">詳細オプション</string>
+    <string name="browser_identity">ブラウザ識別</string>
+    <string name="select_preset_ua">プリセットUAを選択</string>
+    <string name="click_arrow_to_select">右の矢印をクリックしてプリセットを選択</string>
+    <string name="click_below_to_select">下をクリックしてプリセットを選択</string>
+    <string name="this_device">このデバイス</string>
+    <string name="default_settings">デフォルト設定</string>
+    <string name="temp_save_directory">一時保存ディレクトリ</string>
+    <string name="click_to_select_temp">クリックして選択（このダウンロードのみ）</string>
+    <string name="start_download">ダウンロード開始</string>
+    <string name="multithread_hint">マルチスレッドで速度が向上しますが、リソースを多く使用します</string>
+    <string name="temp_dir_hint">一時ディレクトリはこのダウンロードのみに使用され、保存されません</string>
+    
+    <!-- シンプルダウンロードダイアログ -->
+    <string name="download_address">ダウンロードアドレス</string>
+    <string name="url_example">https://example.com/file.zip</string>
+    <string name="enter_valid_download_link">有効なダウンロードリンクを入力してください</string>
+    <string name="auto_extract_filename">空の場合はURLから自動抽出</string>
+    <string name="auto_detect_filename">空の場合はファイル名を自動検出</string>
+    <string name="use_default_settings_hint">デフォルト設定でダウンロードします\nその他のオプションは右下のボタンをご利用ください</string>
+</resources>
+

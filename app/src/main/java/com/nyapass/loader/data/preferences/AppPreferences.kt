@@ -68,6 +68,10 @@ class AppPreferences(context: Context) {
     private val _hasShownFirebaseTip = MutableStateFlow(getHasShownFirebaseTip())
     val hasShownFirebaseTip: StateFlow<Boolean> = _hasShownFirebaseTip.asStateFlow()
     
+    // 语言设置
+    private val _language = MutableStateFlow(getLanguage())
+    val language: StateFlow<Language> = _language.asStateFlow()
+    
     /**
      * 保存主题颜色
      */
@@ -299,6 +303,26 @@ class AppPreferences(context: Context) {
         return prefs.getBoolean(KEY_HAS_SHOWN_FIREBASE_TIP, false)
     }
     
+    /**
+     * 保存语言设置
+     */
+    fun saveLanguage(language: Language) {
+        prefs.edit().putString(KEY_LANGUAGE, language.name).apply()
+        _language.value = language
+    }
+    
+    /**
+     * 获取语言设置
+     */
+    private fun getLanguage(): Language {
+        val languageName = prefs.getString(KEY_LANGUAGE, Language.SYSTEM.name)
+        return try {
+            Language.valueOf(languageName ?: Language.SYSTEM.name)
+        } catch (e: Exception) {
+            Language.SYSTEM
+        }
+    }
+    
     companion object {
         private const val KEY_THEME_COLOR = "theme_color"
         private const val KEY_DARK_MODE = "dark_mode"
@@ -312,6 +336,7 @@ class AppPreferences(context: Context) {
         private const val KEY_HAS_SHOWN_CLIPBOARD_TIP = "has_shown_clipboard_tip"
         private const val KEY_FIREBASE_ENABLED = "firebase_enabled"
         private const val KEY_HAS_SHOWN_FIREBASE_TIP = "has_shown_firebase_tip"
+        private const val KEY_LANGUAGE = "language"
     }
 }
 
@@ -346,6 +371,17 @@ enum class DarkMode(val displayName: String) {
     LIGHT("浅色"),
     DARK("深色"),
     SYSTEM("跟随系统")
+}
+
+/**
+ * 语言设置
+ */
+enum class Language(val displayName: String, val locale: String) {
+    SYSTEM("跟随系统", ""),
+    CHINESE_SIMPLIFIED("简体中文", "zh-CN"),
+    CHINESE_TRADITIONAL("繁體中文", "zh-TW"),
+    ENGLISH("English", "en"),
+    JAPANESE("日本語", "ja")
 }
 
 /**

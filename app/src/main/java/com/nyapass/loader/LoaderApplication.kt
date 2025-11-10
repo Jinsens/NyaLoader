@@ -1,6 +1,7 @@
 ﻿package com.nyapass.loader
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -8,6 +9,7 @@ import com.nyapass.loader.data.database.AppDatabase
 import com.nyapass.loader.data.preferences.AppPreferences
 import com.nyapass.loader.download.DownloadEngine
 import com.nyapass.loader.repository.DownloadRepository
+import com.nyapass.loader.util.LocaleHelper
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
@@ -64,8 +66,27 @@ class LoaderApplication : Application() {
         super.onCreate()
         instance = this
         
+        // 应用语言设置
+        applyLanguageSettings()
+        
         // 根据用户设置初始化 Firebase
         initFirebaseIfEnabled()
+    }
+    
+    override fun attachBaseContext(base: Context) {
+        // 在附加基础Context时应用语言设置
+        val preferences = AppPreferences(base)
+        val language = preferences.language.value
+        val context = LocaleHelper.applyLanguage(base, language)
+        super.attachBaseContext(context)
+    }
+    
+    /**
+     * 应用语言设置
+     */
+    private fun applyLanguageSettings() {
+        val language = appPreferences.language.value
+        LocaleHelper.applyLanguage(this, language)
     }
     
     /**

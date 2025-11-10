@@ -32,7 +32,13 @@ fun LicensesScreen(
     val versionInfo = remember {
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            "${packageInfo.versionName} (${packageInfo.versionCode})"
+            val versionCode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toLong()
+            }
+            "${packageInfo.versionName} ($versionCode)"
         } catch (e: Exception) {
             "1.0.0 (1)"
         }
@@ -190,7 +196,7 @@ fun AppInfoCard(versionInfo: String) {
             
             // 版权信息
             Text(
-                text = "© 2024 小花生FMR",
+                text = "© 2025 小花生FMR",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center

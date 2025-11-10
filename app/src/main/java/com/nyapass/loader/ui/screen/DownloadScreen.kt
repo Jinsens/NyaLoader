@@ -19,8 +19,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.nyapass.loader.R
 import com.nyapass.loader.ui.components.AddDownloadDialog
 import com.nyapass.loader.ui.components.DownloadTaskItem
 import com.nyapass.loader.ui.components.formatFileSize
@@ -105,13 +107,13 @@ fun DownloadScreen(
                             IconButton(onClick = { 
                                 scope.launch { drawerState.open() }
                             }) {
-                                Icon(Icons.Default.Menu, contentDescription = "菜单")
+                                Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu))
                             }
                         },
                         actions = {
                             // 搜索按钮
                             IconButton(onClick = { viewModel.startSearch() }) {
-                                Icon(Icons.Default.Search, contentDescription = "搜索")
+                                Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
@@ -131,8 +133,8 @@ fun DownloadScreen(
                     ExtendedFloatingActionButton(
                         onClick = { viewModel.showAddDialog() },
                         expanded = expandedFab,
-                        icon = { Icon(Icons.Default.Add, contentDescription = "新建下载") },
-                        text = { Text("新建下载") }
+                        icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_download)) },
+                        text = { Text(stringResource(R.string.new_download)) }
                     )
                 }
             }
@@ -265,12 +267,12 @@ fun NavigationDrawerContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "NyaLoader",
+                        text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "多线程下载器",
+                        text = stringResource(R.string.multithreaded_downloader),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -281,7 +283,7 @@ fun NavigationDrawerContent(
             
             // 过滤选项
             Text(
-                text = "任务筛选",
+                text = stringResource(R.string.task_filter),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -289,7 +291,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.AutoMirrored.Filled.List, null) },
-                label = { Text("全部") },
+                label = { Text(stringResource(R.string.all)) },
                 selected = currentFilter == TaskFilter.ALL,
                 onClick = { onFilterSelected(TaskFilter.ALL) },
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -297,7 +299,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.Default.Download, null) },
-                label = { Text("下载中") },
+                label = { Text(stringResource(R.string.downloading)) },
                 selected = currentFilter == TaskFilter.DOWNLOADING,
                 onClick = { onFilterSelected(TaskFilter.DOWNLOADING) },
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -305,7 +307,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.Default.CheckCircle, null) },
-                label = { Text("已完成") },
+                label = { Text(stringResource(R.string.completed)) },
                 selected = currentFilter == TaskFilter.COMPLETED,
                 onClick = { onFilterSelected(TaskFilter.COMPLETED) },
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -313,7 +315,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.Default.Pause, null) },
-                label = { Text("已暂停") },
+                label = { Text(stringResource(R.string.paused)) },
                 selected = currentFilter == TaskFilter.PAUSED,
                 onClick = { onFilterSelected(TaskFilter.PAUSED) },
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -321,7 +323,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.Default.Error, null) },
-                label = { Text("失败") },
+                label = { Text(stringResource(R.string.failed)) },
                 selected = currentFilter == TaskFilter.FAILED,
                 onClick = { onFilterSelected(TaskFilter.FAILED) },
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -331,7 +333,7 @@ fun NavigationDrawerContent(
             
             // 清理操作
             Text(
-                text = "任务管理",
+                text = stringResource(R.string.task_management),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -339,7 +341,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.Default.Clear, null) },
-                label = { Text("清除已完成") },
+                label = { Text(stringResource(R.string.clear_completed)) },
                 selected = false,
                 onClick = onClearCompleted,
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -347,7 +349,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.Default.Clear, null) },
-                label = { Text("清除失败") },
+                label = { Text(stringResource(R.string.clear_failed)) },
                 selected = false,
                 onClick = onClearFailed,
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -357,7 +359,7 @@ fun NavigationDrawerContent(
             
             // 更多选项
             Text(
-                text = "更多",
+                text = stringResource(R.string.more),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -365,7 +367,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.Default.Settings, null) },
-                label = { Text("设置") },
+                label = { Text(stringResource(R.string.settings)) },
                 selected = false,
                 onClick = onOpenSettings,
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -373,7 +375,7 @@ fun NavigationDrawerContent(
             
             NavigationDrawerItem(
                 icon = { Icon(Icons.Default.Code, null) },
-                label = { Text("开源许可") },
+                label = { Text(stringResource(R.string.open_source_licenses)) },
                 selected = false,
                 onClick = onOpenLicenses,
                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -411,13 +413,15 @@ fun EmptyState(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = when (filter) {
-                TaskFilter.ALL -> "暂无下载任务"
-                TaskFilter.DOWNLOADING -> "暂无正在下载的任务"
-                TaskFilter.COMPLETED -> "暂无已完成的任务"
-                TaskFilter.PAUSED -> "暂无已暂停的任务"
-                TaskFilter.FAILED -> "暂无失败的任务"
-            },
+            text = stringResource(
+                when (filter) {
+                    TaskFilter.ALL -> R.string.no_tasks
+                    TaskFilter.DOWNLOADING -> R.string.no_downloading_tasks
+                    TaskFilter.COMPLETED -> R.string.no_completed_tasks
+                    TaskFilter.PAUSED -> R.string.no_paused_tasks
+                    TaskFilter.FAILED -> R.string.no_failed_tasks
+                }
+            ),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
@@ -425,7 +429,7 @@ fun EmptyState(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = "点击右下角按钮创建新任务",
+            text = stringResource(R.string.tap_to_create),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
         )
@@ -455,7 +459,7 @@ fun SearchEmptyState(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "未找到匹配的任务",
+            text = stringResource(R.string.no_search_results),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
@@ -497,7 +501,7 @@ fun SearchTopBar(
                     .focusRequester(focusRequester),
                 placeholder = { 
                     Text(
-                        "搜索文件名、URL或路径",
+                        stringResource(R.string.search_placeholder),
                         style = MaterialTheme.typography.bodyLarge
                     ) 
                 },
@@ -520,7 +524,7 @@ fun SearchTopBar(
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { onSearchQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "清除")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear))
                         }
                     }
                 }
@@ -528,7 +532,7 @@ fun SearchTopBar(
         },
         navigationIcon = {
             IconButton(onClick = onCloseSearch) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -572,14 +576,14 @@ fun TotalProgressBar(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "总下载进度",
+                        text = stringResource(R.string.total_download_progress),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 
                 Text(
-                    text = "${totalProgress.activeTaskCount} 个任务",
+                    text = stringResource(R.string.tasks_count, totalProgress.activeTaskCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

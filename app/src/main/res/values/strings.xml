@@ -1,8 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 应用名称 -->
     <string name="app_name">NyaLoader</string>
+    
+    <!-- 通知 -->
     <string name="download_notification_channel">下载通知</string>
     <string name="download_notification_title">NyaLoader</string>
     <string name="download_notification_text">下载服务运行中</string>
+    
+    <!-- 通用 -->
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="add">添加</string>
+    <string name="back">返回</string>
+    <string name="save">保存</string>
+    <string name="close">关闭</string>
+    
+    <!-- 设置界面 -->
+    <string name="settings">设置</string>
+    <string name="appearance">外观</string>
+    <string name="download_settings">下载设置</string>
+    <string name="data_analytics">数据分析</string>
+    <string name="other">其他</string>
+    
+    <!-- 语言设置 -->
+    <string name="language">语言</string>
+    <string name="language_system">跟随系统</string>
+    <string name="language_chinese_simplified">简体中文</string>
+    <string name="language_chinese_traditional">繁體中文</string>
+    <string name="language_english">English</string>
+    <string name="language_japanese">日本語</string>
+    
+    <!-- 主题设置 -->
+    <string name="theme_color">主题颜色</string>
+    <string name="custom_color">自定义颜色</string>
+    <string name="dark_mode">暗色模式</string>
+    <string name="theme_color_dynamic">自动取色</string>
+    <string name="theme_color_blue">蓝色</string>
+    <string name="theme_color_green">绿色</string>
+    <string name="theme_color_purple">紫色</string>
+    <string name="theme_color_orange">橙色</string>
+    <string name="theme_color_red">红色</string>
+    <string name="theme_color_pink">粉色</string>
+    <string name="theme_color_teal">青色</string>
+    <string name="theme_color_custom">自定义</string>
+    <string name="dark_mode_light">浅色</string>
+    <string name="dark_mode_dark">深色</string>
+    <string name="dark_mode_system">跟随系统</string>
+    <string name="custom_color_dialog_title">自定义颜色</string>
+    <string name="custom_color_hint">#RRGGBB</string>
+    <string name="custom_color_preview">预览</string>
+    <string name="click_to_set">点击设置</string>
+    
+    <!-- 下载设置 -->
+    <string name="default_save_location">默认保存位置</string>
+    <string name="custom_directory">自定义目录</string>
+    <string name="click_to_select">点击选择</string>
+    <string name="default_thread_count">默认线程数</string>
+    <string name="default_user_agent">默认User-Agent</string>
+    <string name="use_webview_ua">使用WebView默认UA</string>
+    <string name="clipboard_monitor">剪贴板监听</string>
+    <string name="clipboard_monitor_description">复制链接后自动弹窗，快速开始下载</string>
+    <string name="save_location_public">公共下载目录</string>
+    <string name="save_location_private">应用私有目录</string>
+    <string name="save_location_custom">自定义目录</string>
+    
+    <!-- User-Agent -->
+    <string name="user_agent_dialog_title">默认User-Agent</string>
+    <string name="user_agent_label">User-Agent</string>
+    <string name="user_agent_show_presets">选择预设</string>
+    <string name="user_agent_hide_presets">隐藏预设</string>
+    <string name="user_agent_device">本设备</string>
+    <string name="user_agent_custom_presets">自定义预设</string>
+    <string name="user_agent_system_presets">系统预设</string>
+    <string name="user_agent_no_custom">暂无自定义预设，点击上方+号添加</string>
+    <string name="user_agent_add_preset">添加自定义预设</string>
+    <string name="user_agent_preset_name">预设名称</string>
+    <string name="user_agent_preset_name_hint">例如：我的浏览器</string>
+    <string name="user_agent_preset_ua_hint">输入User-Agent字符串</string>
+    <string name="user_agent_preset_name_error">请输入预设名称</string>
+    <string name="user_agent_preset_ua_error">请输入User-Agent</string>
+    
+    <!-- Firebase -->
+    <string name="firebase_analytics">Google Firebase 分析</string>
+    <string name="firebase_description">帮助我们改进应用体验（需要重启应用生效）</string>
+    <string name="firebase_permission_title">数据分析服务</string>
+    <string name="firebase_permission_description">我们使用 Google Firebase 来收集应用使用数据，帮助我们：</string>
+    <string name="firebase_permission_features">• 了解应用崩溃情况并修复问题\n• 分析用户行为以改进功能\n• 提供更好的用户体验</string>
+    <string name="firebase_permission_note">您可以随时在设置中更改此选项。</string>
+    <string name="firebase_accept">同意并开启</string>
+    <string name="firebase_decline">暂不开启</string>
+    
+    <!-- 关于 -->
+    <string name="about_and_licenses">关于与许可</string>
+    <string name="about_and_licenses_description">查看应用信息和开源许可</string>
+    
+    <!-- 主页面 -->
+    <string name="menu">菜单</string>
+    <string name="search">搜索</string>
+    <string name="new_download">新建下载</string>
+    <string name="multithreaded_downloader">多线程下载器</string>
+    <string name="task_filter">任务筛选</string>
+    <string name="all">全部</string>
+    <string name="downloading">下载中</string>
+    <string name="completed">已完成</string>
+    <string name="paused">已暂停</string>
+    <string name="failed">失败</string>
+    <string name="task_management">任务管理</string>
+    <string name="clear_completed">清除已完成</string>
+    <string name="clear_failed">清除失败</string>
+    <string name="more">更多</string>
+    <string name="open_source_licenses">开源许可</string>
+    
+    <!-- 空状态 -->
+    <string name="no_tasks">暂无下载任务</string>
+    <string name="no_downloading_tasks">暂无正在下载的任务</string>
+    <string name="no_completed_tasks">暂无已完成的任务</string>
+    <string name="no_paused_tasks">暂无已暂停的任务</string>
+    <string name="no_failed_tasks">暂无失败的任务</string>
+    <string name="tap_to_create">点击右下角按钮创建新任务</string>
+    <string name="no_search_results">未找到匹配的任务</string>
+    
+    <!-- 搜索 -->
+    <string name="search_placeholder">搜索文件名、URL或路径</string>
+    <string name="clear">清除</string>
+    
+    <!-- 总进度 -->
+    <string name="total_download_progress">总下载进度</string>
+    <string name="tasks_count">%d 个任务</string>
+    
+    <!-- 添加下载对话框 -->
+    <string name="new_download_task">新建下载任务</string>
+    <string name="download_link">下载链接</string>
+    <string name="enter_url">请输入URL</string>
+    <string name="enter_valid_url">请输入有效的URL</string>
+    <string name="filename_optional">文件名（可选）</string>
+    <string name="auto_extract_from_url">自动从URL提取</string>
+    <string name="thread_count">线程数</string>
+    <string name="thread_count_error">线程数必须在1-256之间</string>
+    <string name="thread_count_hint">建议使用32个线程，最大支持256</string>
+    <string name="advanced_options">高级选项</string>
+    <string name="browser_identity">浏览器标识</string>
+    <string name="select_preset_ua">选择预设UA</string>
+    <string name="click_arrow_to_select">点击右侧箭头选择预设</string>
+    <string name="click_below_to_select">点击下方选择预设</string>
+    <string name="this_device">本设备</string>
+    <string name="default_settings">默认设置</string>
+    <string name="temp_save_directory">临时保存目录</string>
+    <string name="click_to_select_temp">点击选择（仅本次下载）</string>
+    <string name="start_download">开始下载</string>
+    <string name="multithread_hint">多线程下载可提高下载速度，但会占用更多系统资源</string>
+    <string name="temp_dir_hint">临时目录仅用于本次下载，不会保存到设置中</string>
+    
+    <!-- 简化下载对话框 -->
+    <string name="download_address">下载地址</string>
+    <string name="url_example">https://example.com/file.zip</string>
+    <string name="enter_valid_download_link">请输入有效的下载链接</string>
+    <string name="auto_extract_filename">不填则自动从URL中提取</string>
+    <string name="auto_detect_filename">留空将自动识别文件名</string>
+    <string name="use_default_settings_hint">将使用默认设置进行下载\n如需更多选项，请使用右下角的新建下载按钮</string>
 </resources>
-

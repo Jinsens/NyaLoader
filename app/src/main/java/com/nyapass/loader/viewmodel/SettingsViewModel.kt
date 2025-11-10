@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nyapass.loader.data.preferences.AppPreferences
 import com.nyapass.loader.data.preferences.DarkMode
+import com.nyapass.loader.data.preferences.Language
 import com.nyapass.loader.data.preferences.SaveLocation
 import com.nyapass.loader.data.preferences.ThemeColor
 import com.nyapass.loader.data.preferences.UserAgentPreset
@@ -46,6 +47,9 @@ class SettingsViewModel(
     
     // Firebase 开关
     val firebaseEnabled: StateFlow<Boolean> = preferences.firebaseEnabled
+    
+    // 语言设置
+    val language: StateFlow<Language> = preferences.language
     
     // UI状态
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -147,6 +151,15 @@ class SettingsViewModel(
     fun updateFirebaseEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferences.saveFirebaseEnabled(enabled)
+        }
+    }
+    
+    /**
+     * 更新语言设置
+     */
+    fun updateLanguage(language: Language) {
+        viewModelScope.launch {
+            preferences.saveLanguage(language)
         }
     }
     

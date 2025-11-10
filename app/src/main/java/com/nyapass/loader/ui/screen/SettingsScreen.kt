@@ -22,8 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.nyapass.loader.R
 import com.nyapass.loader.data.preferences.DarkMode
+import com.nyapass.loader.data.preferences.Language
 import com.nyapass.loader.data.preferences.SaveLocation
 import com.nyapass.loader.data.preferences.ThemeColor
 import com.nyapass.loader.data.preferences.UserAgentPreset
@@ -53,6 +56,7 @@ fun SettingsScreen(
     val defaultThreadCount by viewModel.defaultThreadCount.collectAsState()
     val clipboardMonitorEnabled by viewModel.clipboardMonitorEnabled.collectAsState()
     val firebaseEnabled by viewModel.firebaseEnabled.collectAsState()
+    val language by viewModel.language.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     
     // 当页面销毁时，清除所有对话框状态
@@ -65,10 +69,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("设置") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -85,14 +89,36 @@ fun SettingsScreen(
         ) {
             // 外观设置
             item {
-                SettingsSectionHeader("外观")
+                SettingsSectionHeader(stringResource(R.string.appearance))
+            }
+            
+            // 语言设置
+            item {
+                SettingsItemWithContent(
+                    icon = Icons.Default.Language,
+                    title = stringResource(R.string.language),
+                    subtitle = language.displayName
+                ) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(Language.entries.toList()) { lang ->
+                            FilterChip(
+                                selected = lang == language,
+                                onClick = { viewModel.updateLanguage(lang) },
+                                label = { Text(lang.displayName) }
+                            )
+                        }
+                    }
+                }
             }
             
             // 主题颜色
             item {
                 SettingsItemWithContent(
                     icon = Icons.Default.Palette,
-                    title = "主题颜色",
+                    title = stringResource(R.string.theme_color),
                     subtitle = themeColor.displayName
                 ) {
                     ColorSelector(
@@ -107,8 +133,8 @@ fun SettingsScreen(
                 item {
                     SettingsItem(
                         icon = Icons.Default.ColorLens,
-                        title = "自定义颜色",
-                        subtitle = customColor ?: "点击设置",
+                        title = stringResource(R.string.custom_color),
+                        subtitle = customColor ?: stringResource(R.string.click_to_set),
                         onClick = { viewModel.showColorPicker() }
                     )
                 }
@@ -118,7 +144,7 @@ fun SettingsScreen(
             item {
                 SettingsItemWithSegmented(
                     icon = Icons.Default.DarkMode,
-                    title = "暗色模式",
+                    title = stringResource(R.string.dark_mode),
                     options = DarkMode.entries.toList(),
                     selectedOption = darkMode,
                     onOptionSelected = { viewModel.updateDarkMode(it) },
@@ -130,14 +156,14 @@ fun SettingsScreen(
             
             // 下载设置
             item {
-                SettingsSectionHeader("下载设置")
+                SettingsSectionHeader(stringResource(R.string.download_settings))
             }
             
             // 默认保存位置
             item {
                 SettingsItemWithSegmented(
                     icon = Icons.Default.Folder,
-                    title = "默认保存位置",
+                    title = stringResource(R.string.default_save_location),
                     options = SaveLocation.entries.toList(),
                     selectedOption = defaultSaveLocation,
                     onOptionSelected = { viewModel.updateDefaultSaveLocation(it) },
@@ -150,8 +176,8 @@ fun SettingsScreen(
                 item {
                     SettingsItem(
                         icon = Icons.Default.FolderOpen,
-                        title = "自定义目录",
-                        subtitle = customSavePath ?: "点击选择",
+                        title = stringResource(R.string.custom_directory),
+                        subtitle = customSavePath ?: stringResource(R.string.click_to_select),
                         onClick = onSelectFolder
                     )
                 }
@@ -161,7 +187,7 @@ fun SettingsScreen(
             item {
                 SettingsItemWithSlider(
                     icon = Icons.Default.Speed,
-                    title = "默认线程数",
+                    title = stringResource(R.string.default_thread_count),
                     value = defaultThreadCount,
                     valueRange = 1f..256f,
                     onValueChange = { viewModel.updateDefaultThreadCount(it.toInt()) }
@@ -172,8 +198,8 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     icon = Icons.Default.Computer,
-                    title = "默认User-Agent",
-                    subtitle = defaultUserAgent?.take(50) ?: "使用WebView默认UA",
+                    title = stringResource(R.string.default_user_agent),
+                    subtitle = defaultUserAgent?.take(50) ?: stringResource(R.string.use_webview_ua),
                     onClick = { viewModel.showUserAgentDialog() }
                 )
             }
@@ -182,8 +208,8 @@ fun SettingsScreen(
             item {
                 SettingsItemWithSwitch(
                     icon = Icons.Default.ContentPaste,
-                    title = "剪贴板监听",
-                    subtitle = "复制链接后自动弹窗，快速开始下载",
+                    title = stringResource(R.string.clipboard_monitor),
+                    subtitle = stringResource(R.string.clipboard_monitor_description),
                     checked = clipboardMonitorEnabled,
                     onCheckedChange = { viewModel.updateClipboardMonitorEnabled(it) }
                 )
@@ -193,15 +219,15 @@ fun SettingsScreen(
             
             // 数据分析
             item {
-                SettingsSectionHeader("数据分析")
+                SettingsSectionHeader(stringResource(R.string.data_analytics))
             }
             
             // Firebase 开关
             item {
                 SettingsItemWithSwitch(
                     icon = Icons.Default.Analytics,
-                    title = "Google Firebase 分析",
-                    subtitle = "帮助我们改进应用体验（需要重启应用生效）",
+                    title = stringResource(R.string.firebase_analytics),
+                    subtitle = stringResource(R.string.firebase_description),
                     checked = firebaseEnabled,
                     onCheckedChange = { viewModel.updateFirebaseEnabled(it) }
                 )
@@ -211,14 +237,14 @@ fun SettingsScreen(
             
             // 关于与许可
             item {
-                SettingsSectionHeader("其他")
+                SettingsSectionHeader(stringResource(R.string.other))
             }
             
             item {
                 SettingsItem(
                     icon = Icons.Default.Info,
-                    title = "关于与许可",
-                    subtitle = "查看应用信息和开源许可",
+                    title = stringResource(R.string.about_and_licenses),
+                    subtitle = stringResource(R.string.about_and_licenses_description),
                     onClick = onOpenLicenses
                 )
             }
@@ -653,21 +679,21 @@ fun CustomColorPickerDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("自定义颜色") },
+        title = { Text(stringResource(R.string.custom_color_dialog_title)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = colorHex,
                     onValueChange = { colorHex = it },
-                    label = { Text("十六进制颜色") },
-                    placeholder = { Text("#RRGGBB") },
+                    label = { Text(stringResource(R.string.custom_color)) },
+                    placeholder = { Text(stringResource(R.string.custom_color_hint)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "预览",
+                    text = stringResource(R.string.custom_color_preview),
                     style = MaterialTheme.typography.labelMedium
                 )
                 
@@ -690,12 +716,12 @@ fun CustomColorPickerDialog(
         },
         confirmButton = {
             Button(onClick = { onConfirm(colorHex) }) {
-                Text("确定")
+                Text(stringResource(R.string.confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -721,7 +747,7 @@ fun UserAgentDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("默认User-Agent") },
+        title = { Text(stringResource(R.string.user_agent_dialog_title)) },
         text = {
             Column(
                 modifier = Modifier
@@ -731,7 +757,7 @@ fun UserAgentDialog(
                 OutlinedTextField(
                     value = userAgent,
                     onValueChange = { userAgent = it },
-                    label = { Text("User-Agent") },
+                    label = { Text(stringResource(R.string.user_agent_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     maxLines = 5
@@ -743,7 +769,7 @@ fun UserAgentDialog(
                     onClick = { showPresets = !showPresets },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (showPresets) "隐藏预设" else "选择预设")
+                    Text(if (showPresets) stringResource(R.string.user_agent_hide_presets) else stringResource(R.string.user_agent_show_presets))
                     Icon(
                         if (showPresets) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = null
@@ -757,7 +783,7 @@ fun UserAgentDialog(
                     ) {
                         // 本设备预设（放在最前面）
                         UAPresetItem(
-                            name = "本设备", 
+                            name = stringResource(R.string.user_agent_device), 
                             ua = deviceUA,
                             isHighlighted = true
                         ) {
@@ -774,14 +800,14 @@ fun UserAgentDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "自定义预设",
+                                text = stringResource(R.string.user_agent_custom_presets),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             IconButton(onClick = onAddCustomPreset) {
                                 Icon(
                                     Icons.Default.Add,
-                                    contentDescription = "添加自定义预设",
+                                    contentDescription = stringResource(R.string.add),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -790,7 +816,7 @@ fun UserAgentDialog(
                         // 自定义预设列表
                         if (customPresets.isEmpty()) {
                             Text(
-                                text = "暂无自定义预设，点击上方+号添加",
+                                text = stringResource(R.string.user_agent_no_custom),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -813,7 +839,7 @@ fun UserAgentDialog(
                         
                         // 系统预设
                         Text(
-                            text = "系统预设",
+                            text = stringResource(R.string.user_agent_system_presets),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -840,12 +866,12 @@ fun UserAgentDialog(
         },
         confirmButton = {
             Button(onClick = { onConfirm(userAgent.ifBlank { null }) }) {
-                Text("确定")
+                Text(stringResource(R.string.confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -953,7 +979,7 @@ fun AddCustomUAPresetDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("添加自定义UA预设") },
+        title = { Text(stringResource(R.string.user_agent_add_preset)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -965,11 +991,11 @@ fun AddCustomUAPresetDialog(
                         name = it
                         nameError = false
                     },
-                    label = { Text("预设名称") },
-                    placeholder = { Text("例如：我的浏览器") },
+                    label = { Text(stringResource(R.string.user_agent_preset_name)) },
+                    placeholder = { Text(stringResource(R.string.user_agent_preset_name_hint)) },
                     isError = nameError,
                     supportingText = if (nameError) {
-                        { Text("请输入预设名称") }
+                        { Text(stringResource(R.string.user_agent_preset_name_error)) }
                     } else null,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -981,11 +1007,11 @@ fun AddCustomUAPresetDialog(
                         userAgent = it
                         uaError = false
                     },
-                    label = { Text("User-Agent") },
-                    placeholder = { Text("输入User-Agent字符串") },
+                    label = { Text(stringResource(R.string.user_agent_label)) },
+                    placeholder = { Text(stringResource(R.string.user_agent_preset_ua_hint)) },
                     isError = uaError,
                     supportingText = if (uaError) {
-                        { Text("请输入User-Agent") }
+                        { Text(stringResource(R.string.user_agent_preset_ua_error)) }
                     } else null,
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
@@ -1011,12 +1037,12 @@ fun AddCustomUAPresetDialog(
                     onConfirm(name.trim(), userAgent.trim())
                 }
             }) {
-                Text("添加")
+                Text(stringResource(R.string.add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

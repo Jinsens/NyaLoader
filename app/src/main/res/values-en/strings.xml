@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">NyaLoader</string>
+    
+    <!-- Notifications -->
+    <string name="download_notification_channel">Download Notifications</string>
+    <string name="download_notification_title">NyaLoader</string>
+    <string name="download_notification_text">Download service is running</string>
+    
+    <!-- Common -->
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="add">Add</string>
+    <string name="back">Back</string>
+    <string name="save">Save</string>
+    <string name="close">Close</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings">Settings</string>
+    <string name="appearance">Appearance</string>
+    <string name="download_settings">Download Settings</string>
+    <string name="data_analytics">Data Analytics</string>
+    <string name="other">Other</string>
+    
+    <!-- Language Settings -->
+    <string name="language">Language</string>
+    <string name="language_system">Follow System</string>
+    <string name="language_chinese_simplified">简体中文</string>
+    <string name="language_chinese_traditional">繁體中文</string>
+    <string name="language_english">English</string>
+    <string name="language_japanese">日本語</string>
+    
+    <!-- Theme Settings -->
+    <string name="theme_color">Theme Color</string>
+    <string name="custom_color">Custom Color</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="theme_color_dynamic">Dynamic</string>
+    <string name="theme_color_blue">Blue</string>
+    <string name="theme_color_green">Green</string>
+    <string name="theme_color_purple">Purple</string>
+    <string name="theme_color_orange">Orange</string>
+    <string name="theme_color_red">Red</string>
+    <string name="theme_color_pink">Pink</string>
+    <string name="theme_color_teal">Teal</string>
+    <string name="theme_color_custom">Custom</string>
+    <string name="dark_mode_light">Light</string>
+    <string name="dark_mode_dark">Dark</string>
+    <string name="dark_mode_system">Follow System</string>
+    <string name="custom_color_dialog_title">Custom Color</string>
+    <string name="custom_color_hint">#RRGGBB</string>
+    <string name="custom_color_preview">Preview</string>
+    <string name="click_to_set">Click to set</string>
+    
+    <!-- Download Settings -->
+    <string name="default_save_location">Default Save Location</string>
+    <string name="custom_directory">Custom Directory</string>
+    <string name="click_to_select">Click to select</string>
+    <string name="default_thread_count">Default Thread Count</string>
+    <string name="default_user_agent">Default User-Agent</string>
+    <string name="use_webview_ua">Use WebView default UA</string>
+    <string name="clipboard_monitor">Clipboard Monitor</string>
+    <string name="clipboard_monitor_description">Auto show dialog after copying link for quick download</string>
+    <string name="save_location_public">Public Download</string>
+    <string name="save_location_private">App Private</string>
+    <string name="save_location_custom">Custom</string>
+    
+    <!-- User-Agent -->
+    <string name="user_agent_dialog_title">Default User-Agent</string>
+    <string name="user_agent_label">User-Agent</string>
+    <string name="user_agent_show_presets">Show Presets</string>
+    <string name="user_agent_hide_presets">Hide Presets</string>
+    <string name="user_agent_device">This Device</string>
+    <string name="user_agent_custom_presets">Custom Presets</string>
+    <string name="user_agent_system_presets">System Presets</string>
+    <string name="user_agent_no_custom">No custom presets, tap + to add</string>
+    <string name="user_agent_add_preset">Add Custom Preset</string>
+    <string name="user_agent_preset_name">Preset Name</string>
+    <string name="user_agent_preset_name_hint">e.g.: My Browser</string>
+    <string name="user_agent_preset_ua_hint">Enter User-Agent string</string>
+    <string name="user_agent_preset_name_error">Please enter preset name</string>
+    <string name="user_agent_preset_ua_error">Please enter User-Agent</string>
+    
+    <!-- Firebase -->
+    <string name="firebase_analytics">Google Firebase Analytics</string>
+    <string name="firebase_description">Help us improve app experience (requires app restart)</string>
+    <string name="firebase_permission_title">Analytics Service</string>
+    <string name="firebase_permission_description">We use Google Firebase to collect usage data to help us:</string>
+    <string name="firebase_permission_features">• Understand and fix app crashes\n• Analyze user behavior to improve features\n• Provide better user experience</string>
+    <string name="firebase_permission_note">You can change this option in settings anytime.</string>
+    <string name="firebase_accept">Agree and Enable</string>
+    <string name="firebase_decline">Not Now</string>
+    
+    <!-- About -->
+    <string name="about_and_licenses">About &amp; Licenses</string>
+    <string name="about_and_licenses_description">View app info and open source licenses</string>
+    
+    <!-- Main Screen -->
+    <string name="menu">Menu</string>
+    <string name="search">Search</string>
+    <string name="new_download">New Download</string>
+    <string name="multithreaded_downloader">Multithreaded Downloader</string>
+    <string name="task_filter">Task Filter</string>
+    <string name="all">All</string>
+    <string name="downloading">Downloading</string>
+    <string name="completed">Completed</string>
+    <string name="paused">Paused</string>
+    <string name="failed">Failed</string>
+    <string name="task_management">Task Management</string>
+    <string name="clear_completed">Clear Completed</string>
+    <string name="clear_failed">Clear Failed</string>
+    <string name="more">More</string>
+    <string name="open_source_licenses">Open Source Licenses</string>
+    
+    <!-- Empty States -->
+    <string name="no_tasks">No download tasks</string>
+    <string name="no_downloading_tasks">No downloading tasks</string>
+    <string name="no_completed_tasks">No completed tasks</string>
+    <string name="no_paused_tasks">No paused tasks</string>
+    <string name="no_failed_tasks">No failed tasks</string>
+    <string name="tap_to_create">Tap the button to create a new task</string>
+    <string name="no_search_results">No matching tasks found</string>
+    
+    <!-- Search -->
+    <string name="search_placeholder">Search filename, URL or path</string>
+    <string name="clear">Clear</string>
+    
+    <!-- Total Progress -->
+    <string name="total_download_progress">Total Download Progress</string>
+    <string name="tasks_count">%d tasks</string>
+    
+    <!-- Add Download Dialog -->
+    <string name="new_download_task">New Download Task</string>
+    <string name="download_link">Download Link</string>
+    <string name="enter_url">Enter URL</string>
+    <string name="enter_valid_url">Please enter a valid URL</string>
+    <string name="filename_optional">Filename (Optional)</string>
+    <string name="auto_extract_from_url">Auto extract from URL</string>
+    <string name="thread_count">Thread Count</string>
+    <string name="thread_count_error">Thread count must be between 1-256</string>
+    <string name="thread_count_hint">Recommended 32 threads, max 256</string>
+    <string name="advanced_options">Advanced Options</string>
+    <string name="browser_identity">Browser Identity</string>
+    <string name="select_preset_ua">Select Preset UA</string>
+    <string name="click_arrow_to_select">Click arrow to select preset</string>
+    <string name="click_below_to_select">Click below to select preset</string>
+    <string name="this_device">This Device</string>
+    <string name="default_settings">Default Settings</string>
+    <string name="temp_save_directory">Temp Save Directory</string>
+    <string name="click_to_select_temp">Click to select (this download only)</string>
+    <string name="start_download">Start Download</string>
+    <string name="multithread_hint">Multithreading improves speed but uses more resources</string>
+    <string name="temp_dir_hint">Temporary directory is for this download only and not saved</string>
+    
+    <!-- Simple Download Dialog -->
+    <string name="download_address">Download Address</string>
+    <string name="url_example">https://example.com/file.zip</string>
+    <string name="enter_valid_download_link">Please enter a valid download link</string>
+    <string name="auto_extract_filename">Auto extract from URL if left empty</string>
+    <string name="auto_detect_filename">Auto detect filename if left empty</string>
+    <string name="use_default_settings_hint">Will use default settings to download\nFor more options, use the button in the bottom right</string>
+</resources>
+

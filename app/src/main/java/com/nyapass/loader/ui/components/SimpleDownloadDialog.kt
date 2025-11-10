@@ -6,7 +6,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.nyapass.loader.R
 
 /**
  * 简化的下载对话框
@@ -39,7 +41,7 @@ fun SimpleDownloadDialog(
         },
         title = { 
             Text(
-                "新建下载",
+                stringResource(R.string.new_download),
                 style = MaterialTheme.typography.headlineSmall
             ) 
         },
@@ -55,14 +57,14 @@ fun SimpleDownloadDialog(
                         url = it
                         urlError = false
                     },
-                    label = { Text("下载地址") },
-                    placeholder = { Text("https://example.com/file.zip") },
+                    label = { Text(stringResource(R.string.download_address)) },
+                    placeholder = { Text(stringResource(R.string.url_example)) },
                     leadingIcon = { 
                         Icon(Icons.Default.Link, null) 
                     },
                     isError = urlError,
                     supportingText = if (urlError) {
-                        { Text("请输入有效的下载链接") }
+                        { Text(stringResource(R.string.enter_valid_download_link)) }
                     } else null,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = false,
@@ -73,13 +75,13 @@ fun SimpleDownloadDialog(
                 OutlinedTextField(
                     value = fileName,
                     onValueChange = { fileName = it },
-                    label = { Text("文件名（可选）") },
-                    placeholder = { Text("不填则自动从URL中提取") },
+                    label = { Text(stringResource(R.string.filename_optional)) },
+                    placeholder = { Text(stringResource(R.string.auto_extract_filename)) },
                     leadingIcon = { 
                         Icon(Icons.Default.Description, null) 
                     },
                     supportingText = {
-                        Text("留空将自动识别文件名")
+                        Text(stringResource(R.string.auto_detect_filename))
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -102,7 +104,7 @@ fun SimpleDownloadDialog(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "将使用默认设置进行下载\n如需更多选项，请使用右下角的新建下载按钮",
+                            text = stringResource(R.string.use_default_settings_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
@@ -132,12 +134,12 @@ fun SimpleDownloadDialog(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("开始下载")
+                Text(stringResource(R.string.start_download))
             }
         },
         dismissButton = {
             TextButton(onClick = currentOnDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
