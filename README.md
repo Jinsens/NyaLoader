@@ -1,6 +1,3 @@
-# NyaLoader
-Multithreaded downloader – experience blazing-fast download speeds. NyaLoader多线程下载器，享受极速下载
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 # NyaLoader - 多线程下载管理器
 
@@ -10,7 +7,7 @@ Multithreaded downloader – experience blazing-fast download speeds. NyaLoader�
 ![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=white)
 ![Material Design 3](https://img.shields.io/badge/Design-Material%203-6200EE)
-![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 一款现代化的 Android 多线程下载管理器，采用 Material Design 3 设计语言和 Jetpack Compose 构建。
 
