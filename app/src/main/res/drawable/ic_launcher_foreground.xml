@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.5"
+        android:scaleY="0.5"
+        android:translateX="27"
+        android:translateY="27">
+        <!-- Download arrow icon -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,27C53.2,27 52.5,27.3 52,27.9L39,40.9L39,9C39,6.8 37.2,5 35,5L29,5C26.8,5 25,6.8 25,9L25,40.9L12,27.9C10.7,26.6 8.5,26.6 7.2,27.9C5.9,29.2 5.9,31.4 7.2,32.7L29.6,55.1C30.2,55.7 31,56 31.8,56C32.6,56 33.4,55.7 34,55.1L56.4,32.7C57.7,31.4 57.7,29.2 56.4,27.9C55.9,27.3 55.2,27 54.4,27L54,27Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M59,48L59,54C59,56.2 57.2,58 55,58L9,58C6.8,58 5,56.2 5,54L5,48C5,45.8 6.8,44 9,44L16,44L16,48L12,48L12,52L52,52L52,48L48,48L48,44L55,44C57.2,44 59,45.8 59,48Z" />
+    </group>
+</vector>
+

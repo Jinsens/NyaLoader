@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 公共Download目录 -->
+    <external-path
+        name="external_downloads"
+        path="Download/" />
+    
+    <!-- 应用私有外部存储 -->
+    <external-files-path
+        name="external_files"
+        path="Download/" />
+    
+    <!-- 外部存储根目录 -->
+    <external-path
+        name="external_storage"
+        path="." />
+</paths>
+

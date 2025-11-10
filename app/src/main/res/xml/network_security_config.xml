@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 允许所有HTTP明文流量（包括HTTP下载） -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <!-- 信任系统证书 -->
+            <certificates src="system" />
+            <!-- 信任用户安装的证书 -->
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- 为了安全，也可以只允许特定域名使用HTTP -->
+    <!-- 如果你想限制只允许某些域名使用HTTP，可以使用以下配置： -->
+    <!-- 
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">example.com</domain>
+        <domain includeSubdomains="true">your-domain.com</domain>
+    </domain-config>
+    -->
+</network-security-config>
+

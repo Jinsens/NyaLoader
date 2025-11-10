@@ -1,0 +1,8 @@
+kotlin version: 2.0.21
+error message: The daemon has terminated unexpectedly on startup attempt #1 with error code: 1. The daemon process output:
+    1. #
+    2. # There is insufficient memory for the Java Runtime Environment to continue.
+    3. # Native memory allocation (malloc) failed to allocate 1152000 bytes. Error detail: AllocateHeap
+    4. # An error report file with more information is saved as:
+    5. # C:\Users\13563\AppData\Local\kotlin\daemon\hs_err_pid9712.log
+
