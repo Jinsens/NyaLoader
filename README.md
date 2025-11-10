@@ -1,6 +1,5 @@
 # NyaLoader
 Multithreaded downloader – experience blazing-fast download speeds. NyaLoader多线程下载器，享受极速下载
-# 项目名
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 # NyaLoader - 多线程下载管理器
