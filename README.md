@@ -369,15 +369,15 @@ key.password=your_key_password
 **小花生FMR**
 
 - 版本：1.0.0
-- 邮箱：[your-email@example.com] （请替换）
-- GitHub：[@yourusername] （请替换）
+- 邮箱：[2442198073@qq.com]
+- GitHub：[@Jinsens]
 
 ---
 
 ## 📮 联系方式
 
-- 提交 Issue: [GitHub Issues](https://github.com/yourusername/NyaLoader/issues)
-- 讨论区: [GitHub Discussions](https://github.com/yourusername/NyaLoader/discussions)
+- 提交 Issue: [GitHub Issues](https://github.com/Jinsens/NyaLoader/issues)
+- 讨论区: [GitHub Discussions](https://github.com/Jinsens/NyaLoader/discussions)
 
 ---
 
