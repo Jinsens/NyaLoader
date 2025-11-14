@@ -92,9 +92,37 @@
     <string name="firebase_accept">Agree and Enable</string>
     <string name="firebase_decline">Not Now</string>
     
-    <!-- About -->
+    <!-- About & Licenses -->
     <string name="about_and_licenses">About &amp; Licenses</string>
     <string name="about_and_licenses_description">View app info and open source licenses</string>
+    <string name="open_source_licenses">Open Source Licenses</string>
+    <string name="using_open_source_projects">This app uses the following open source projects</string>
+    <string name="thanks_to_contributors">Thanks to all open source contributors!</string>
+    <string name="app_icon">App Icon</string>
+    <string name="multi_thread_downloader">Multi-thread Download Manager</string>
+    <string name="version">Version</string>
+    <string name="version_format">Version %s</string>
+    <string name="author">Author</string>
+    <string name="author_name">Author: XiaoHuashengFMR</string>
+    <string name="copyright">© 2025 XiaoHuashengFMR</string>
+    <string name="open_source_license_agpl">Open sourced under AGPL-3.0 License</string>
+    
+    <!-- Library Descriptions -->
+    <string name="lib_kotlin_desc">Modern JVM programming language</string>
+    <string name="lib_jetpack_compose_desc">Modern declarative UI framework for Android</string>
+    <string name="lib_material3_desc">Material Design 3 component library</string>
+    <string name="lib_material_icons_desc">Material Design extended icon library</string>
+    <string name="lib_androidx_core_desc">Kotlin extensions for Android core library</string>
+    <string name="lib_lifecycle_desc">Android lifecycle-aware components</string>
+    <string name="lib_activity_compose_desc">Integration library for Activity and Compose</string>
+    <string name="lib_viewmodel_compose_desc">Integration between ViewModel and Compose</string>
+    <string name="lib_room_desc">Android SQLite database abstraction layer</string>
+    <string name="lib_navigation_desc">Jetpack Compose navigation component</string>
+    <string name="lib_okhttp_desc">Efficient HTTP client library by Square</string>
+    <string name="lib_coroutines_desc">Kotlin coroutines library for asynchronous programming</string>
+    <string name="lib_serialization_desc">Kotlin multiplatform serialization library</string>
+    <string name="lib_workmanager_desc">Android background task scheduler</string>
+    <string name="lib_gson_desc">Google JSON serialization library</string>
     
     <!-- Main Screen -->
     <string name="menu">Menu</string>
@@ -111,7 +139,6 @@
     <string name="clear_completed">Clear Completed</string>
     <string name="clear_failed">Clear Failed</string>
     <string name="more">More</string>
-    <string name="open_source_licenses">Open Source Licenses</string>
     
     <!-- Empty States -->
     <string name="no_tasks">No download tasks</string>

@@ -92,9 +92,37 @@
     <string name="firebase_accept">同意して有効にする</string>
     <string name="firebase_decline">今はしない</string>
     
-    <!-- について -->
+    <!-- このアプリについて・ライセンス -->
     <string name="about_and_licenses">このアプリについて・ライセンス</string>
     <string name="about_and_licenses_description">アプリ情報とオープンソースライセンスを表示</string>
+    <string name="open_source_licenses">オープンソースライセンス</string>
+    <string name="using_open_source_projects">このアプリは以下のオープンソースプロジェクトを使用しています</string>
+    <string name="thanks_to_contributors">すべてのオープンソースプロジェクトの貢献者に感謝します！</string>
+    <string name="app_icon">アプリアイコン</string>
+    <string name="multi_thread_downloader">マルチスレッドダウンロードマネージャー</string>
+    <string name="version">バージョン</string>
+    <string name="version_format">バージョン %s</string>
+    <string name="author">作者</string>
+    <string name="author_name">作者：XiaoHuashengFMR</string>
+    <string name="copyright">© 2025 XiaoHuashengFMR</string>
+    <string name="open_source_license_agpl">AGPL-3.0 ライセンスの下でオープンソース化</string>
+    
+    <!-- ライブラリの説明 -->
+    <string name="lib_kotlin_desc">モダンなJVMプログラミング言語</string>
+    <string name="lib_jetpack_compose_desc">Android向けモダンな宣言型UIフレームワーク</string>
+    <string name="lib_material3_desc">Material Design 3 コンポーネントライブラリ</string>
+    <string name="lib_material_icons_desc">Material Design 拡張アイコンライブラリ</string>
+    <string name="lib_androidx_core_desc">Android コアライブラリのKotlin拡張</string>
+    <string name="lib_lifecycle_desc">Android ライフサイクル対応コンポーネント</string>
+    <string name="lib_activity_compose_desc">ActivityとComposeの統合ライブラリ</string>
+    <string name="lib_viewmodel_compose_desc">ViewModelとComposeの統合</string>
+    <string name="lib_room_desc">Android SQLite データベース抽象化レイヤー</string>
+    <string name="lib_navigation_desc">Jetpack Compose ナビゲーションコンポーネント</string>
+    <string name="lib_okhttp_desc">Squareが開発した高効率HTTPクライアントライブラリ</string>
+    <string name="lib_coroutines_desc">非同期プログラミング用Kotlinコルーチンライブラリ</string>
+    <string name="lib_serialization_desc">Kotlinマルチプラットフォームシリアル化ライブラリ</string>
+    <string name="lib_workmanager_desc">Androidバックグラウンドタスクスケジューラ</string>
+    <string name="lib_gson_desc">GoogleのJSONシリアル化/デシリアル化ライブラリ</string>
     
     <!-- メイン画面 -->
     <string name="menu">メニュー</string>
@@ -111,7 +139,6 @@
     <string name="clear_completed">完了済みを削除</string>
     <string name="clear_failed">失敗を削除</string>
     <string name="more">その他</string>
-    <string name="open_source_licenses">オープンソースライセンス</string>
     
     <!-- 空の状態 -->
     <string name="no_tasks">ダウンロードタスクがありません</string>

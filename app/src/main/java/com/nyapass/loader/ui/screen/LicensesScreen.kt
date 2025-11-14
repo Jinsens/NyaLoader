@@ -12,9 +12,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.nyapass.loader.R
 /**
  * 开源许可界面
  * 
@@ -40,18 +42,20 @@ fun LicensesScreen(
             }
             "${packageInfo.versionName} ($versionCode)"
         } catch (e: Exception) {
-            "1.0.0 (1)"
+            "1.1.0 (2)"
         }
     }
+    
+    val openSourceLibraries = getOpenSourceLibraries()
     
     Scaffold(
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text("关于与许可") },
+                title = { Text(stringResource(R.string.about_and_licenses)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -81,7 +85,7 @@ fun LicensesScreen(
             
             item {
                 Text(
-                    text = "开源许可",
+                    text = stringResource(R.string.open_source_licenses),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -90,7 +94,7 @@ fun LicensesScreen(
             
             item {
                 Text(
-                    text = "本应用使用了以下开源项目",
+                    text = stringResource(R.string.using_open_source_projects),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -103,7 +107,7 @@ fun LicensesScreen(
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "感谢所有开源项目的贡献者！",
+                    text = stringResource(R.string.thanks_to_contributors),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -117,6 +121,7 @@ fun LicensesScreen(
  */
 @Composable
 fun AppInfoCard(versionInfo: String) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -134,7 +139,7 @@ fun AppInfoCard(versionInfo: String) {
             // 应用图标
             Icon(
                 imageVector = Icons.Default.Download,
-                contentDescription = "应用图标",
+                contentDescription = stringResource(R.string.app_icon),
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -149,7 +154,7 @@ fun AppInfoCard(versionInfo: String) {
             
             // 副标题
             Text(
-                text = "多线程下载管理器",
+                text = stringResource(R.string.multi_thread_downloader),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
             )
@@ -163,12 +168,12 @@ fun AppInfoCard(versionInfo: String) {
             ) {
                 Icon(
                     imageVector = Icons.Default.Info,
-                    contentDescription = "版本",
+                    contentDescription = stringResource(R.string.version),
                     modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "版本 $versionInfo",
+                    text = stringResource(R.string.version_format, versionInfo),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -182,12 +187,12 @@ fun AppInfoCard(versionInfo: String) {
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = "作者",
+                    contentDescription = stringResource(R.string.author),
                     modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "作者：小花生FMR",
+                    text = stringResource(R.string.author_name),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -198,14 +203,14 @@ fun AppInfoCard(versionInfo: String) {
             
             // 版权信息
             Text(
-                text = "© 2025 小花生FMR",
+                text = stringResource(R.string.copyright),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
             
             Text(
-                text = "基于 AGPL-3.0 许可证开源",
+                text = stringResource(R.string.open_source_license_agpl),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
@@ -250,7 +255,7 @@ fun LicenseCard(library: OpenSourceLibrary) {
                 )
                 AssistChip(
                     onClick = { },
-                    label = { Text("版本 ${library.version}") }
+                    label = { Text(stringResource(R.string.version_format, library.version)) }
                 )
             }
             
@@ -279,108 +284,109 @@ data class OpenSourceLibrary(
 /**
  * 项目使用的开源库列表
  */
-val openSourceLibraries = listOf(
+@Composable
+fun getOpenSourceLibraries() = listOf(
     OpenSourceLibrary(
         name = "Kotlin",
-        description = "现代化的 JVM 编程语言",
+        description = stringResource(R.string.lib_kotlin_desc),
         license = "Apache 2.0",
         version = "2.2.21",
         url = "https://kotlinlang.org"
     ),
     OpenSourceLibrary(
         name = "Jetpack Compose",
-        description = "Android 现代化声明式 UI 框架",
+        description = stringResource(R.string.lib_jetpack_compose_desc),
         license = "Apache 2.0",
         version = "2025.11.00",
         url = "https://developer.android.com/compose"
     ),
     OpenSourceLibrary(
         name = "Material 3",
-        description = "Material Design 3 组件库",
+        description = stringResource(R.string.lib_material3_desc),
         license = "Apache 2.0",
         version = "Latest",
         url = "https://m3.material.io"
     ),
     OpenSourceLibrary(
         name = "Material Icons Extended",
-        description = "Material Design 扩展图标库",
+        description = stringResource(R.string.lib_material_icons_desc),
         license = "Apache 2.0",
         version = "Latest",
         url = "https://fonts.google.com/icons"
     ),
     OpenSourceLibrary(
         name = "AndroidX Core KTX",
-        description = "Android 核心库的 Kotlin 扩展",
+        description = stringResource(R.string.lib_androidx_core_desc),
         license = "Apache 2.0",
         version = "1.17.0",
         url = "https://developer.android.com/kotlin/ktx"
     ),
     OpenSourceLibrary(
         name = "Lifecycle Runtime KTX",
-        description = "Android 生命周期感知组件",
+        description = stringResource(R.string.lib_lifecycle_desc),
         license = "Apache 2.0",
         version = "2.9.4",
         url = "https://developer.android.com/topic/libraries/architecture/lifecycle"
     ),
     OpenSourceLibrary(
         name = "Activity Compose",
-        description = "Activity 与 Compose 的集成库",
+        description = stringResource(R.string.lib_activity_compose_desc),
         license = "Apache 2.0",
         version = "1.11.0",
         url = "https://developer.android.com/jetpack/androidx/releases/activity"
     ),
     OpenSourceLibrary(
         name = "ViewModel Compose",
-        description = "ViewModel 与 Compose 的集成",
+        description = stringResource(R.string.lib_viewmodel_compose_desc),
         license = "Apache 2.0",
         version = "2.9.4",
         url = "https://developer.android.com/topic/libraries/architecture/viewmodel"
     ),
     OpenSourceLibrary(
         name = "Room Database",
-        description = "Android SQLite 数据库抽象层",
+        description = stringResource(R.string.lib_room_desc),
         license = "Apache 2.0",
         version = "2.8.3",
         url = "https://developer.android.com/training/data-storage/room"
     ),
     OpenSourceLibrary(
         name = "Navigation Compose",
-        description = "Jetpack Compose 导航组件",
+        description = stringResource(R.string.lib_navigation_desc),
         license = "Apache 2.0",
         version = "2.9.6",
         url = "https://developer.android.com/jetpack/compose/navigation"
     ),
     OpenSourceLibrary(
         name = "OkHttp",
-        description = "Square 开发的高效 HTTP 客户端库",
+        description = stringResource(R.string.lib_okhttp_desc),
         license = "Apache 2.0",
         version = "5.3.0",
         url = "https://square.github.io/okhttp/"
     ),
     OpenSourceLibrary(
         name = "Kotlin Coroutines",
-        description = "Kotlin 协程库，用于异步编程",
+        description = stringResource(R.string.lib_coroutines_desc),
         license = "Apache 2.0",
         version = "1.10.2",
         url = "https://kotlinlang.org/docs/coroutines-overview.html"
     ),
     OpenSourceLibrary(
         name = "Kotlinx Serialization",
-        description = "Kotlin 多平台序列化库",
+        description = stringResource(R.string.lib_serialization_desc),
         license = "Apache 2.0",
         version = "1.9.0",
         url = "https://github.com/Kotlin/kotlinx.serialization"
     ),
     OpenSourceLibrary(
         name = "WorkManager",
-        description = "Android 后台任务调度库",
+        description = stringResource(R.string.lib_workmanager_desc),
         license = "Apache 2.0",
         version = "2.11.0",
         url = "https://developer.android.com/topic/libraries/architecture/workmanager"
     ),
     OpenSourceLibrary(
         name = "Gson",
-        description = "Google 的 JSON 序列化/反序列化库",
+        description = stringResource(R.string.lib_gson_desc),
         license = "Apache 2.0",
         version = "2.13.2",
         url = "https://github.com/google/gson"

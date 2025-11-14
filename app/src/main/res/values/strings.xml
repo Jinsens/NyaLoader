@@ -92,9 +92,37 @@
     <string name="firebase_accept">同意并开启</string>
     <string name="firebase_decline">暂不开启</string>
     
-    <!-- 关于 -->
+    <!-- 关于与许可 -->
     <string name="about_and_licenses">关于与许可</string>
     <string name="about_and_licenses_description">查看应用信息和开源许可</string>
+    <string name="open_source_licenses">开源许可</string>
+    <string name="using_open_source_projects">本应用使用了以下开源项目</string>
+    <string name="thanks_to_contributors">感谢所有开源项目的贡献者！</string>
+    <string name="app_icon">应用图标</string>
+    <string name="multi_thread_downloader">多线程下载管理器</string>
+    <string name="version">版本</string>
+    <string name="version_format">版本 %s</string>
+    <string name="author">作者</string>
+    <string name="author_name">作者：小花生FMR</string>
+    <string name="copyright">© 2025 小花生FMR</string>
+    <string name="open_source_license_agpl">基于 AGPL-3.0 许可证开源</string>
+    
+    <!-- 开源库描述 -->
+    <string name="lib_kotlin_desc">现代化的 JVM 编程语言</string>
+    <string name="lib_jetpack_compose_desc">Android 现代化声明式 UI 框架</string>
+    <string name="lib_material3_desc">Material Design 3 组件库</string>
+    <string name="lib_material_icons_desc">Material Design 扩展图标库</string>
+    <string name="lib_androidx_core_desc">Android 核心库的 Kotlin 扩展</string>
+    <string name="lib_lifecycle_desc">Android 生命周期感知组件</string>
+    <string name="lib_activity_compose_desc">Activity 与 Compose 的集成库</string>
+    <string name="lib_viewmodel_compose_desc">ViewModel 与 Compose 的集成</string>
+    <string name="lib_room_desc">Android SQLite 数据库抽象层</string>
+    <string name="lib_navigation_desc">Jetpack Compose 导航组件</string>
+    <string name="lib_okhttp_desc">Square 开发的高效 HTTP 客户端库</string>
+    <string name="lib_coroutines_desc">Kotlin 协程库，用于异步编程</string>
+    <string name="lib_serialization_desc">Kotlin 多平台序列化库</string>
+    <string name="lib_workmanager_desc">Android 后台任务调度库</string>
+    <string name="lib_gson_desc">Google 的 JSON 序列化/反序列化库</string>
     
     <!-- 主页面 -->
     <string name="menu">菜单</string>
@@ -111,7 +139,6 @@
     <string name="clear_completed">清除已完成</string>
     <string name="clear_failed">清除失败</string>
     <string name="more">更多</string>
-    <string name="open_source_licenses">开源许可</string>
     
     <!-- 空状态 -->
     <string name="no_tasks">暂无下载任务</string>
