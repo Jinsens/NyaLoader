@@ -135,6 +135,9 @@
     <string name="download_link">ダウンロードリンク</string>
     <string name="enter_url">URLを入力</string>
     <string name="enter_valid_url">有効なURLを入力してください</string>
+    <string name="add_more_links">さらにリンクを追加</string>
+    <string name="batch_download_hint">一括ダウンロード：%d 個のリンクを追加しました</string>
+    <string name="filename_only_first">最初のリンクのみに適用</string>
     <string name="filename_optional">ファイル名（オプション）</string>
     <string name="auto_extract_from_url">URLから自動抽出</string>
     <string name="thread_count">スレッド数</string>
@@ -160,5 +163,35 @@
     <string name="auto_extract_filename">空の場合はURLから自動抽出</string>
     <string name="auto_detect_filename">空の場合はファイル名を自動検出</string>
     <string name="use_default_settings_hint">デフォルト設定でダウンロードします\nその他のオプションは右下のボタンをご利用ください</string>
+
+    <!-- ダウンロードタスクカード -->
+    <string name="download_status_pending">待機中</string>
+    <string name="download_status_running">ダウンロード中</string>
+    <string name="download_status_paused">一時停止</string>
+    <string name="download_status_completed">完了</string>
+    <string name="download_status_failed">失敗</string>
+    <string name="download_status_cancelled">キャンセル済み</string>
+
+    <string name="download_error_title">エラー情報</string>
+    <string name="download_error_unknown">不明なエラー</string>
+    <string name="download_error_label">エラー</string>
+
+    <string name="download_url_label">URL</string>
+    <string name="download_save_path_label">保存パス</string>
+    <string name="download_location_label">保存場所</string>
+    <string name="download_thread_count_label">スレッド数</string>
+    <string name="download_support_range_label">レジューム対応</string>
+    <string name="yes">はい</string>
+    <string name="no">いいえ</string>
+
+    <string name="download_url_copied">URL をコピーしました</string>
+    <string name="download_path_copied">保存パスをコピーしました</string>
+
+    <string name="download_redownload">再ダウンロード</string>
+    <string name="download_stop_and_delete">停止して削除</string>
+    <string name="download_delete_task_title">タスクを削除</string>
+    <string name="download_delete_task_message">このダウンロードタスクとファイルを削除しますか？</string>
+    <string name="download_open_file">開く</string>
+    <string name="copy_long_press_hint">長押しでコピー</string>
 </resources>
 

@@ -20,8 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.nyapass.loader.R
 import com.nyapass.loader.data.model.DownloadStatus
 import com.nyapass.loader.viewmodel.TaskWithProgress
 import kotlin.math.pow
@@ -101,7 +103,7 @@ fun DownloadTaskItem(
                         if (task.status == DownloadStatus.COMPLETED && onOpenFile != null) {
                             Icon(
                                 Icons.AutoMirrored.Filled.OpenInNew,
-                                contentDescription = "打开",
+                                contentDescription = stringResource(R.string.download_open_file),
                                 modifier = Modifier.size(16.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
@@ -137,28 +139,40 @@ fun DownloadTaskItem(
                     when (task.status) {
                         DownloadStatus.PENDING -> {
                             IconButton(onClick = { currentOnStart(task.id) }) {
-                                Icon(Icons.Default.PlayArrow, "开始")
+                                Icon(
+                                    Icons.Default.PlayArrow,
+                                    contentDescription = stringResource(R.string.download_status_pending)
+                                )
                             }
                         }
                         DownloadStatus.RUNNING -> {
                             IconButton(onClick = { currentOnPause(task.id) }) {
-                                Icon(Icons.Default.Pause, "暂停")
+                                Icon(
+                                    Icons.Default.Pause,
+                                    contentDescription = stringResource(R.string.download_status_running)
+                                )
                             }
                         }
                         DownloadStatus.PAUSED -> {
                             IconButton(onClick = { currentOnResume(task.id) }) {
-                                Icon(Icons.Default.PlayArrow, "继续")
+                                Icon(
+                                    Icons.Default.PlayArrow,
+                                    contentDescription = stringResource(R.string.download_status_paused)
+                                )
                             }
                         }
                         DownloadStatus.FAILED -> {
                             IconButton(onClick = { currentOnRetry(task.id) }) {
-                                Icon(Icons.Default.Refresh, "重试")
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = stringResource(R.string.download_status_failed)
+                                )
                             }
                         }
                         DownloadStatus.COMPLETED -> {
                             Icon(
                                 Icons.Default.CheckCircle,
-                                "完成",
+                                contentDescription = stringResource(R.string.download_status_completed),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -170,7 +184,7 @@ fun DownloadTaskItem(
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
                             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            if (expanded) "收起" else "展开"
+                            contentDescription = null
                         )
                     }
                 }
@@ -241,19 +255,19 @@ fun DownloadTaskItem(
                                 ) {
                                     Icon(
                                         Icons.Default.Error,
-                                        contentDescription = "错误",
+                                        contentDescription = stringResource(R.string.download_error_label),
                                         tint = MaterialTheme.colorScheme.onErrorContainer,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "错误信息",
+                                        text = stringResource(R.string.download_error_title),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = task.errorMessage ?: "未知错误",
+                                    text = task.errorMessage ?: stringResource(R.string.download_error_unknown),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
@@ -262,24 +276,49 @@ fun DownloadTaskItem(
                     }
                     
                     CopyableDetailRow(
-                        label = "URL",
+                        label = stringResource(R.string.download_url_label),
                         value = task.url,
                         context = context,
-                        onCopied = { 
-                            Toast.makeText(context, "URL已复制", Toast.LENGTH_SHORT).show()
+                        onCopied = {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.download_url_copied),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     )
                     CopyableDetailRow(
-                        label = "保存路径",
+                        label = stringResource(R.string.download_save_path_label),
                         value = task.filePath,
                         context = context,
-                        onCopied = { 
-                            Toast.makeText(context, "保存路径已复制", Toast.LENGTH_SHORT).show()
+                        onCopied = {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.download_path_copied),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     )
-                    DetailRow("保存位置", if (task.saveToPublicDir) "公共Download目录" else "应用私有目录")
-                    DetailRow("线程数", "${task.threadCount}")
-                    DetailRow("支持断点续传", if (task.supportRange) "是" else "否")
+                    DetailRow(
+                        label = stringResource(R.string.download_location_label),
+                        value = if (task.saveToPublicDir) {
+                            stringResource(R.string.save_location_public)
+                        } else {
+                            stringResource(R.string.save_location_private)
+                        }
+                    )
+                    DetailRow(
+                        label = stringResource(R.string.download_thread_count_label),
+                        value = "${task.threadCount}"
+                    )
+                    DetailRow(
+                        label = stringResource(R.string.download_support_range_label),
+                        value = if (task.supportRange) {
+                            stringResource(R.string.yes)
+                        } else {
+                            stringResource(R.string.no)
+                        }
+                    )
                 }
                 
                 // 完成后显示操作按钮
@@ -299,7 +338,7 @@ fun DownloadTaskItem(
                         ) {
                             Icon(Icons.Default.Delete, contentDescription = null)
                             Spacer(Modifier.width(4.dp))
-                            Text("删除")
+                            Text(stringResource(R.string.delete))
                         }
                         
                         Button(
@@ -308,7 +347,7 @@ fun DownloadTaskItem(
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(Modifier.width(4.dp))
-                            Text("重新下载")
+                            Text(stringResource(R.string.download_redownload))
                         }
                     }
                 } else if (task.status != DownloadStatus.COMPLETED) {
@@ -324,7 +363,13 @@ fun DownloadTaskItem(
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text(if (task.status == DownloadStatus.RUNNING) "停止并删除" else "删除")
+                        Text(
+                            text = if (task.status == DownloadStatus.RUNNING) {
+                                stringResource(R.string.download_stop_and_delete)
+                            } else {
+                                stringResource(R.string.delete)
+                            }
+                        )
                     }
                 }
             }
@@ -335,8 +380,8 @@ fun DownloadTaskItem(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除这个下载任务吗？文件也将被删除。") },
+            title = { Text(stringResource(R.string.download_delete_task_title)) },
+            text = { Text(stringResource(R.string.download_delete_task_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -344,12 +389,12 @@ fun DownloadTaskItem(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("删除")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -404,7 +449,7 @@ fun CopyableDetailRow(
             )
             Icon(
                 imageVector = Icons.Default.ContentCopy,
-                contentDescription = "长按复制",
+                contentDescription = stringResource(R.string.copy_long_press_hint),
                 modifier = Modifier.size(12.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
@@ -430,26 +475,32 @@ fun getStatusColor(status: DownloadStatus): androidx.compose.ui.graphics.Color {
     }
 }
 
+@Composable
 fun getStatusText(status: DownloadStatus): String {
     return when (status) {
-        DownloadStatus.PENDING -> "等待中"
-        DownloadStatus.RUNNING -> "下载中"
-        DownloadStatus.PAUSED -> "已暂停"
-        DownloadStatus.COMPLETED -> "已完成"
-        DownloadStatus.FAILED -> "失败"
-        DownloadStatus.CANCELLED -> "已取消"
+        DownloadStatus.PENDING -> stringResource(R.string.download_status_pending)
+        DownloadStatus.RUNNING -> stringResource(R.string.download_status_running)
+        DownloadStatus.PAUSED -> stringResource(R.string.download_status_paused)
+        DownloadStatus.COMPLETED -> stringResource(R.string.download_status_completed)
+        DownloadStatus.FAILED -> stringResource(R.string.download_status_failed)
+        DownloadStatus.CANCELLED -> stringResource(R.string.download_status_cancelled)
     }
 }
 
 fun formatFileSize(bytes: Long): String {
     if (bytes <= 0) return "0 B"
+    
+    val unit = 1024.0
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
-    val digitGroups = (Math.log10(bytes.toDouble()) / Math.log10(1024.0)).toInt()
-    return String.format(
-        "%.2f %s",
-        bytes / 1024.0.pow(digitGroups.toDouble()),
-        units[digitGroups]
-    )
+    var value = bytes.toDouble()
+    var index = 0
+    
+    while (value >= unit && index < units.lastIndex) {
+        value /= unit
+        index++
+    }
+    
+    return String.format("%.2f %s", value, units[index])
 }
 
 fun formatSpeed(bytesPerSecond: Long): String {

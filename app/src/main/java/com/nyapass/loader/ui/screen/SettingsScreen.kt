@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nyapass.loader.R
 import com.nyapass.loader.data.preferences.DarkMode
 import com.nyapass.loader.data.preferences.Language
@@ -46,18 +47,18 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     
-    val themeColor by viewModel.themeColor.collectAsState()
-    val darkMode by viewModel.darkMode.collectAsState()
-    val customColor by viewModel.customColor.collectAsState()
-    val defaultUserAgent by viewModel.defaultUserAgent.collectAsState()
-    val customUserAgentPresets by viewModel.customUserAgentPresets.collectAsState()
-    val defaultSaveLocation by viewModel.defaultSaveLocation.collectAsState()
-    val customSavePath by viewModel.customSavePath.collectAsState()
-    val defaultThreadCount by viewModel.defaultThreadCount.collectAsState()
-    val clipboardMonitorEnabled by viewModel.clipboardMonitorEnabled.collectAsState()
-    val firebaseEnabled by viewModel.firebaseEnabled.collectAsState()
-    val language by viewModel.language.collectAsState()
-    val uiState by viewModel.uiState.collectAsState()
+    val themeColor by viewModel.themeColor.collectAsStateWithLifecycle()
+    val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
+    val customColor by viewModel.customColor.collectAsStateWithLifecycle()
+    val defaultUserAgent by viewModel.defaultUserAgent.collectAsStateWithLifecycle()
+    val customUserAgentPresets by viewModel.customUserAgentPresets.collectAsStateWithLifecycle()
+    val defaultSaveLocation by viewModel.defaultSaveLocation.collectAsStateWithLifecycle()
+    val customSavePath by viewModel.customSavePath.collectAsStateWithLifecycle()
+    val defaultThreadCount by viewModel.defaultThreadCount.collectAsStateWithLifecycle()
+    val clipboardMonitorEnabled by viewModel.clipboardMonitorEnabled.collectAsStateWithLifecycle()
+    val firebaseEnabled by viewModel.firebaseEnabled.collectAsStateWithLifecycle()
+    val language by viewModel.language.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     // 当页面销毁时，清除所有对话框状态
     DisposableEffect(Unit) {
@@ -67,6 +68,7 @@ fun SettingsScreen(
     }
     
     Scaffold(
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings)) },
@@ -78,7 +80,8 @@ fun SettingsScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                ),
+                windowInsets = TopAppBarDefaults.windowInsets
             )
         }
     ) { paddingValues ->

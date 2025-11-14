@@ -135,6 +135,9 @@
     <string name="download_link">Download Link</string>
     <string name="enter_url">Enter URL</string>
     <string name="enter_valid_url">Please enter a valid URL</string>
+    <string name="add_more_links">Add More Links</string>
+    <string name="batch_download_hint">Batch Download: %d links added</string>
+    <string name="filename_only_first">Only applies to first link</string>
     <string name="filename_optional">Filename (Optional)</string>
     <string name="auto_extract_from_url">Auto extract from URL</string>
     <string name="thread_count">Thread Count</string>
@@ -160,5 +163,35 @@
     <string name="auto_extract_filename">Auto extract from URL if left empty</string>
     <string name="auto_detect_filename">Auto detect filename if left empty</string>
     <string name="use_default_settings_hint">Will use default settings to download\nFor more options, use the button in the bottom right</string>
+
+    <!-- Download task card -->
+    <string name="download_status_pending">Pending</string>
+    <string name="download_status_running">Downloading</string>
+    <string name="download_status_paused">Paused</string>
+    <string name="download_status_completed">Completed</string>
+    <string name="download_status_failed">Failed</string>
+    <string name="download_status_cancelled">Cancelled</string>
+
+    <string name="download_error_title">Error</string>
+    <string name="download_error_unknown">Unknown error</string>
+    <string name="download_error_label">Error</string>
+
+    <string name="download_url_label">URL</string>
+    <string name="download_save_path_label">Save path</string>
+    <string name="download_location_label">Location</string>
+    <string name="download_thread_count_label">Threads</string>
+    <string name="download_support_range_label">Resume support</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <string name="download_url_copied">URL copied</string>
+    <string name="download_path_copied">Path copied</string>
+
+    <string name="download_redownload">Download again</string>
+    <string name="download_stop_and_delete">Stop and delete</string>
+    <string name="download_delete_task_title">Delete task</string>
+    <string name="download_delete_task_message">Delete this download task and its file?</string>
+    <string name="download_open_file">Open</string>
+    <string name="copy_long_press_hint">Long press to copy</string>
 </resources>
 

@@ -58,7 +58,8 @@ class LoaderApplication : Application() {
             context = this,
             taskDao = database.downloadTaskDao(),
             partDao = database.downloadPartDao(),
-            downloadEngine = downloadEngine
+            downloadEngine = downloadEngine,
+            okHttpClient = okHttpClient
         )
     }
     

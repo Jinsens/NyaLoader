@@ -135,6 +135,9 @@
     <string name="download_link">下载链接</string>
     <string name="enter_url">请输入URL</string>
     <string name="enter_valid_url">请输入有效的URL</string>
+    <string name="add_more_links">添加更多链接</string>
+    <string name="batch_download_hint">批量下载：已添加 %d 个链接</string>
+    <string name="filename_only_first">仅对第一个链接有效</string>
     <string name="filename_optional">文件名（可选）</string>
     <string name="auto_extract_from_url">自动从URL提取</string>
     <string name="thread_count">线程数</string>
@@ -160,4 +163,34 @@
     <string name="auto_extract_filename">不填则自动从URL中提取</string>
     <string name="auto_detect_filename">留空将自动识别文件名</string>
     <string name="use_default_settings_hint">将使用默认设置进行下载\n如需更多选项，请使用右下角的新建下载按钮</string>
+
+    <!-- 下载任务卡片 -->
+    <string name="download_status_pending">等待中</string>
+    <string name="download_status_running">下载中</string>
+    <string name="download_status_paused">已暂停</string>
+    <string name="download_status_completed">已完成</string>
+    <string name="download_status_failed">失败</string>
+    <string name="download_status_cancelled">已取消</string>
+
+    <string name="download_error_title">错误信息</string>
+    <string name="download_error_unknown">未知错误</string>
+    <string name="download_error_label">错误</string>
+
+    <string name="download_url_label">URL</string>
+    <string name="download_save_path_label">保存路径</string>
+    <string name="download_location_label">保存位置</string>
+    <string name="download_thread_count_label">线程数</string>
+    <string name="download_support_range_label">支持断点续传</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+
+    <string name="download_url_copied">URL已复制</string>
+    <string name="download_path_copied">保存路径已复制</string>
+
+    <string name="download_redownload">重新下载</string>
+    <string name="download_stop_and_delete">停止并删除</string>
+    <string name="download_delete_task_title">确认删除</string>
+    <string name="download_delete_task_message">确定要删除这个下载任务吗？文件也将被删除。</string>
+    <string name="download_open_file">打开</string>
+    <string name="copy_long_press_hint">长按复制</string>
 </resources>

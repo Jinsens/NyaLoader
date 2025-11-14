@@ -39,9 +39,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.nyapass.loader.ui.screen.DownloadScreen
 import com.nyapass.loader.ui.screen.LicensesScreen
 import com.nyapass.loader.ui.screen.SettingsScreen
@@ -53,6 +50,9 @@ import com.nyapass.loader.viewmodel.DownloadViewModel
 import com.nyapass.loader.viewmodel.SettingsViewModel
 import com.nyapass.loader.viewmodel.ViewModelFactory
 import com.nyapass.loader.data.preferences.Language
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 class MainActivity : ComponentActivity() {
     
@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var settingsViewModel: SettingsViewModel
     private var selectedFolderPath by mutableStateOf<String?>(null) // 设置界面的持久化路径
     private var tempFolderPath by mutableStateOf<String?>(null) // 创建下载的临时路径
-    private var lastProcessedUrl = "" // 记录最后处理的URL，避免重复弹窗
+    private var lastProcessedUrl = "" // 记录最后处理的URL（规范化后），避免重复弹窗
     
     // 权限请求启动器
     private val permissionLauncher = registerForActivityResult(
@@ -120,7 +120,7 @@ class MainActivity : ComponentActivity() {
             val path = it.path?.replace("/tree/primary:", "/storage/emulated/0/") ?: it.toString()
             selectedFolderPath = path
             
-            // ✅ 持久化保存到设置
+            //  持久化保存到设置
             settingsViewModel.updateCustomSavePath(path)
             
             Toast.makeText(
@@ -146,7 +146,7 @@ class MainActivity : ComponentActivity() {
             // 将Uri转换为路径（用于显示）
             val path = it.path?.replace("/tree/primary:", "/storage/emulated/0/") ?: it.toString()
             
-            // ⚠️ 仅设置临时路径，不持久化
+            //  仅设置临时路径，不持久化
             tempFolderPath = path
             
             Toast.makeText(
@@ -168,8 +168,31 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // 设置沉浸式状态栏和导航栏 - Edge to Edge
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        // 设置状态栏和导航栏为透明（虽然API已废弃，但仍是实现沉浸式的必要方法）
+        @Suppress("DEPRECATION")
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        @Suppress("DEPRECATION")
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        
+        // Android 10+ 关闭导航栏对比度强制，实现更纯粹的沉浸式效果
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
+        
+        // 启用预测性返回手势动画（Android 13+）
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            // AndroidManifest 中已设置 enableOnBackInvokedCallback="true"
+            // Compose 的 BackHandler 和 ModalNavigationDrawer 会自动支持预测性返回
+        }
+        
         // 初始化ViewModel
         val application = application as LoaderApplication
+        // 从设置中恢复最近一次处理的剪贴板URL，避免重启应用后重复弹窗
+        lastProcessedUrl = application.appPreferences.getLastClipboardUrl() ?: ""
+
         val downloadFactory = ViewModelFactory(application.downloadRepository, application.appPreferences)
         downloadViewModel = ViewModelProvider(this, downloadFactory)[DownloadViewModel::class.java]
         settingsViewModel = ViewModelProvider(this, downloadFactory)[SettingsViewModel::class.java]
@@ -195,7 +218,7 @@ class MainActivity : ComponentActivity() {
                     // 语言已更改，重启Activity以应用新语言
                     Toast.makeText(
                         this@MainActivity,
-                        "语言已更改，正在重启...",
+                        "语言已更改，请稍等",
                         Toast.LENGTH_SHORT
                     ).show()
                     
@@ -368,11 +391,19 @@ class MainActivity : ComponentActivity() {
             
             if (text.isNotBlank()) {
                 // 尝试从文本中提取URL
-                val url = extractUrlFromText(text)
-                if (url != null && UrlValidator.isValidUrlFormat(url)) {
+                val url = extractUrlFromText(text) ?: return null
+                
+                if (UrlValidator.isValidUrlFormat(url)) {
+                    // 使用规范化后的URL做去重比较
+                    val normalized = normalizeUrlForCompare(url)
+                    
                     // 检查是否与上次处理的URL相同，避免重复弹窗
-                    if (url != lastProcessedUrl) {
-                        lastProcessedUrl = url
+                    if (normalized.isNotEmpty() && normalized != lastProcessedUrl) {
+                        lastProcessedUrl = normalized
+                        // 持久化保存，避免应用重启后重复弹窗
+                        (application as? LoaderApplication)
+                            ?.appPreferences
+                            ?.saveLastClipboardUrl(normalized)
                         return url
                     }
                 }
@@ -383,59 +414,60 @@ class MainActivity : ComponentActivity() {
     }
     
     /**
-     * 重置已处理的URL（用于对话框关闭后）
-     */
-    fun resetProcessedUrl() {
-        lastProcessedUrl = ""
-    }
-    
-    /**
-     * 从文本中提取URL（优化版）
-     * 支持复杂的URL（包含中文、特殊字符、URL编码等）
+     * 从文本中提取URL（增强版）
+     * - 支持一段文本中包含多个URL
+     * - 去掉中文/英文标点等尾部字符
+     * - 优先返回看起来像真实资源文件的链接（带常见扩展名）
      */
     private fun extractUrlFromText(text: String): String? {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return null
         
-        // 快速路径：如果以http开头，直接处理
-        val startsWithHttp = trimmed.startsWith("http://", ignoreCase = true)
-        val startsWithHttps = trimmed.startsWith("https://", ignoreCase = true)
+        // 使用正则提取文本中的所有 http/https 链接
+        val regex = Regex("""https?://[^\s]+""", RegexOption.IGNORE_CASE)
+        val matches = regex.findAll(trimmed).map { it.value }.toList()
+        if (matches.isEmpty()) return null
         
-        if (startsWithHttp || startsWithHttps) {
-            // 找到第一个空白字符的位置
-            var endIndex = trimmed.length
-            for (i in trimmed.indices) {
-                val c = trimmed[i]
-                if (c.isWhitespace() || c == '\n' || c == '\r') {
-                    endIndex = i
-                    break
-                }
-            }
-            return trimmed.substring(0, endIndex)
+        // 清理每个候选URL尾部的标点符号
+        val cleanedCandidates = matches.map { raw ->
+            raw.trim().trimEnd(')', ']', '}', '>', '，', '。', '！', '；', ';', ',', '、', '"', '\'')
+        }.filter { it.isNotBlank() }
+        
+        if (cleanedCandidates.isEmpty()) return null
+        
+        // 优先选择看起来像真实资源文件的URL（带常见扩展名）
+        val exts = listOf(
+            ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz",
+            ".apk", ".exe", ".iso",
+            ".mp4", ".mkv", ".avi", ".mov",
+            ".mp3", ".flac", ".wav",
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"
+        )
+        
+        val withExt = cleanedCandidates.firstOrNull { url ->
+            val lower = url.lowercase()
+            val path = lower.substringBefore('?').substringBefore('#')
+            exts.any { ext -> path.endsWith(ext) }
         }
         
-        // 从文本中查找URL（使用indexOf代替正则表达式，更快）
-        val httpIndex = trimmed.indexOf("http://", ignoreCase = true)
-        val httpsIndex = trimmed.indexOf("https://", ignoreCase = true)
-        
-        val startIndex = when {
-            httpIndex >= 0 && httpsIndex >= 0 -> minOf(httpIndex, httpsIndex)
-            httpIndex >= 0 -> httpIndex
-            httpsIndex >= 0 -> httpsIndex
-            else -> return null
+        return withExt ?: cleanedCandidates.first()
+    }
+
+    /**
+     * 将URL规范化用于去重比较：去掉结尾的斜杠、忽略大小写和fragment
+     */
+    private fun normalizeUrlForCompare(url: String): String {
+        return try {
+            val uri = android.net.Uri.parse(url)
+            val scheme = uri.scheme?.lowercase() ?: return url.trim()
+            val host = uri.host?.lowercase() ?: return url.trim()
+            val port = if (uri.port != -1) ":${uri.port}" else ""
+            val path = (uri.path ?: "").trimEnd('/')
+            val query = uri.query?.let { "?$it" } ?: ""
+            "$scheme://$host$port$path$query"
+        } catch (e: Exception) {
+            url.trim()
         }
-        
-        // 从找到的位置开始提取URL
-        var endIndex = trimmed.length
-        for (i in startIndex until trimmed.length) {
-            val c = trimmed[i]
-            if (c.isWhitespace() || c == '\n' || c == '\r') {
-                endIndex = i
-                break
-            }
-        }
-        
-        return trimmed.substring(startIndex, endIndex)
     }
 }
 
@@ -526,8 +558,7 @@ fun AppNavigation(
             onDismiss = { 
                 showSimpleDialog = false
                 clipboardUrl = ""
-                // 对话框关闭后重置，允许下次再弹
-                activity?.resetProcessedUrl()
+                // 不重置lastProcessedUrl，避免相同链接再次弹出
             },
             onConfirm = { url, fileName ->
                 // 创建下载任务（使用设置中的持久化路径）
@@ -546,9 +577,20 @@ fun AppNavigation(
             }
         )
     }
-    
-    NavHost(navController = navController, startDestination = "download") {
-        composable("download") {
+
+    NavHost(
+        navController = navController,
+        startDestination = "download"
+    ) {
+        composable(
+            route = "download",
+            popEnterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            }
+        ) {
             DownloadScreen(
                 viewModel = downloadViewModel,
                 onSelectTempFolder = onSelectTempFolder,  // 临时目录选择
@@ -558,12 +600,38 @@ fun AppNavigation(
                     navController.navigate("settings")
                 },
                 onOpenLicenses = {
-                    navController.navigate("licenses")
+                    // 当前设计下，关于与许可只从设置入口进入，这里保持空实现
                 }
             )
         }
-        
-        composable("settings") {
+
+        composable(
+            route = "settings",
+            enterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            exitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popEnterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popExitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            }
+        ) {
             SettingsScreen(
                 viewModel = settingsViewModel,
                 onNavigateBack = {
@@ -575,8 +643,34 @@ fun AppNavigation(
                 }
             )
         }
-        
-        composable("licenses") {
+
+        composable(
+            route = "licenses",
+            enterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            exitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popEnterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popExitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            }
+        ) {
             LicensesScreen(
                 onBackClick = {
                     navController.popBackStack()

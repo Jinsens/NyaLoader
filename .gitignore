@@ -42,7 +42,8 @@ replay_pid*
 .externalNativeBuild
 .cxx
 local.properties
-
+.cursor
+.kotlin
 # Built application files
 *.apk
 *.aar

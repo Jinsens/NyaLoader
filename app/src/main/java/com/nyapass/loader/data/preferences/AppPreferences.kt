@@ -71,6 +71,19 @@ class AppPreferences(context: Context) {
     // 语言设置
     private val _language = MutableStateFlow(getLanguage())
     val language: StateFlow<Language> = _language.asStateFlow()
+
+    // 最近一次处理的剪贴板URL（用于避免重复弹窗）
+    fun saveLastClipboardUrl(url: String?) {
+        if (url.isNullOrBlank()) {
+            prefs.edit().remove(KEY_LAST_CLIPBOARD_URL).apply()
+        } else {
+            prefs.edit().putString(KEY_LAST_CLIPBOARD_URL, url).apply()
+        }
+    }
+
+    fun getLastClipboardUrl(): String? {
+        return prefs.getString(KEY_LAST_CLIPBOARD_URL, null)
+    }
     
     /**
      * 保存主题颜色
@@ -337,6 +350,7 @@ class AppPreferences(context: Context) {
         private const val KEY_FIREBASE_ENABLED = "firebase_enabled"
         private const val KEY_HAS_SHOWN_FIREBASE_TIP = "has_shown_firebase_tip"
         private const val KEY_LANGUAGE = "language"
+        private const val KEY_LAST_CLIPBOARD_URL = "last_clipboard_url"
     }
 }
 

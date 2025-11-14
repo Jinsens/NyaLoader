@@ -45,6 +45,7 @@ fun LicensesScreen(
     }
     
     Scaffold(
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text("关于与许可") },
@@ -56,7 +57,8 @@ fun LicensesScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                ),
+                windowInsets = TopAppBarDefaults.windowInsets
             )
         }
     ) { paddingValues ->

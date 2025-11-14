@@ -32,6 +32,14 @@ fun SimpleDownloadDialog(
     
     AlertDialog(
         onDismissRequest = currentOnDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false  // 允许自定义宽度
+        ),
+        modifier = Modifier
+            .fillMaxWidth(0.92f)
+            .wrapContentHeight(),
         icon = { 
             Icon(
                 Icons.Default.CloudDownload, 

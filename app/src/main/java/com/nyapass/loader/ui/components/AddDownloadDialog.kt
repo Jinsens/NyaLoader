@@ -13,8 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.nyapass.loader.R
 import com.nyapass.loader.data.preferences.UserAgentPreset
 import com.nyapass.loader.util.UserAgentHelper
 
@@ -43,8 +45,10 @@ fun AddDownloadDialog(
     val currentOnConfirm by rememberUpdatedState(onConfirm)
     val currentOnSelectFolder by rememberUpdatedState(onSelectFolder)
     
-    // 使用key确保每次打开对话框时状态都重置
-    var url by remember { mutableStateOf("") }
+    // 批量下载：使用URL列表
+    val urls = remember { mutableStateListOf("") }
+    val urlErrors = remember { mutableStateListOf(false) }
+    
     var fileName by remember { mutableStateOf("") }
     // 依赖defaultThreadCountFromSettings，当它变化时更新
     var threadCount by remember(defaultThreadCountFromSettings) { 
@@ -56,7 +60,6 @@ fun AddDownloadDialog(
     }
     var showAdvancedOptions by remember { mutableStateOf(false) }
     var showUAPresets by remember { mutableStateOf(false) }
-    var urlError by remember { mutableStateOf(false) }
     var threadCountError by remember { mutableStateOf(false) }
     
     // 使用外部传入的临时路径
@@ -64,8 +67,16 @@ fun AddDownloadDialog(
     
     AlertDialog(
         onDismissRequest = currentOnDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false  // 允许自定义宽度
+        ),
+        modifier = Modifier
+            .fillMaxWidth(0.92f)
+            .wrapContentHeight(),
         icon = { Icon(Icons.Default.Download, contentDescription = null) },
-        title = { Text("新建下载任务") },
+        title = { Text(stringResource(R.string.new_download_task)) },
         text = {
             Column(
                 modifier = Modifier
@@ -73,31 +84,112 @@ fun AddDownloadDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // URL输入框
-                OutlinedTextField(
-                    value = url,
-                    onValueChange = {
-                        url = it
-                        urlError = false
+                // URL输入框列表（批量下载）
+                urls.forEachIndexed { index, url ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.Top
+                    ) {
+                        OutlinedTextField(
+                            value = url,
+                            onValueChange = {
+                                urls[index] = it
+                                if (index < urlErrors.size) {
+                                    urlErrors[index] = false
+                                }
+                            },
+                            label = { 
+                                Text(
+                                    if (urls.size > 1) 
+                                        "${stringResource(R.string.download_link)} ${index + 1}" 
+                                    else 
+                                        stringResource(R.string.download_link)
+                                ) 
+                            },
+                            placeholder = { Text(stringResource(R.string.enter_url)) },
+                            leadingIcon = { Icon(Icons.Default.Link, null) },
+                            trailingIcon = if (urls.size > 1) {
+                                {
+                                    IconButton(
+                                        onClick = { 
+                                            urls.removeAt(index)
+                                            if (index < urlErrors.size) {
+                                                urlErrors.removeAt(index)
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.delete),
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            } else null,
+                            isError = index < urlErrors.size && urlErrors[index],
+                            supportingText = if (index < urlErrors.size && urlErrors[index]) {
+                                { Text(stringResource(R.string.enter_valid_url)) }
+                            } else null,
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                    }
+                }
+                
+                // 添加更多链接按钮
+                OutlinedButton(
+                    onClick = { 
+                        urls.add("")
+                        urlErrors.add(false)
                     },
-                    label = { Text("下载链接") },
-                    placeholder = { Text("请输入URL") },
-                    leadingIcon = { Icon(Icons.Default.Link, null) },
-                    isError = urlError,
-                    supportingText = if (urlError) {
-                        { Text("请输入有效的URL") }
-                    } else null,
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.add_more_links))
+                }
+                
+                // 批量下载提示
+                if (urls.size > 1) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.batch_download_hint, urls.size),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
                 
                 // 文件名输入框（可选）
                 OutlinedTextField(
                     value = fileName,
                     onValueChange = { fileName = it },
-                    label = { Text("文件名（可选）") },
-                    placeholder = { Text("自动从URL提取") },
+                    label = { Text(stringResource(R.string.filename_optional)) },
+                    placeholder = { Text(stringResource(R.string.auto_extract_from_url)) },
                     leadingIcon = { Icon(Icons.Default.Description, null) },
+                    supportingText = if (urls.size > 1) {
+                        { Text(stringResource(R.string.filename_only_first)) }
+                    } else null,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -109,13 +201,13 @@ fun AddDownloadDialog(
                         threadCount = it
                         threadCountError = false
                     },
-                    label = { Text("线程数") },
+                    label = { Text(stringResource(R.string.thread_count)) },
                     leadingIcon = { Icon(Icons.Default.Speed, null) },
                     isError = threadCountError,
                     supportingText = if (threadCountError) {
-                        { Text("线程数必须在1-256之间") }
+                        { Text(stringResource(R.string.thread_count_error)) }
                     } else {
-                        { Text("建议使用32个线程，最大支持256") }
+                        { Text(stringResource(R.string.thread_count_hint)) }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -144,7 +236,7 @@ fun AddDownloadDialog(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "高级选项",
+                                text = stringResource(R.string.advanced_options),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -161,19 +253,19 @@ fun AddDownloadDialog(
                     OutlinedTextField(
                         value = userAgent,
                         onValueChange = { userAgent = it },
-                        label = { Text("User-Agent") },
-                        placeholder = { Text("浏览器标识") },
+                        label = { Text(stringResource(R.string.user_agent_label)) },
+                        placeholder = { Text(stringResource(R.string.browser_identity)) },
                         leadingIcon = { Icon(Icons.Default.Computer, null) },
                         trailingIcon = {
                             IconButton(onClick = { showUAPresets = !showUAPresets }) {
                                 Icon(
                                     if (showUAPresets) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    "选择预设UA"
+                                    stringResource(R.string.select_preset_ua)
                                 )
                             }
                         },
                         supportingText = { 
-                            Text(if (showUAPresets) "点击下方选择预设" else "点击右侧箭头选择预设")
+                            Text(if (showUAPresets) stringResource(R.string.click_below_to_select) else stringResource(R.string.click_arrow_to_select))
                         },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 2,
@@ -188,7 +280,7 @@ fun AddDownloadDialog(
                         ) {
                             // 本设备预设（放在最前面）
                             UAPresetItemSimple(
-                                name = "本设备", 
+                                name = stringResource(R.string.this_device), 
                                 ua = webViewUA,
                                 isHighlighted = true
                             ) {
@@ -199,7 +291,7 @@ fun AddDownloadDialog(
                             // 默认设置中的UA（如果有）
                             if (defaultUserAgentFromSettings != null && defaultUserAgentFromSettings != webViewUA) {
                                 UAPresetItemSimple(
-                                    name = "默认设置",
+                                    name = stringResource(R.string.default_settings),
                                     ua = defaultUserAgentFromSettings!!
                                 ) {
                                     userAgent = it
@@ -211,7 +303,7 @@ fun AddDownloadDialog(
                             if (customUserAgentPresets.isNotEmpty()) {
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                                 Text(
-                                    text = "自定义预设",
+                                    text = stringResource(R.string.user_agent_custom_presets),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(vertical = 4.dp)
@@ -230,7 +322,7 @@ fun AddDownloadDialog(
                             // 系统预设
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             Text(
-                                text = "系统预设",
+                                text = stringResource(R.string.user_agent_system_presets),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(vertical = 4.dp)
@@ -280,11 +372,11 @@ fun AddDownloadDialog(
                                 )
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "临时保存目录",
+                                        text = stringResource(R.string.temp_save_directory),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     Text(
-                                        text = customPath ?: "点击选择（仅本次下载）",
+                                        text = customPath ?: stringResource(R.string.click_to_select_temp),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (customPath != null) {
                                             MaterialTheme.colorScheme.primary
@@ -326,7 +418,7 @@ fun AddDownloadDialog(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "多线程下载可提高下载速度，但会占用更多系统资源",
+                                text = stringResource(R.string.multithread_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
@@ -342,7 +434,7 @@ fun AddDownloadDialog(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    text = "临时目录仅用于本次下载，不会保存到设置中",
+                                    text = stringResource(R.string.temp_dir_hint),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -358,35 +450,56 @@ fun AddDownloadDialog(
                     // 验证输入
                     var hasError = false
                     
-                    if (url.isBlank() || !url.startsWith("http")) {
-                        urlError = true
-                        hasError = true
+                    // 验证所有URL
+                    urlErrors.clear()
+                    urls.forEachIndexed { index, url ->
+                        val isValid = url.isNotBlank() && url.trim().startsWith("http", ignoreCase = true)
+                        urlErrors.add(!isValid)
+                        if (!isValid) {
+                            hasError = true
+                        }
                     }
                     
+                    // 验证线程数
                     val threads = threadCount.toIntOrNull()
                     if (threads == null || threads !in 1..256) {
                         threadCountError = true
                         hasError = true
                     }
                     
-                    if (!hasError) {
-                        currentOnConfirm(
-                            url.trim(),
-                            fileName.trim().ifBlank { null },
-                            threads!!,
-                            true, // 始终使用默认设置
-                            customPath, // 临时自定义路径
-                            userAgent.trim().ifBlank { null }
-                        )
+                    if (!hasError && threads != null) {
+                        // 为每个有效的URL创建下载任务
+                        urls.forEachIndexed { index, url ->
+                            if (url.isNotBlank() && url.trim().startsWith("http", ignoreCase = true)) {
+                                // 批量下载时，文件名只对第一个URL有效，其他自动从URL提取
+                                val actualFileName = if (index == 0 && fileName.isNotBlank()) {
+                                    fileName.trim()
+                                } else {
+                                    null
+                                }
+                                
+                                currentOnConfirm(
+                                    url.trim(),
+                                    actualFileName,
+                                    threads,
+                                    true, // 始终使用默认设置
+                                    customPath, // 临时自定义路径
+                                    userAgent.trim().ifBlank { null }
+                                )
+                            }
+                        }
+                        
+                        // 关闭对话框
+                        currentOnDismiss()
                     }
                 }
             ) {
-                Text("开始下载")
+                Text(stringResource(R.string.start_download))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

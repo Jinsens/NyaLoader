@@ -1,5 +1,6 @@
 ﻿package com.nyapass.loader.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -51,7 +52,9 @@ fun DownloadScreen(
     val tasks by viewModel.filteredTasks.collectAsState()
     val totalProgress by viewModel.totalProgress.collectAsState()
     
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val drawerState = rememberDrawerState(
+        initialValue = DrawerValue.Closed
+    )
     val scope = rememberCoroutineScope()
     
     // 记录滚动状态
@@ -64,6 +67,20 @@ fun DownloadScreen(
         }
     }
     
+    // 处理侧边栏的返回事件，确保预测性返回手势生效
+    if (drawerState.isOpen) {
+        androidx.activity.compose.BackHandler {
+            scope.launch { drawerState.close() }
+        }
+    }
+    
+    // 处理搜索栏的返回事件
+    if (uiState.isSearching) {
+        androidx.activity.compose.BackHandler {
+            viewModel.stopSearch()
+        }
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -93,6 +110,7 @@ fun DownloadScreen(
         }
     ) {
         Scaffold(
+            contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             topBar = {
                 if (uiState.isSearching) {
                     SearchTopBar(
@@ -119,7 +137,8 @@ fun DownloadScreen(
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        ),
+                        windowInsets = TopAppBarDefaults.windowInsets
                     )
                 }
             },
@@ -249,6 +268,7 @@ fun NavigationDrawerContent(
             modifier = Modifier
                 .fillMaxHeight()
                 .width(280.dp)
+                .statusBarsPadding()  // 处理状态栏沉浸
         ) {
             // 抽屉头部
             Box(
@@ -370,14 +390,6 @@ fun NavigationDrawerContent(
                 label = { Text(stringResource(R.string.settings)) },
                 selected = false,
                 onClick = onOpenSettings,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.Code, null) },
-                label = { Text(stringResource(R.string.open_source_licenses)) },
-                selected = false,
-                onClick = onOpenLicenses,
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
         }
@@ -538,7 +550,8 @@ fun SearchTopBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+        ),
+        windowInsets = TopAppBarDefaults.windowInsets
     )
 }
 

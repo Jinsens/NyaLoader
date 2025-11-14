@@ -135,6 +135,9 @@
     <string name="download_link">下載連結</string>
     <string name="enter_url">請輸入URL</string>
     <string name="enter_valid_url">請輸入有效的URL</string>
+    <string name="add_more_links">新增更多連結</string>
+    <string name="batch_download_hint">批次下載：已新增 %d 個連結</string>
+    <string name="filename_only_first">僅對第一個連結有效</string>
     <string name="filename_optional">檔案名稱（選填）</string>
     <string name="auto_extract_from_url">自動從URL擷取</string>
     <string name="thread_count">執行緒數</string>
@@ -160,5 +163,35 @@
     <string name="auto_extract_filename">不填則自動從URL中擷取</string>
     <string name="auto_detect_filename">留空將自動識別檔案名稱</string>
     <string name="use_default_settings_hint">將使用預設設定進行下載\n如需更多選項，請使用右下角的新建下載按鈕</string>
+
+    <!-- 下載任務卡片 -->
+    <string name="download_status_pending">等待中</string>
+    <string name="download_status_running">下載中</string>
+    <string name="download_status_paused">已暫停</string>
+    <string name="download_status_completed">已完成</string>
+    <string name="download_status_failed">失敗</string>
+    <string name="download_status_cancelled">已取消</string>
+
+    <string name="download_error_title">錯誤資訊</string>
+    <string name="download_error_unknown">未知錯誤</string>
+    <string name="download_error_label">錯誤</string>
+
+    <string name="download_url_label">URL</string>
+    <string name="download_save_path_label">儲存路徑</string>
+    <string name="download_location_label">儲存位置</string>
+    <string name="download_thread_count_label">執行緒數</string>
+    <string name="download_support_range_label">支援斷點續傳</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+
+    <string name="download_url_copied">URL 已複製</string>
+    <string name="download_path_copied">儲存路徑已複製</string>
+
+    <string name="download_redownload">重新下載</string>
+    <string name="download_stop_and_delete">停止並刪除</string>
+    <string name="download_delete_task_title">確認刪除</string>
+    <string name="download_delete_task_message">確定要刪除這個下載任務嗎？檔案也將被刪除。</string>
+    <string name="download_open_file">開啟</string>
+    <string name="copy_long_press_hint">長按複製</string>
 </resources>
 
