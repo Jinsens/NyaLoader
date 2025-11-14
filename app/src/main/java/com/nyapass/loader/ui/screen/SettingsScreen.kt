@@ -32,6 +32,7 @@ import com.nyapass.loader.data.preferences.SaveLocation
 import com.nyapass.loader.data.preferences.ThemeColor
 import com.nyapass.loader.data.preferences.UserAgentPreset
 import com.nyapass.loader.util.UserAgentHelper
+import com.nyapass.loader.util.getLocalizedName
 import com.nyapass.loader.viewmodel.SettingsViewModel
 
 /**
@@ -100,7 +101,7 @@ fun SettingsScreen(
                 SettingsItemWithContent(
                     icon = Icons.Default.Language,
                     title = stringResource(R.string.language),
-                    subtitle = language.displayName
+                    subtitle = language.getLocalizedName()
                 ) {
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -110,7 +111,7 @@ fun SettingsScreen(
                             FilterChip(
                                 selected = lang == language,
                                 onClick = { viewModel.updateLanguage(lang) },
-                                label = { Text(lang.displayName) }
+                                label = { Text(lang.getLocalizedName()) }
                             )
                         }
                     }
@@ -122,7 +123,7 @@ fun SettingsScreen(
                 SettingsItemWithContent(
                     icon = Icons.Default.Palette,
                     title = stringResource(R.string.theme_color),
-                    subtitle = themeColor.displayName
+                    subtitle = themeColor.getLocalizedName()
                 ) {
                     ColorSelector(
                         selectedColor = themeColor,
@@ -151,7 +152,7 @@ fun SettingsScreen(
                     options = DarkMode.entries.toList(),
                     selectedOption = darkMode,
                     onOptionSelected = { viewModel.updateDarkMode(it) },
-                    optionLabel = { it.displayName }
+                    optionLabel = { it.getLocalizedName() }
                 )
             }
             
@@ -170,7 +171,7 @@ fun SettingsScreen(
                     options = SaveLocation.entries.toList(),
                     selectedOption = defaultSaveLocation,
                     onOptionSelected = { viewModel.updateDefaultSaveLocation(it) },
-                    optionLabel = { it.displayName }
+                    optionLabel = { it.getLocalizedName() }
                 )
             }
             
@@ -420,7 +421,7 @@ fun <T> SettingsItemWithSegmented(
     options: List<T>,
     selectedOption: T,
     onOptionSelected: (T) -> Unit,
-    optionLabel: (T) -> String
+    optionLabel: @Composable (T) -> String
 ) {
     Column(
         modifier = Modifier
@@ -643,7 +644,7 @@ fun ColorOption(
         Spacer(modifier = Modifier.height(4.dp))
         
         Text(
-            text = color.displayName,
+            text = color.getLocalizedName(),
             style = MaterialTheme.typography.labelSmall,
             color = if (isSelected) MaterialTheme.colorScheme.primary 
                    else MaterialTheme.colorScheme.onSurfaceVariant
@@ -847,19 +848,19 @@ fun UserAgentDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                         
-                        UAPresetItem("Chrome Windows", UserAgentHelper.Presets.CHROME_WINDOWS) {
+                        UAPresetItem(stringResource(R.string.user_agent_chrome_windows), UserAgentHelper.Presets.CHROME_WINDOWS) {
                             userAgent = it
                             showPresets = false
                         }
-                        UAPresetItem("Chrome Mac", UserAgentHelper.Presets.CHROME_MAC) {
+                        UAPresetItem(stringResource(R.string.user_agent_chrome_mac), UserAgentHelper.Presets.CHROME_MAC) {
                             userAgent = it
                             showPresets = false
                         }
-                        UAPresetItem("Firefox", UserAgentHelper.Presets.FIREFOX) {
+                        UAPresetItem(stringResource(R.string.user_agent_firefox), UserAgentHelper.Presets.FIREFOX) {
                             userAgent = it
                             showPresets = false
                         }
-                        UAPresetItem("Android Chrome", UserAgentHelper.Presets.ANDROID_CHROME) {
+                        UAPresetItem(stringResource(R.string.user_agent_android_chrome), UserAgentHelper.Presets.ANDROID_CHROME) {
                             userAgent = it
                             showPresets = false
                         }
@@ -958,7 +959,7 @@ fun UAPresetItemWithDelete(
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "删除",
+                    contentDescription = stringResource(R.string.delete),
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(20.dp)
                 )

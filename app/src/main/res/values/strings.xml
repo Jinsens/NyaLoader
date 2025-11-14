@@ -81,6 +81,10 @@
     <string name="user_agent_preset_ua_hint">输入User-Agent字符串</string>
     <string name="user_agent_preset_name_error">请输入预设名称</string>
     <string name="user_agent_preset_ua_error">请输入User-Agent</string>
+    <string name="user_agent_chrome_windows">Chrome Windows</string>
+    <string name="user_agent_chrome_mac">Chrome Mac</string>
+    <string name="user_agent_firefox">Firefox</string>
+    <string name="user_agent_android_chrome">Android Chrome</string>
     
     <!-- Firebase -->
     <string name="firebase_analytics">Google Firebase 分析</string>

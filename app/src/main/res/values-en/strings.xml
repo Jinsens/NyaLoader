@@ -81,6 +81,10 @@
     <string name="user_agent_preset_ua_hint">Enter User-Agent string</string>
     <string name="user_agent_preset_name_error">Please enter preset name</string>
     <string name="user_agent_preset_ua_error">Please enter User-Agent</string>
+    <string name="user_agent_chrome_windows">Chrome Windows</string>
+    <string name="user_agent_chrome_mac">Chrome Mac</string>
+    <string name="user_agent_firefox">Firefox</string>
+    <string name="user_agent_android_chrome">Android Chrome</string>
     
     <!-- Firebase -->
     <string name="firebase_analytics">Google Firebase Analytics</string>
