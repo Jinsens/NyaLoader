@@ -396,7 +396,7 @@ key.password=your_key_password
 
 ## ⭐ Star 历史
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/NyaLoader&type=Date)](https://star-history.com/#yourusername/NyaLoader&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=NyaLoader/NyaLoader&type=Date)](https://star-history.com/#NyaLoader/NyaLoader&Date)
 
 ---
 
