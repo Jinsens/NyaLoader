@@ -1,6 +1,7 @@
 ﻿package com.nyapass.loader.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nyapass.loader.data.model.DownloadStatus
@@ -8,15 +9,19 @@ import com.nyapass.loader.data.model.DownloadTask
 import com.nyapass.loader.data.model.getProgress
 import com.nyapass.loader.download.DownloadProgress
 import com.nyapass.loader.repository.DownloadRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * 下载ViewModel
+ * 使用 Hilt 进行依赖注入
  */
-class DownloadViewModel(
+@HiltViewModel
+class DownloadViewModel @Inject constructor(
     private val repository: DownloadRepository
 ) : ViewModel() {
     
@@ -422,6 +427,7 @@ class DownloadViewModel(
 /**
  * UI状态
  */
+@Immutable
 data class DownloadUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -445,6 +451,7 @@ enum class TaskFilter {
 /**
  * 带进度的任务
  */
+@Immutable
 data class TaskWithProgress(
     val task: DownloadTask,
     val progress: Float,
@@ -454,6 +461,7 @@ data class TaskWithProgress(
 /**
  * 总下载进度
  */
+@Immutable
 data class TotalProgress(
     val showProgress: Boolean = false,
     val totalSize: Long = 0L,

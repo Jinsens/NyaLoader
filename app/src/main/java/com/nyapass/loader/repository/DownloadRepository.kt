@@ -224,11 +224,9 @@ class DownloadRepository(
      */
     suspend fun startDownload(taskId: Long) {
         try {
-            Log.i(TAG, "Repository开始下载: taskId=$taskId")
             downloadEngine.startDownload(taskId)
-            Log.i(TAG, "Repository下载引擎已启动: taskId=$taskId")
         } catch (e: Exception) {
-            Log.e(TAG, "Repository启动下载失败: taskId=$taskId, error=${e.message}", e)
+            Log.e(TAG, "启动下载失败: $taskId - ${e.message}")
             throw e
         }
     }
@@ -237,18 +235,14 @@ class DownloadRepository(
      * 暂停下载
      */
     suspend fun pauseDownload(taskId: Long) {
-        Log.i(TAG, "Repository暂停下载: taskId=$taskId")
         downloadEngine.pauseDownload(taskId)
-        Log.i(TAG, "Repository暂停下载完成: taskId=$taskId")
     }
     
     /**
      * 恢复下载
      */
     suspend fun resumeDownload(taskId: Long) {
-        Log.i(TAG, "Repository恢复下载: taskId=$taskId")
         downloadEngine.startDownload(taskId)
-        Log.i(TAG, "Repository恢复下载完成: taskId=$taskId")
     }
     
     /**
@@ -262,33 +256,26 @@ class DownloadRepository(
      * 删除任务
      */
     suspend fun deleteTask(taskId: Long) {
-        Log.i(TAG, "Repository删除任务开始: taskId=$taskId")
         val task = taskDao.getTaskById(taskId)
         
         // 先取消下载（如果正在运行）
         try {
-            Log.i(TAG, "Repository取消下载: taskId=$taskId")
             downloadEngine.cancelDownload(taskId)
-            Log.i(TAG, "Repository下载已取消: taskId=$taskId")
         } catch (e: Exception) {
-            Log.e(TAG, "Repository取消下载失败: taskId=$taskId, error=${e.message}")
-            // 即使取消失败，仍继续删除流程
+            Log.e(TAG, "取消下载失败: ${e.message}")
         }
         
         // 删除文件
         task?.let {
             val file = File(it.filePath)
             if (file.exists()) {
-                Log.i(TAG, "Repository删除文件: ${file.absolutePath}")
                 file.delete()
             }
         }
         
         // 删除数据库记录
-        Log.i(TAG, "Repository删除数据库记录: taskId=$taskId")
         partDao.deletePartsByTaskId(taskId)
         taskDao.deleteTaskById(taskId)
-        Log.i(TAG, "Repository删除任务完成: taskId=$taskId")
     }
     
     /**
@@ -309,34 +296,24 @@ class DownloadRepository(
      * 重试失败的任务或重新下载已完成的任务
      */
     suspend fun retryFailedTask(taskId: Long) {
-        Log.i(TAG, "重试/重新下载任务: taskId=$taskId")
-        val task = taskDao.getTaskById(taskId)
-        
-        if (task == null) {
-            Log.e(TAG, "任务不存在: taskId=$taskId")
-            return
-        }
+        val task = taskDao.getTaskById(taskId) ?: return
         
         // 如果是已完成的任务,需要重置下载数据
         if (task.status == DownloadStatus.COMPLETED) {
-            Log.i(TAG, "重新下载已完成的任务: taskId=$taskId")
-            
             // 先取消可能存在的下载任务
             try {
                 downloadEngine.cancelDownload(taskId)
             } catch (e: Exception) {
-                // 忽略取消失败的错误
+                // 忽略
             }
             
             // 删除已下载的文件
             val file = File(task.filePath)
             if (file.exists()) {
-                Log.i(TAG, "删除已存在的文件: ${file.absolutePath}")
                 file.delete()
             }
             
             // 删除所有分片记录
-            Log.i(TAG, "删除分片记录: taskId=$taskId")
             partDao.deletePartsByTaskId(taskId)
             
             // 重置任务的下载数据
@@ -348,17 +325,14 @@ class DownloadRepository(
                 errorMessage = null,
                 updatedAt = System.currentTimeMillis()
             )
-            Log.i(TAG, "重置任务数据: taskId=$taskId")
             taskDao.updateTask(resetTask)
         } else {
             // 对于失败或其他状态的任务,只需清除错误消息并更新状态
-            Log.i(TAG, "重试失败的任务: taskId=$taskId, status=${task.status}")
             taskDao.clearErrorMessage(taskId)
             taskDao.updateStatus(taskId, DownloadStatus.PENDING)
         }
         
         // 启动下载
-        Log.i(TAG, "启动下载: taskId=$taskId")
         downloadEngine.startDownload(taskId)
     }
     

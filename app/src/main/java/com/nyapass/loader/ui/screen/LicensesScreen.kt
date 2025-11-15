@@ -44,7 +44,7 @@ fun LicensesScreen(
             }
             "${packageInfo.versionName} ($versionCode)"
         } catch (e: Exception) {
-            "1.2.0 (3)"
+            "1.2.5 (4)"
         }
     }
     
@@ -298,6 +298,7 @@ fun LicenseCard(library: OpenSourceLibrary) {
 /**
  * 开源库数据类
  */
+@androidx.compose.runtime.Immutable
 data class OpenSourceLibrary(
     val name: String,
     val description: String,

@@ -3,6 +3,8 @@
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.nyapass.loader.data.database.AppDatabase
@@ -10,68 +12,84 @@ import com.nyapass.loader.data.preferences.AppPreferences
 import com.nyapass.loader.download.DownloadEngine
 import com.nyapass.loader.repository.DownloadRepository
 import com.nyapass.loader.util.LocaleHelper
+import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
-import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 /**
  * Application类
  * 初始化全局依赖
+ * 使用 Hilt 进行依赖注入
+ * 
+ * 优化启动性能：
+ * - 关键组件立即初始化
+ * - 非关键组件延迟到后台线程初始化
  * 
  * @author 小花生FMR
  * @version 1.0.0
  */
+@HiltAndroidApp
 class LoaderApplication : Application() {
     
-    // 数据库实例
-    val database: AppDatabase by lazy {
-        AppDatabase.getDatabase(this)
-    }
+    // 使用 Hilt 注入依赖
+    @Inject
+    lateinit var database: AppDatabase
     
-    // 应用设置
-    val appPreferences: AppPreferences by lazy {
-        AppPreferences(this)
-    }
+    @Inject
+    lateinit var appPreferences: AppPreferences
     
-    // OkHttp客户端
-    val okHttpClient: OkHttpClient by lazy {
-        OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .build()
-    }
+    @Inject
+    lateinit var okHttpClient: OkHttpClient
     
-    // 下载引擎
-    val downloadEngine: DownloadEngine by lazy {
-        DownloadEngine(
-            context = this,
-            taskDao = database.downloadTaskDao(),
-            partDao = database.downloadPartDao(),
-            okHttpClient = okHttpClient
-        )
-    }
+    @Inject
+    lateinit var downloadEngine: DownloadEngine
     
-    // Repository
-    val downloadRepository: DownloadRepository by lazy {
-        DownloadRepository(
-            context = this,
-            taskDao = database.downloadTaskDao(),
-            partDao = database.downloadPartDao(),
-            downloadEngine = downloadEngine,
-            okHttpClient = okHttpClient
-        )
-    }
+    @Inject
+    lateinit var downloadRepository: DownloadRepository
     
     override fun onCreate() {
         super.onCreate()
         instance = this
         
-        // 应用语言设置
-        applyLanguageSettings()
+        // 【关键组件】立即初始化 - 必须在主线程完成
+        initCriticalComponents()
         
-        // 根据用户设置初始化 Firebase
-        initFirebaseIfEnabled()
+        // 【非关键组件】延迟到后台线程初始化 - 优化启动时间
+        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
+            initNonCriticalComponents()
+        }
+    }
+    
+    /**
+     * 初始化关键组件（主线程）
+     * 这些组件必须在应用启动时立即可用
+     */
+    private fun initCriticalComponents() {
+        try {
+            // 应用语言设置（必须在主线程，影响 UI）
+            applyLanguageSettings()
+            
+            Log.i(TAG, "✅ 关键组件初始化完成")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 关键组件初始化失败", e)
+        }
+    }
+    
+    /**
+     * 初始化非关键组件（后台线程）
+     * 这些组件可以延迟初始化，不影响应用启动
+     */
+    private fun initNonCriticalComponents() {
+        try {
+            // Firebase 初始化（可延迟，用于统计分析）
+            initFirebaseIfEnabled()
+            
+            Log.i(TAG, "✅ 非关键组件初始化完成")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 非关键组件初始化失败", e)
+        }
     }
     
     override fun attachBaseContext(base: Context) {

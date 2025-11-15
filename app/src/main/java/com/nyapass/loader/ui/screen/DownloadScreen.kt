@@ -1,6 +1,5 @@
 ﻿package com.nyapass.loader.ui.screen
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,13 +8,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -26,11 +23,9 @@ import androidx.compose.ui.unit.dp
 import com.nyapass.loader.R
 import com.nyapass.loader.ui.components.AddDownloadDialog
 import com.nyapass.loader.ui.components.DownloadTaskItem
-import com.nyapass.loader.ui.components.formatFileSize
-import com.nyapass.loader.ui.components.formatSpeed
+import com.nyapass.loader.ui.screen.components.*
 import com.nyapass.loader.viewmodel.DownloadViewModel
 import com.nyapass.loader.viewmodel.TaskFilter
-import com.nyapass.loader.viewmodel.TotalProgress
 import kotlinx.coroutines.launch
 
 /**
@@ -67,17 +62,23 @@ fun DownloadScreen(
         }
     }
     
-    // 处理侧边栏的返回事件，确保预测性返回手势生效
-    if (drawerState.isOpen) {
+    // 处理返回键的优先级：搜索 > 侧边栏 > 过滤器
+    // 1. 如果正在搜索，返回键关闭搜索
+    if (uiState.isSearching) {
+        androidx.activity.compose.BackHandler {
+            viewModel.stopSearch()
+        }
+    }
+    // 2. 如果侧边栏打开，返回键关闭侧边栏
+    else if (drawerState.isOpen) {
         androidx.activity.compose.BackHandler {
             scope.launch { drawerState.close() }
         }
     }
-    
-    // 处理搜索栏的返回事件
-    if (uiState.isSearching) {
+    // 3. 如果过滤器不是"全部"，返回键重置为"全部"
+    else if (uiState.filter != TaskFilter.ALL) {
         androidx.activity.compose.BackHandler {
-            viewModel.stopSearch()
+            viewModel.updateFilter(TaskFilter.ALL)
         }
     }
 
@@ -186,6 +187,7 @@ fun DownloadScreen(
                         }
                     } else {
                         // 任务列表
+                        // 性能优化：使用 key 参数、contentType，减少不必要的重组
                         LazyColumn(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
@@ -199,7 +201,8 @@ fun DownloadScreen(
                         ) {
                             items(
                                 items = tasks,
-                                key = { it.task.id }
+                                key = { it.task.id },
+                                contentType = { "DownloadTaskItem" }
                             ) { taskWithProgress ->
                                 DownloadTaskItem(
                                     taskWithProgress = taskWithProgress,
@@ -248,241 +251,6 @@ fun DownloadScreen(
                 }
             }
         }
-    }
-}
-
-/**
- * 侧滑导航抽屉内容
- */
-@Composable
-fun NavigationDrawerContent(
-    currentFilter: TaskFilter,
-    onFilterSelected: (TaskFilter) -> Unit,
-    onClearCompleted: () -> Unit,
-    onClearFailed: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenLicenses: () -> Unit
-) {
-    ModalDrawerSheet {
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(280.dp)
-                .statusBarsPadding()  // 处理状态栏沉浸
-        ) {
-            // 抽屉头部
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .padding(16.dp),
-                contentAlignment = Alignment.BottomStart
-            ) {
-                Column {
-                    Icon(
-                        imageVector = Icons.Default.CloudDownload,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.multithreaded_downloader),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            
-            HorizontalDivider()
-            
-            // 过滤选项
-            Text(
-                text = stringResource(R.string.task_filter),
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.AutoMirrored.Filled.List, null) },
-                label = { Text(stringResource(R.string.all)) },
-                selected = currentFilter == TaskFilter.ALL,
-                onClick = { onFilterSelected(TaskFilter.ALL) },
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.Download, null) },
-                label = { Text(stringResource(R.string.downloading)) },
-                selected = currentFilter == TaskFilter.DOWNLOADING,
-                onClick = { onFilterSelected(TaskFilter.DOWNLOADING) },
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.CheckCircle, null) },
-                label = { Text(stringResource(R.string.completed)) },
-                selected = currentFilter == TaskFilter.COMPLETED,
-                onClick = { onFilterSelected(TaskFilter.COMPLETED) },
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.Pause, null) },
-                label = { Text(stringResource(R.string.paused)) },
-                selected = currentFilter == TaskFilter.PAUSED,
-                onClick = { onFilterSelected(TaskFilter.PAUSED) },
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.Error, null) },
-                label = { Text(stringResource(R.string.failed)) },
-                selected = currentFilter == TaskFilter.FAILED,
-                onClick = { onFilterSelected(TaskFilter.FAILED) },
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            
-            // 清理操作
-            Text(
-                text = stringResource(R.string.task_management),
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.Clear, null) },
-                label = { Text(stringResource(R.string.clear_completed)) },
-                selected = false,
-                onClick = onClearCompleted,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.Clear, null) },
-                label = { Text(stringResource(R.string.clear_failed)) },
-                selected = false,
-                onClick = onClearFailed,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            
-            // 更多选项
-            Text(
-                text = stringResource(R.string.more),
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            NavigationDrawerItem(
-                icon = { Icon(Icons.Default.Settings, null) },
-                label = { Text(stringResource(R.string.settings)) },
-                selected = false,
-                onClick = onOpenSettings,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-        }
-    }
-}
-
-/**
- * 空状态组件
- */
-@Composable
-fun EmptyState(
-    modifier: Modifier = Modifier,
-    filter: TaskFilter
-) {
-    Column(
-        modifier = modifier.padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = when (filter) {
-                TaskFilter.ALL -> Icons.Default.CloudDownload
-                TaskFilter.DOWNLOADING -> Icons.Default.Download
-                TaskFilter.COMPLETED -> Icons.Default.CheckCircle
-                TaskFilter.PAUSED -> Icons.Default.Pause
-                TaskFilter.FAILED -> Icons.Default.Error
-            },
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = stringResource(
-                when (filter) {
-                    TaskFilter.ALL -> R.string.no_tasks
-                    TaskFilter.DOWNLOADING -> R.string.no_downloading_tasks
-                    TaskFilter.COMPLETED -> R.string.no_completed_tasks
-                    TaskFilter.PAUSED -> R.string.no_paused_tasks
-                    TaskFilter.FAILED -> R.string.no_failed_tasks
-                }
-            ),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = stringResource(R.string.tap_to_create),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-        )
-    }
-}
-
-/**
- * 搜索无结果状态
- */
-@Composable
-fun SearchEmptyState(
-    modifier: Modifier = Modifier,
-    searchQuery: String
-) {
-    Column(
-        modifier = modifier.padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.SearchOff,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = stringResource(R.string.no_search_results),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = "「$searchQuery」",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-        )
     }
 }
 
@@ -554,99 +322,3 @@ fun SearchTopBar(
         windowInsets = TopAppBarDefaults.windowInsets
     )
 }
-
-/**
- * 总下载进度条组件
- */
-@Composable
-fun TotalProgressBar(
-    totalProgress: TotalProgress
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 3.dp,
-        shadowElevation = 8.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Download,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.total_download_progress),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                
-                Text(
-                    text = stringResource(R.string.tasks_count, totalProgress.activeTaskCount),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // 进度条
-            LinearProgressIndicator(
-                progress = { totalProgress.progress / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(MaterialTheme.shapes.small),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // 进度信息
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "${formatFileSize(totalProgress.downloadedSize)} / ${formatFileSize(totalProgress.totalSize)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (totalProgress.totalSpeed > 0) {
-                        Text(
-                            text = "${formatSpeed(totalProgress.totalSpeed)}/s",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    
-                    Text(
-                        text = "${String.format("%.1f", totalProgress.progress)}%",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-

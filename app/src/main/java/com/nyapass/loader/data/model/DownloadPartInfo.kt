@@ -1,11 +1,13 @@
 ﻿package com.nyapass.loader.data.model
 
+import androidx.compose.runtime.Immutable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
  * 下载分片信息，用于多线程下载和断点续传
  */
+@Immutable
 @Entity(tableName = "download_parts")
 data class DownloadPartInfo(
     @PrimaryKey(autoGenerate = true)

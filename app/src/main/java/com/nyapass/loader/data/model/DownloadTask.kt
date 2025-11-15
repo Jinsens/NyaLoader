@@ -1,8 +1,10 @@
 ﻿package com.nyapass.loader.data.model
 
+import androidx.compose.runtime.Immutable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+@Immutable
 @Entity(tableName = "download_tasks")
 data class DownloadTask(
     @PrimaryKey(autoGenerate = true)

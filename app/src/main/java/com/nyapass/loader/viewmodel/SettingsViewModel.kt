@@ -1,5 +1,6 @@
 ﻿package com.nyapass.loader.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nyapass.loader.data.preferences.AppPreferences
@@ -8,13 +9,17 @@ import com.nyapass.loader.data.preferences.Language
 import com.nyapass.loader.data.preferences.SaveLocation
 import com.nyapass.loader.data.preferences.ThemeColor
 import com.nyapass.loader.data.preferences.UserAgentPreset
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * 设置ViewModel
+ * 使用 Hilt 进行依赖注入
  */
-class SettingsViewModel(
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
     private val preferences: AppPreferences
 ) : ViewModel() {
     
@@ -225,6 +230,7 @@ class SettingsViewModel(
 /**
  * 设置UI状态
  */
+@Immutable
 data class SettingsUiState(
     val showColorPicker: Boolean = false,
     val showUserAgentDialog: Boolean = false,

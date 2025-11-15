@@ -357,6 +357,7 @@ class AppPreferences(context: Context) {
 /**
  * User-Agent预设
  */
+@androidx.compose.runtime.Immutable
 @kotlinx.serialization.Serializable
 data class UserAgentPreset(
     val name: String,

@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
     id("kotlin-kapt")
     id("com.google.gms.google-services")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -15,14 +16,14 @@ android {
         applicationId = "com.nyapass.loader"
         minSdk = 24
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.2.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
 
-    /* 与 defaultConfig / buildTypes 平级 */
+  
     splits {
         abi {
             isEnable = true
@@ -74,6 +75,7 @@ dependencies {
     /* ---------------- Core ---------------- */
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-process:2.9.4")
     implementation("androidx.activity:activity-compose:1.11.0")
     implementation("androidx.fragment:fragment-ktx:1.8.9")
 
@@ -117,6 +119,12 @@ dependencies {
 
     /* ---------------- Guava ---------------- */
     implementation("com.google.guava:guava:33.5.0-android")
+
+    /* ---------------- Hilt ---------------- */
+    implementation("com.google.dagger:hilt-android:2.57.2")
+    kapt("com.google.dagger:hilt-android-compiler:2.57.2")
+    // Hilt ViewModel
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
 
     /* ---------------- Test ---------------- */
     testImplementation("junit:junit:4.13.2")

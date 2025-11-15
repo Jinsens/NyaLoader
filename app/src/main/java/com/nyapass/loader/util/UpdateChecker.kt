@@ -2,6 +2,7 @@ package com.nyapass.loader.util
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,6 +16,7 @@ import java.io.IOException
  * @author 小花生FMR
  * @version 1.0.0
  */
+@Immutable
 data class VersionInfo(
     val versionCode: Int,
     val versionName: String,
