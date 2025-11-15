@@ -153,11 +153,21 @@ class UpdateHandler(private val activity: ComponentActivity) {
             }
             
             // 注册广播接收器
-            activity.registerReceiver(
-                onDownloadComplete,
-                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                Context.RECEIVER_EXPORTED
-            )
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                // Android 8.0+ (API 26+)
+                activity.registerReceiver(
+                    onDownloadComplete,
+                    IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                    Context.RECEIVER_EXPORTED
+                )
+            } else {
+                // Android 7.0-7.1 (API 24-25)
+                @Suppress("UnspecifiedRegisterReceiverFlag")
+                activity.registerReceiver(
+                    onDownloadComplete,
+                    IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+                )
+            }
             
         } catch (e: Exception) {
             Toast.makeText(

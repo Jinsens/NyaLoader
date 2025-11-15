@@ -69,8 +69,8 @@ class LoaderApplication : Application() {
     private fun initCriticalComponents() {
         try {
             // 应用语言设置（必须在主线程，影响 UI）
-            applyLanguageSettings()
-            
+        applyLanguageSettings()
+        
             Log.i(TAG, "✅ 关键组件初始化完成")
         } catch (e: Exception) {
             Log.e(TAG, "❌ 关键组件初始化失败", e)
@@ -84,7 +84,7 @@ class LoaderApplication : Application() {
     private fun initNonCriticalComponents() {
         try {
             // Firebase 初始化（可延迟，用于统计分析）
-            initFirebaseIfEnabled()
+        initFirebaseIfEnabled()
             
             Log.i(TAG, "✅ 非关键组件初始化完成")
         } catch (e: Exception) {
