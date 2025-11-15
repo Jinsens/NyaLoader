@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.nyapass.loader.MainActivity
+import com.nyapass.loader.R
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -58,31 +59,29 @@ class DownloadNotificationService : Service() {
      * 创建通知渠道
      */
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // 下载进度通知渠道
-            val progressChannel = NotificationChannel(
-                CHANNEL_ID_PROGRESS,
-                "下载进度",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "显示文件下载进度"
-                setShowBadge(false)
-            }
-            
-            // 下载完成通知渠道
-            val completeChannel = NotificationChannel(
-                CHANNEL_ID_COMPLETE,
-                "下载完成",
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "下载完成提醒"
-                setShowBadge(true)
-            }
-            
-            notificationManager.createNotificationChannels(
-                listOf(progressChannel, completeChannel)
-            )
+        // 下载进度通知渠道
+        val progressChannel = NotificationChannel(
+            CHANNEL_ID_PROGRESS,
+            getString(R.string.notification_channel_progress),
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = getString(R.string.notification_channel_progress_desc)
+            setShowBadge(false)
         }
+        
+        // 下载完成通知渠道
+        val completeChannel = NotificationChannel(
+            CHANNEL_ID_COMPLETE,
+            getString(R.string.notification_channel_complete),
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = getString(R.string.notification_channel_complete_desc)
+            setShowBadge(true)
+        }
+        
+        notificationManager.createNotificationChannels(
+            listOf(progressChannel, completeChannel)
+        )
     }
     
     /**
@@ -91,7 +90,7 @@ class DownloadNotificationService : Service() {
     private fun startForegroundService() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID_PROGRESS)
             .setContentTitle("NyaLoader")
-            .setContentText("下载服务运行中")
+            .setContentText(getString(R.string.notification_service_running))
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -105,7 +104,7 @@ class DownloadNotificationService : Service() {
      */
     private fun updateProgress(intent: Intent) {
         val taskId = intent.getLongExtra(EXTRA_TASK_ID, -1)
-        val fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: "未知文件"
+        val fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: getString(R.string.notification_unknown_file)
         val progress = intent.getIntExtra(EXTRA_PROGRESS, 0)
         @Suppress("UNUSED_VARIABLE")
         val downloadedSize = intent.getLongExtra(EXTRA_DOWNLOADED_SIZE, 0)
@@ -136,7 +135,7 @@ class DownloadNotificationService : Service() {
                 String.format("%.2f KB/s", speed / 1024.0)
             }
         } else {
-            "计算中..."
+            getString(R.string.notification_calculating)
         }
         
         val notification = NotificationCompat.Builder(this, CHANNEL_ID_PROGRESS)
@@ -158,7 +157,7 @@ class DownloadNotificationService : Service() {
      */
     private fun showCompleteNotification(intent: Intent) {
         val taskId = intent.getLongExtra(EXTRA_TASK_ID, -1)
-        val fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: "未知文件"
+        val fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: getString(R.string.notification_unknown_file)
         
         if (taskId == -1L) return
         
@@ -172,7 +171,7 @@ class DownloadNotificationService : Service() {
         )
         
         val notification = NotificationCompat.Builder(this, CHANNEL_ID_COMPLETE)
-            .setContentTitle("下载完成")
+            .setContentTitle(getString(R.string.notification_download_complete))
             .setContentText(fileName)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
             .setAutoCancel(true)
@@ -189,8 +188,8 @@ class DownloadNotificationService : Service() {
      */
     private fun showFailedNotification(intent: Intent) {
         val taskId = intent.getLongExtra(EXTRA_TASK_ID, -1)
-        val fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: "未知文件"
-        val error = intent.getStringExtra(EXTRA_ERROR) ?: "未知错误"
+        val fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: getString(R.string.notification_unknown_file)
+        val error = intent.getStringExtra(EXTRA_ERROR) ?: getString(R.string.notification_unknown_error)
         
         if (taskId == -1L) return
         
@@ -204,7 +203,7 @@ class DownloadNotificationService : Service() {
         )
         
         val notification = NotificationCompat.Builder(this, CHANNEL_ID_COMPLETE)
-            .setContentTitle("下载失败")
+            .setContentTitle(getString(R.string.notification_download_failed))
             .setContentText("$fileName - $error")
             .setSmallIcon(android.R.drawable.stat_notify_error)
             .setAutoCancel(true)
@@ -243,11 +242,7 @@ class DownloadNotificationService : Service() {
             val intent = Intent(context, DownloadNotificationService::class.java).apply {
                 action = ACTION_START_FOREGROUND
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            context.startForegroundService(intent)
         }
         
         /**

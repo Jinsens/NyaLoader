@@ -7,6 +7,7 @@
 package com.nyapass.loader
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -29,10 +30,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.nyapass.loader.data.preferences.AppPreferences
 import com.nyapass.loader.data.preferences.Language
+import com.nyapass.loader.ui.components.FirebasePermissionDialog
 import com.nyapass.loader.ui.components.UpdateDialog
 import com.nyapass.loader.ui.screen.DownloadScreen
 import com.nyapass.loader.ui.screen.LicensesScreen
 import com.nyapass.loader.ui.screen.SettingsScreen
+import com.nyapass.loader.ui.screen.StatisticsScreen
+import com.nyapass.loader.ui.screen.WebViewScreen
+import com.nyapass.loader.viewmodel.StatisticsState
 import com.nyapass.loader.ui.theme.getColorScheme
 import com.nyapass.loader.util.*
 import com.nyapass.loader.viewmodel.DownloadViewModel
@@ -41,6 +46,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.Job
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
@@ -60,6 +67,7 @@ class MainActivity : ComponentActivity() {
     
     private var selectedFolderPath by mutableStateOf<String?>(null) // 设置界面的持久化路径
     private var tempFolderPath by mutableStateOf<String?>(null) // 创建下载的临时路径
+    private var intentUrl by mutableStateOf<String?>(null) // 从外部 Intent 接收的下载链接
     
     // 设置界面的文件夹选择器（持久化）
     private val settingsFolderPickerLauncher = registerForActivityResult(
@@ -73,16 +81,14 @@ class MainActivity : ComponentActivity() {
                 android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             
-            // 将Uri转换为路径（用于显示）
-            val path = it.path?.replace("/tree/primary:", "/storage/emulated/0/") ?: it.toString()
-            selectedFolderPath = path
+            val rawUri = it.toString()
+            selectedFolderPath = rawUri
             
-            // 持久化保存到设置
-            appPreferences.saveCustomSavePath(path)
+            appPreferences.saveCustomSavePath(rawUri)
             
             Toast.makeText(
                 this,
-                "已保存默认目录: $path",
+                getString(R.string.directory_saved_toast, PathFormatter.formatForDisplay(this, rawUri) ?: rawUri),
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -100,15 +106,12 @@ class MainActivity : ComponentActivity() {
                 android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             
-            // 将Uri转换为路径（用于显示）
-            val path = it.path?.replace("/tree/primary:", "/storage/emulated/0/") ?: it.toString()
-            
-            // 仅设置临时路径，不持久化
-            tempFolderPath = path
+            val rawUri = it.toString()
+            tempFolderPath = rawUri
             
             Toast.makeText(
                 this,
-                "已选择临时目录: $path",
+                getString(R.string.directory_selected_toast, PathFormatter.formatForDisplay(this, rawUri) ?: rawUri),
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -124,26 +127,72 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // 设置沉浸式状态栏和导航栏
         setupEdgeToEdge()
-        
+
         // 初始化Handler
         permissionHandler = PermissionHandler(this)
         updateHandler = UpdateHandler(this)
         clipboardHandler = ClipboardHandler(this)
-        
+
         permissionHandler.initialize()
-        
+
         // 从设置中恢复最近一次处理的剪贴板URL，避免重启应用后重复弹窗
         clipboardHandler.setLastProcessedUrl(appPreferences.getLastClipboardUrl() ?: "")
-        
+
         // 请求权限
         permissionHandler.requestPermissionsIfNeeded()
-        
+
+        // 处理外部 Intent（系统下载器功能）
+        handleIntent(intent)
+
         setContent {
             MainContent()
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // 处理新的 Intent（应用已在前台时）
+        handleIntent(intent)
+    }
+
+    /**
+     * 处理外部 Intent，提取下载链接
+     */
+    private fun handleIntent(intent: Intent?) {
+        intent ?: return
+
+        val url: String? = when (intent.action) {
+            Intent.ACTION_VIEW -> {
+                // 从浏览器或其他应用打开的链接
+                intent.dataString
+            }
+            Intent.ACTION_SEND -> {
+                // 通过分享功能发送的文本
+                if (intent.type == "text/plain") {
+                    intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
+                        // 提取文本中的 URL
+                        extractUrlFromText(text)
+                    }
+                } else null
+            }
+            else -> null
+        }
+
+        if (!url.isNullOrBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
+            intentUrl = url
+            android.util.Log.i("MainActivity", "从 Intent 接收到下载链接: $url")
+        }
+    }
+
+    /**
+     * 从文本中提取 URL
+     */
+    private fun extractUrlFromText(text: String): String? {
+        val urlPattern = Regex("https?://[^\\s]+")
+        return urlPattern.find(text)?.value
     }
     
     /**
@@ -182,7 +231,7 @@ class MainActivity : ComponentActivity() {
         // 当语言变化时重启Activity
         LaunchedEffect(language) {
             if (previousLanguage != null && previousLanguage != language) {
-                Toast.makeText(this@MainActivity, "语言已更改，请稍等", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, getString(R.string.language_changed_toast), Toast.LENGTH_SHORT).show()
                 kotlinx.coroutines.delay(500)
                 recreate()
             }
@@ -252,10 +301,17 @@ class MainActivity : ComponentActivity() {
         }
         
         // 当默认保存位置改为自定义且需要选择路径时
-        LaunchedEffect(defaultSaveLocation) {
-            if (defaultSaveLocation == com.nyapass.loader.data.preferences.SaveLocation.CUSTOM && customSavePath == null) {
+        // 添加标志避免应用启动时自动触发
+        var hasCheckedInitialPath by remember { mutableStateOf(false) }
+        LaunchedEffect(defaultSaveLocation, customSavePath) {
+            // 只有在用户主动切换到自定义位置且路径为空时才提示选择
+            // 忽略应用启动时的首次检查
+            if (hasCheckedInitialPath &&
+                defaultSaveLocation == com.nyapass.loader.data.preferences.SaveLocation.CUSTOM &&
+                customSavePath == null) {
                 settingsFolderPickerLauncher.launch(null)
             }
+            hasCheckedInitialPath = true
         }
         
         // 更新selectedFolderPath为设置中的自定义路径
@@ -293,6 +349,8 @@ class MainActivity : ComponentActivity() {
                     settingsViewModel = settingsViewModel,
                     persistentFolderPath = selectedFolderPath,
                     tempFolderPath = tempFolderPath,
+                    intentUrl = intentUrl,
+                    onIntentUrlConsumed = { intentUrl = null },
                     onSelectPersistentFolder = { settingsFolderPickerLauncher.launch(null) },
                     onSelectTempFolder = { tempFolderPickerLauncher.launch(null) },
                     onResetTempFolder = { tempFolderPath = null },
@@ -332,6 +390,8 @@ fun AppNavigation(
     settingsViewModel: SettingsViewModel,
     persistentFolderPath: String?,
     tempFolderPath: String?,
+    intentUrl: String?,
+    onIntentUrlConsumed: () -> Unit,
     onSelectPersistentFolder: () -> Unit,
     onSelectTempFolder: () -> Unit,
     onResetTempFolder: () -> Unit,
@@ -343,46 +403,108 @@ fun AppNavigation(
     val context = androidx.compose.ui.platform.LocalContext.current
     val activity = context as? MainActivity
     val app = context.applicationContext as LoaderApplication
-    
+
+    // 使用受管理的协程作用域，自动处理生命周期
+    val coroutineScope = rememberCoroutineScope()
+
     // 收集剪贴板监听设置
     val clipboardEnabled by app.appPreferences.clipboardMonitorEnabled.collectAsStateWithLifecycle()
     val hasShownTip by app.appPreferences.hasShownClipboardTip.collectAsStateWithLifecycle()
-    
+
+    // 收集用户配置的默认线程数
+    val defaultThreadCount by app.appPreferences.defaultThreadCount.collectAsStateWithLifecycle()
+
     // 对话框状态
     var showSimpleDialog by remember { mutableStateOf(false) }
     var showClipboardTip by remember { mutableStateOf(false) }
     var clipboardUrl by remember { mutableStateOf("") }
-    
+
+    // 处理外部 Intent 传入的 URL（系统下载器功能）
+    LaunchedEffect(intentUrl) {
+        if (!intentUrl.isNullOrBlank()) {
+            clipboardUrl = intentUrl
+            showSimpleDialog = true
+            onIntentUrlConsumed()
+        }
+    }
+
+    // 使用 rememberUpdatedState 捕获最新状态，避免闭包问题
+    val currentHasShownTip by rememberUpdatedState(hasShownTip)
+    val currentClipboardEnabled by rememberUpdatedState(clipboardEnabled)
+
     // 监听生命周期，当应用回到前台时检查剪贴板
     val lifecycleOwner = LocalLifecycleOwner.current
-    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
-    
-    // 使用 LaunchedEffect 立即响应生命周期变化
-    LaunchedEffect(lifecycleState, hasShownTip, clipboardEnabled) {
-        if (lifecycleState == Lifecycle.State.RESUMED) {
-            // 首次使用时显示提示
-            if (!hasShownTip) {
-                showClipboardTip = true
-                return@LaunchedEffect
-            }
-            
-            // 如果未启用剪贴板监听，跳过
-            if (!clipboardEnabled) {
-                return@LaunchedEffect
-            }
-            
-            // 检查剪贴板（在IO线程执行）
-            withContext(Dispatchers.IO) {
-                clipboardHandler.checkClipboardForUrl()?.let { url ->
-                    withContext(Dispatchers.Main) {
-                        // 持久化保存
-                        app.appPreferences.saveLastClipboardUrl(clipboardHandler.getLastProcessedUrl())
-                        // 显示对话框
-                        clipboardUrl = url
-                        showSimpleDialog = true
+
+    // 使用 DisposableEffect 监听生命周期事件，只依赖 lifecycleOwner
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            // 当生命周期变为 RESUMED（从后台切换到前台）时检查剪贴板
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                // 首次使用时显示提示（使用 currentHasShownTip 获取最新值）
+                if (!currentHasShownTip) {
+                    showClipboardTip = true
+                    return@LifecycleEventObserver
+                }
+
+                // 如果未启用剪贴板监听，跳过（使用 currentClipboardEnabled 获取最新值）
+                if (!currentClipboardEnabled) {
+                    return@LifecycleEventObserver
+                }
+
+                // 使用受管理的协程作用域执行剪贴板检测
+                coroutineScope.launch(Dispatchers.IO) {
+                    // 检查协程是否已被取消
+                    if (currentCoroutineContext()[Job]?.isActive == false) return@launch
+
+                    // 检查剪贴板（智能检测）
+                    val result = clipboardHandler.checkClipboardForUrl()
+
+                    // 再次检查协程状态
+                    if (currentCoroutineContext()[Job]?.isActive == false) return@launch
+
+                    when (result) {
+                        is com.nyapass.loader.util.ClipboardCheckResult.DirectDownload -> {
+                            // 有明显文件扩展名，直接弹窗
+                            withContext(Dispatchers.Main) {
+                                app.appPreferences.saveLastClipboardUrl(clipboardHandler.getLastProcessedUrl())
+                                clipboardUrl = result.url
+                                showSimpleDialog = true
+                            }
+                        }
+
+                        is com.nyapass.loader.util.ClipboardCheckResult.NeedsValidation -> {
+                            // 检查协程状态后再进行网络请求
+                            if (currentCoroutineContext()[Job]?.isActive == false) return@launch
+
+                            // 复杂参数链接，需要验证
+                            val isDownload = clipboardHandler.validateDownloadUrl(result.url)
+
+                            // 网络请求后再次检查协程状态
+                            if (currentCoroutineContext()[Job]?.isActive == false) return@launch
+
+                            if (isDownload) {
+                                withContext(Dispatchers.Main) {
+                                    app.appPreferences.saveLastClipboardUrl(clipboardHandler.getLastProcessedUrl())
+                                    clipboardUrl = result.url
+                                    showSimpleDialog = true
+                                }
+                            }
+                            // 如果验证失败，不弹窗
+                        }
+
+                        is com.nyapass.loader.util.ClipboardCheckResult.NoUrl,
+                        is com.nyapass.loader.util.ClipboardCheckResult.AlreadyProcessed -> {
+                            // 没有URL或已处理过，不做任何操作
+                        }
                     }
                 }
             }
+        }
+        
+        lifecycleOwner.lifecycle.addObserver(observer)
+        
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
     
@@ -397,13 +519,13 @@ fun AppNavigation(
                 app.appPreferences.saveClipboardMonitorEnabled(true)
                 app.appPreferences.saveHasShownClipboardTip(true)
                 showClipboardTip = false
-                Toast.makeText(context, "已启用智能剪贴板监听", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.clipboard_enabled_toast), Toast.LENGTH_SHORT).show()
             },
             onDisable = {
                 app.appPreferences.saveClipboardMonitorEnabled(false)
                 app.appPreferences.saveHasShownClipboardTip(true)
                 showClipboardTip = false
-                Toast.makeText(context, "可在设置中随时开启", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.clipboard_can_enable_later), Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -420,7 +542,7 @@ fun AppNavigation(
                 downloadViewModel.createDownloadTask(
                     url = url,
                     fileName = fileName,
-                    threadCount = 32,
+                    threadCount = defaultThreadCount,
                     saveToPublicDir = true,
                     customPath = persistentFolderPath,
                     userAgent = null
@@ -450,7 +572,42 @@ fun AppNavigation(
                 tempFolderPath = tempFolderPath,
                 onResetTempFolder = onResetTempFolder,
                 onOpenSettings = { navController.navigate("settings") },
-                onOpenLicenses = { }
+                onOpenLicenses = { },
+                onOpenWebView = { navController.navigate("webview") },
+                onOpenStatistics = { navController.navigate("statistics") }
+            )
+        }
+
+        composable(
+            route = "webview",
+            enterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            exitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popEnterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popExitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            }
+        ) {
+            WebViewScreen(
+                viewModel = downloadViewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -521,64 +678,49 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() }
             )
         }
+
+        composable(
+            route = "statistics",
+            enterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            exitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popEnterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popExitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            }
+        ) {
+            val statisticsState by downloadViewModel.statisticsState.collectAsState()
+
+            LaunchedEffect(Unit) {
+                downloadViewModel.loadStatistics()
+            }
+
+            StatisticsScreen(
+                statistics = when (val state = statisticsState) {
+                    is StatisticsState.Success -> state.data
+                    else -> null
+                },
+                isLoading = statisticsState is StatisticsState.Loading,
+                onBackClick = { navController.popBackStack() },
+                onClearStats = { downloadViewModel.clearAllStats() }
+            )
+        }
     }
 }
-
-/**
- * Firebase 权限对话框
- */
-@Composable
-fun FirebasePermissionDialog(
-    onAccept: () -> Unit,
-    onDecline: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = { /* 不允许点击外部关闭 */ },
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Analytics,
-                contentDescription = "Firebase",
-                tint = MaterialTheme.colorScheme.primary
-            )
-        },
-        title = {
-            Text(
-                text = stringResource(R.string.firebase_permission_title),
-                style = MaterialTheme.typography.headlineSmall
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.firebase_permission_description),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = stringResource(R.string.firebase_permission_features),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = stringResource(R.string.firebase_permission_note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        },
-        confirmButton = {
-            Button(onClick = onAccept) {
-                Text(stringResource(R.string.firebase_accept))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDecline) {
-                Text(stringResource(R.string.firebase_decline))
-            }
-        }
-    )
-}
-

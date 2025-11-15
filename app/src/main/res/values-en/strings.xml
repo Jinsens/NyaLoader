@@ -127,7 +127,10 @@
     <string name="lib_serialization_desc">Kotlin multiplatform serialization library</string>
     <string name="lib_workmanager_desc">Android background task scheduler</string>
     <string name="lib_gson_desc">Google JSON serialization library</string>
-    
+    <string name="lib_hilt_desc">Android dependency injection framework</string>
+    <string name="lib_firebase_desc">Google mobile app development platform</string>
+    <string name="lib_guava_desc">Google core Java library extensions</string>
+
     <!-- Main Screen -->
     <string name="menu">Menu</string>
     <string name="search">Search</string>
@@ -142,6 +145,10 @@
     <string name="task_management">Task Management</string>
     <string name="clear_completed">Clear Completed</string>
     <string name="clear_failed">Clear Failed</string>
+    <string name="clear_completed_dialog_title">Clear Completed Tasks</string>
+    <string name="clear_completed_dialog_message">Are you sure you want to clear all completed tasks? This action cannot be undone.</string>
+    <string name="clear_failed_dialog_title">Clear Failed Tasks</string>
+    <string name="clear_failed_dialog_message">Are you sure you want to clear all failed tasks? This action cannot be undone.</string>
     <string name="more">More</string>
     
     <!-- Empty States -->
@@ -187,6 +194,27 @@
     <string name="multithread_hint">Multithreading improves speed but uses more resources</string>
     <string name="temp_dir_hint">Temporary directory is for this download only and not saved</string>
     
+    <!-- Tags -->
+    <string name="tag_section_title">Tags</string>
+    <string name="tag_manage_button">Manage Tags</string>
+    <string name="tag_filter_all">All Tags</string>
+    <string name="tag_filter_untagged">Untagged</string>
+    <string name="tag_empty_hint">No tags yet, you can quickly create them in the sidebar.</string>
+    <string name="tag_select_hint">No tag selected, will display by current status/search criteria.</string>
+    <string name="tag_management_title">Tag Management</string>
+    <string name="tag_name_label">Tag Name</string>
+    <string name="tag_create_button">Create Tag</string>
+    <string name="tag_stats_format">%1$d tasks • %2$s</string>
+    <string name="tag_manage_dialog_title">Tag Management</string>
+    <string name="tag_create_section_title">Create Tag</string>
+    <string name="tag_edit_dialog_title">Edit Tag</string>
+    <string name="tag_delete_confirm_title">Delete Tag</string>
+    <string name="tag_delete_confirm_message">Are you sure you want to delete tag "%1$s"? Related tasks will remain.</string>
+    <string name="tag_move_up">Move Up</string>
+    <string name="tag_move_down">Move Down</string>
+    <string name="tag_edit_button">Edit Tag</string>
+    <string name="tag_delete_button">Delete Tag</string>
+    
     <!-- Simple Download Dialog -->
     <string name="download_address">Download Address</string>
     <string name="url_example">https://example.com/file.zip</string>
@@ -218,6 +246,7 @@
     <string name="download_url_copied">URL copied</string>
     <string name="download_path_copied">Path copied</string>
 
+    <string name="retry">Retry</string>
     <string name="download_redownload">Download again</string>
     <string name="download_stop_and_delete">Stop and delete</string>
     <string name="download_delete_task_title">Delete task</string>
@@ -246,5 +275,165 @@
     <string name="no_app_to_open_file">No app can open this type of file</string>
     <string name="open_file_failed">Failed to open file</string>
     <string name="choose_app_to_open">Choose app to open</string>
-</resources>
+    
+    <!-- Clipboard monitoring dialog -->
+    <string name="clipboard_monitor_title">Smart Clipboard Monitoring</string>
+    <string name="clipboard_monitor_dialog_description">NyaLoader can automatically detect download links in your clipboard</string>
+    <string name="clipboard_feature_auto_detect">Auto Detect</string>
+    <string name="clipboard_feature_auto_detect_desc">Instantly recognizes links when you open the app after copying</string>
+    <string name="clipboard_feature_smart_extract">Smart Extract</string>
+    <string name="clipboard_feature_smart_extract_desc">Automatically extracts download links from long text</string>
+    <string name="clipboard_feature_quick_download">Quick Download</string>
+    <string name="clipboard_feature_quick_download_desc">Start downloading with one tap, no manual input needed</string>
+    <string name="clipboard_monitor_tip">You can enable or disable this feature anytime in settings</string>
+    <string name="clipboard_enable">Enable Smart Monitoring</string>
+    <string name="clipboard_not_now">Not Now</string>
+    <string name="clipboard_enabled_toast">Smart clipboard monitoring enabled</string>
+    <string name="clipboard_can_enable_later">You can enable it anytime in settings</string>
+    
+    <!-- Toast messages -->
+    <string name="language_changed_toast">Language changed, please wait</string>
+    <string name="directory_saved_toast">Default directory saved: %s</string>
+    <string name="directory_selected_toast">Temporary directory selected: %s</string>
+    
+    <!-- WebView -->
+    <string name="webview_title">Browser</string>
+    <string name="webview_back">Back</string>
+    <string name="webview_forward">Forward</string>
+    <string name="webview_refresh">Refresh</string>
+    <string name="webview_cloud_game">Cloud Game</string>
+    <string name="webview_edit_url">Edit URL</string>
+    <string name="webview_url_label">Enter URL</string>
+    <string name="webview_go">Go</string>
+    <string name="webview_download_captured">Download captured: %s</string>
+    <string name="tools">Tools</string>
+    
+    <!-- Notification channels and messages -->
+    <string name="notification_channel_download">Download Notification</string>
+    <string name="notification_channel_progress">Download Progress</string>
+    <string name="notification_channel_progress_desc">Shows file download progress</string>
+    <string name="notification_channel_complete">Download Complete</string>
+    <string name="notification_channel_complete_desc">Download completion notification</string>
+    <string name="notification_service_running">Download service running</string>
+    <string name="notification_download_task">Download task notification</string>
+    <string name="notification_calculating">Calculating…</string>
+    <string name="notification_download_complete">Download Complete</string>
+    <string name="notification_download_failed">Download Failed</string>
+    <string name="notification_unknown_file">Unknown File</string>
+    <string name="notification_unknown_error">Unknown Error</string>
+    
+    <!-- Error messages -->
+    <string name="error_url_empty">URL cannot be empty</string>
+    <string name="error_tag_name_empty">Tag name cannot be empty</string>
+    <string name="error_create_task_failed">Failed to create task: %s</string>
+    <string name="error_start_download_failed">Failed to start download: %s</string>
+    <string name="error_pause_download_failed">Failed to pause download: %s</string>
+    <string name="error_resume_download_failed">Failed to resume download: %s</string>
+    <string name="error_cancel_download_failed">Failed to cancel download: %s</string>
+    <string name="error_delete_task_failed">Failed to delete task: %s</string>
+    <string name="error_retry_failed">Failed to retry: %s</string>
+    <string name="error_clear_failed">Failed to clear: %s</string>
+    <string name="error_create_tag_failed">Failed to create tag: %s</string>
+    <string name="error_delete_tag_failed">Failed to delete tag: %s</string>
+    <string name="error_update_tag_failed">Failed to update tag: %s</string>
+    <string name="error_reorder_tag_failed">Failed to reorder tag: %s</string>
+    <string name="error_batch_delete_failed">Failed to batch delete: %s</string>
+    <string name="error_batch_retry_failed">Failed to batch retry: %s</string>
+    <string name="error_update_task_tags_failed">Failed to update task tags: %s</string>
 
+    <!-- Task Tag Selection Dialog -->
+    <string name="edit_tags">Edit Tags</string>
+    <string name="task_tag_selection_title">Select Tags</string>
+    <string name="task_tag_selection_hint">Tap tags to select or deselect</string>
+    <string name="no_tags_available">No tags available, please create tags first</string>
+
+    <!-- Multi-select mode -->
+    <string name="multi_select_count">%d selected</string>
+    <string name="select_all">Select All</string>
+    <string name="invert_selection">Invert</string>
+
+    <!-- Storage space check -->
+    <string name="disk_space_insufficient">Insufficient storage space, need %s more</string>
+    <string name="disk_space_low">Low storage space, %s remaining</string>
+    <string name="disk_space_sufficient">Sufficient storage space</string>
+    <string name="disk_space_check_failed">Unable to check storage space</string>
+
+    <!-- Duplicate detection -->
+    <string name="duplicate_url_warning">A download task with this URL already exists</string>
+    <string name="duplicate_filename_warning">A file with the same name already exists</string>
+    <string name="duplicate_task_status">Status: %s</string>
+    <string name="continue_anyway">Download Anyway</string>
+    <string name="view_existing">View Existing Task</string>
+
+    <!-- Smart thread count -->
+    <string name="smart_thread_count">Smart Thread Count</string>
+    <string name="smart_thread_count_description">Auto-optimize based on network type and file size</string>
+    <string name="thread_count_auto">Auto</string>
+    <string name="current_network">Current Network</string>
+    <string name="recommended_threads">Recommended Threads</string>
+
+    <!-- Queue management and speed limit -->
+    <string name="max_concurrent_downloads">Max Concurrent Downloads</string>
+    <string name="max_concurrent_downloads_description">Maximum number of simultaneous download tasks</string>
+    <string name="download_speed_limit">Speed Limit</string>
+    <string name="download_speed_limit_description">Limit download speed to save bandwidth</string>
+    <string name="speed_limit_unlimited">Unlimited</string>
+    <string name="queue_position">Queue position: %d</string>
+    <string name="waiting_in_queue">Waiting in queue</string>
+
+    <!-- Share functionality -->
+    <string name="share_link">Share Link</string>
+    <string name="share_file">Share File</string>
+    <string name="share_files">Share %d files</string>
+    <string name="share_failed">Share failed</string>
+    <string name="file_not_exist">File does not exist</string>
+
+    <!-- Download priority -->
+    <string name="priority">Priority</string>
+    <string name="priority_low">Low</string>
+    <string name="priority_normal">Normal</string>
+    <string name="priority_high">High</string>
+    <string name="priority_changed">Priority updated</string>
+
+    <!-- Download statistics -->
+    <string name="statistics_title">Download Statistics</string>
+    <string name="statistics_overview">Overview</string>
+    <string name="total_downloads">Total</string>
+    <string name="completed_downloads">Completed</string>
+    <string name="failed_downloads">Failed</string>
+    <string name="total_downloaded_size">Total Downloaded Size</string>
+    <string name="file_type_distribution">File Type Distribution</string>
+    <string name="file_type_details">Type Details</string>
+    <string name="files_count_unit">files</string>
+    <string name="no_statistics_data">No statistics data</string>
+    <string name="file_type_video">Video</string>
+    <string name="file_type_audio">Audio</string>
+    <string name="file_type_image">Image</string>
+    <string name="file_type_document">Document</string>
+    <string name="file_type_archive">Archive</string>
+    <string name="file_type_application">Application</string>
+    <string name="file_type_other">Other</string>
+    <string name="clear_statistics">Clear Statistics</string>
+    <string name="clear_statistics_title">Clear Statistics Data</string>
+    <string name="clear_statistics_confirm">Are you sure you want to clear all download statistics? This action cannot be undone.</string>
+
+    <!-- Download exception messages -->
+    <string name="error_network_timeout">Network connection timeout, please check your network</string>
+    <string name="error_network_unavailable">Network unavailable, please check your connection</string>
+    <string name="error_connection_reset">Connection reset, please try again later</string>
+    <string name="error_server_error">Server error (HTTP %d), please try again later</string>
+    <string name="error_resource_not_found">Resource not found (404)</string>
+    <string name="error_access_denied">Access denied (403)</string>
+    <string name="error_too_many_requests">Too many requests, please try again later</string>
+    <string name="error_insufficient_storage">Insufficient storage space</string>
+    <string name="error_storage_permission_denied">Storage permission denied, please grant permission</string>
+    <string name="error_file_creation_failed">Failed to create file</string>
+    <string name="error_file_write_failed">Failed to write file</string>
+    <string name="error_file_already_exists">File already exists</string>
+    <string name="error_ssl_certificate">SSL certificate verification failed</string>
+    <string name="error_task_cancelled">Task cancelled</string>
+    <string name="error_range_not_supported">Server does not support resume</string>
+    <string name="error_part_corrupted">Part data corrupted, will re-download</string>
+    <string name="error_integrity_check_failed">File integrity check failed</string>
+    <string name="error_unknown">Unknown error</string>
+</resources>

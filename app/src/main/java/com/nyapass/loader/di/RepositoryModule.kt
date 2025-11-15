@@ -2,6 +2,8 @@ package com.nyapass.loader.di
 
 import android.content.Context
 import com.nyapass.loader.data.dao.DownloadPartDao
+import com.nyapass.loader.data.dao.DownloadStatsDao
+import com.nyapass.loader.data.dao.DownloadTagDao
 import com.nyapass.loader.data.dao.DownloadTaskDao
 import com.nyapass.loader.download.DownloadEngine
 import com.nyapass.loader.repository.DownloadRepository
@@ -30,6 +32,8 @@ object RepositoryModule {
         @ApplicationContext context: Context,
         taskDao: DownloadTaskDao,
         partDao: DownloadPartDao,
+        tagDao: DownloadTagDao,
+        statsDao: DownloadStatsDao,
         downloadEngine: DownloadEngine,
         okHttpClient: OkHttpClient
     ): DownloadRepository {
@@ -37,6 +41,8 @@ object RepositoryModule {
             context = context,
             taskDao = taskDao,
             partDao = partDao,
+            tagDao = tagDao,
+            statsDao = statsDao,
             downloadEngine = downloadEngine,
             okHttpClient = okHttpClient
         )

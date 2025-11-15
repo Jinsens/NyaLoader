@@ -127,7 +127,10 @@
     <string name="lib_serialization_desc">Kotlinマルチプラットフォームシリアル化ライブラリ</string>
     <string name="lib_workmanager_desc">Androidバックグラウンドタスクスケジューラ</string>
     <string name="lib_gson_desc">GoogleのJSONシリアル化/デシリアル化ライブラリ</string>
-    
+    <string name="lib_hilt_desc">Android依存性注入フレームワーク</string>
+    <string name="lib_firebase_desc">Googleモバイルアプリ開発プラットフォーム</string>
+    <string name="lib_guava_desc">GoogleコアJavaライブラリ拡張</string>
+
     <!-- メイン画面 -->
     <string name="menu">メニュー</string>
     <string name="search">検索</string>
@@ -142,6 +145,10 @@
     <string name="task_management">タスク管理</string>
     <string name="clear_completed">完了済みを削除</string>
     <string name="clear_failed">失敗を削除</string>
+    <string name="clear_completed_dialog_title">完了済みタスクを削除</string>
+    <string name="clear_completed_dialog_message">すべての完了済みタスクを削除してもよろしいですか？この操作は元に戻せません。</string>
+    <string name="clear_failed_dialog_title">失敗したタスクを削除</string>
+    <string name="clear_failed_dialog_message">すべての失敗したタスクを削除してもよろしいですか？この操作は元に戻せません。</string>
     <string name="more">その他</string>
     
     <!-- 空の状態 -->
@@ -187,6 +194,27 @@
     <string name="multithread_hint">マルチスレッドで速度が向上しますが、リソースを多く使用します</string>
     <string name="temp_dir_hint">一時ディレクトリはこのダウンロードのみに使用され、保存されません</string>
     
+    <!-- タグ -->
+    <string name="tag_section_title">タグ</string>
+    <string name="tag_manage_button">タグ管理</string>
+    <string name="tag_filter_all">すべてのタグ</string>
+    <string name="tag_filter_untagged">未タグ</string>
+    <string name="tag_empty_hint">タグがありません。サイドバーで素早く作成できます。</string>
+    <string name="tag_select_hint">タグが選択されていません。現在のステータス/検索条件で表示されます。</string>
+    <string name="tag_management_title">タグ管理</string>
+    <string name="tag_name_label">タグ名</string>
+    <string name="tag_create_button">タグを作成</string>
+    <string name="tag_stats_format">%1$d 個のタスク • %2$s</string>
+    <string name="tag_manage_dialog_title">タグ管理</string>
+    <string name="tag_create_section_title">新規タグ</string>
+    <string name="tag_edit_dialog_title">タグを編集</string>
+    <string name="tag_delete_confirm_title">タグを削除</string>
+    <string name="tag_delete_confirm_message">タグ"%1$s"を削除してもよろしいですか？関連タスクは保持されます。</string>
+    <string name="tag_move_up">上に移動</string>
+    <string name="tag_move_down">下に移動</string>
+    <string name="tag_edit_button">タグを編集</string>
+    <string name="tag_delete_button">タグを削除</string>
+    
     <!-- シンプルダウンロードダイアログ -->
     <string name="download_address">ダウンロードアドレス</string>
     <string name="url_example">https://example.com/file.zip</string>
@@ -218,6 +246,7 @@
     <string name="download_url_copied">URL をコピーしました</string>
     <string name="download_path_copied">保存パスをコピーしました</string>
 
+    <string name="retry">再試行</string>
     <string name="download_redownload">再ダウンロード</string>
     <string name="download_stop_and_delete">停止して削除</string>
     <string name="download_delete_task_title">タスクを削除</string>
@@ -246,5 +275,165 @@
     <string name="no_app_to_open_file">このタイプのファイルを開くアプリがありません</string>
     <string name="open_file_failed">ファイルを開けませんでした</string>
     <string name="choose_app_to_open">開くアプリを選択</string>
-</resources>
+    
+    <!-- クリップボード監視ダイアログ -->
+    <string name="clipboard_monitor_title">スマートクリップボード監視</string>
+    <string name="clipboard_monitor_dialog_description">NyaLoader はクリップボード内のダウンロードリンクを自動検出できます</string>
+    <string name="clipboard_feature_auto_detect">自動検出</string>
+    <string name="clipboard_feature_auto_detect_desc">リンクをコピー後、アプリを開くとすぐに認識</string>
+    <string name="clipboard_feature_smart_extract">スマート抽出</string>
+    <string name="clipboard_feature_smart_extract_desc">長いテキストからダウンロードリンクを自動抽出</string>
+    <string name="clipboard_feature_quick_download">高速ダウンロード</string>
+    <string name="clipboard_feature_quick_download_desc">ワンタップでダウンロード開始、手動入力不要</string>
+    <string name="clipboard_monitor_tip">設定でいつでもこの機能を有効/無効にできます</string>
+    <string name="clipboard_enable">スマート監視を有効にする</string>
+    <string name="clipboard_not_now">後で</string>
+    <string name="clipboard_enabled_toast">スマートクリップボード監視を有効にしました</string>
+    <string name="clipboard_can_enable_later">設定でいつでも有効にできます</string>
+    
+    <!-- トーストメッセージ -->
+    <string name="language_changed_toast">言語が変更されました。お待ちください</string>
+    <string name="directory_saved_toast">デフォルトディレクトリを保存しました: %s</string>
+    <string name="directory_selected_toast">一時ディレクトリを選択しました: %s</string>
+    
+    <!-- WebView -->
+    <string name="webview_title">ブラウザ</string>
+    <string name="webview_back">戻る</string>
+    <string name="webview_forward">進む</string>
+    <string name="webview_refresh">更新</string>
+    <string name="webview_cloud_game">クラウドゲーム</string>
+    <string name="webview_edit_url">URLを編集</string>
+    <string name="webview_url_label">URLを入力</string>
+    <string name="webview_go">移動</string>
+    <string name="webview_download_captured">ダウンロードを検出しました: %s</string>
+    <string name="tools">ツール</string>
+    
+    <!-- 通知チャンネルとメッセージ -->
+    <string name="notification_channel_download">ダウンロード通知</string>
+    <string name="notification_channel_progress">ダウンロード進行状況</string>
+    <string name="notification_channel_progress_desc">ファイルのダウンロード進行状況を表示</string>
+    <string name="notification_channel_complete">ダウンロード完了</string>
+    <string name="notification_channel_complete_desc">ダウンロード完了通知</string>
+    <string name="notification_service_running">ダウンロードサービス実行中</string>
+    <string name="notification_download_task">ダウンロードタスク通知</string>
+    <string name="notification_calculating">計算中…</string>
+    <string name="notification_download_complete">ダウンロード完了</string>
+    <string name="notification_download_failed">ダウンロード失敗</string>
+    <string name="notification_unknown_file">不明なファイル</string>
+    <string name="notification_unknown_error">不明なエラー</string>
+    
+    <!-- エラーメッセージ -->
+    <string name="error_url_empty">URLを空にすることはできません</string>
+    <string name="error_tag_name_empty">タグ名を空にすることはできません</string>
+    <string name="error_create_task_failed">タスクの作成に失敗しました: %s</string>
+    <string name="error_start_download_failed">ダウンロードの開始に失敗しました: %s</string>
+    <string name="error_pause_download_failed">ダウンロードの一時停止に失敗しました: %s</string>
+    <string name="error_resume_download_failed">ダウンロードの再開に失敗しました: %s</string>
+    <string name="error_cancel_download_failed">ダウンロードのキャンセルに失敗しました: %s</string>
+    <string name="error_delete_task_failed">タスクの削除に失敗しました: %s</string>
+    <string name="error_retry_failed">再試行に失敗しました: %s</string>
+    <string name="error_clear_failed">クリアに失敗しました: %s</string>
+    <string name="error_create_tag_failed">タグの作成に失敗しました: %s</string>
+    <string name="error_delete_tag_failed">タグの削除に失敗しました: %s</string>
+    <string name="error_update_tag_failed">タグの更新に失敗しました: %s</string>
+    <string name="error_reorder_tag_failed">タグの並び替えに失敗しました: %s</string>
+    <string name="error_batch_delete_failed">一括削除に失敗しました: %s</string>
+    <string name="error_batch_retry_failed">一括再試行に失敗しました: %s</string>
+    <string name="error_update_task_tags_failed">タスクタグの更新に失敗しました: %s</string>
 
+    <!-- タスクタグ選択ダイアログ -->
+    <string name="edit_tags">タグを編集</string>
+    <string name="task_tag_selection_title">タグを選択</string>
+    <string name="task_tag_selection_hint">タグをタップして選択または選択解除</string>
+    <string name="no_tags_available">利用可能なタグがありません。まずタグを作成してください</string>
+
+    <!-- 複数選択モード -->
+    <string name="multi_select_count">%d件選択中</string>
+    <string name="select_all">すべて選択</string>
+    <string name="invert_selection">選択を反転</string>
+
+    <!-- ストレージ容量チェック -->
+    <string name="disk_space_insufficient">ストレージ容量が不足しています。あと %s 必要です</string>
+    <string name="disk_space_low">ストレージ容量が少なくなっています。残り %s</string>
+    <string name="disk_space_sufficient">ストレージ容量は十分です</string>
+    <string name="disk_space_check_failed">ストレージ容量を確認できません</string>
+
+    <!-- 重複検出 -->
+    <string name="duplicate_url_warning">このURLのダウンロードタスクは既に存在します</string>
+    <string name="duplicate_filename_warning">同じ名前のファイルが既に存在します</string>
+    <string name="duplicate_task_status">ステータス：%s</string>
+    <string name="continue_anyway">そのままダウンロード</string>
+    <string name="view_existing">既存のタスクを表示</string>
+
+    <!-- スマートスレッド数 -->
+    <string name="smart_thread_count">スマートスレッド数</string>
+    <string name="smart_thread_count_description">ネットワークタイプとファイルサイズに基づいて自動最適化</string>
+    <string name="thread_count_auto">自動</string>
+    <string name="current_network">現在のネットワーク</string>
+    <string name="recommended_threads">推奨スレッド数</string>
+
+    <!-- キュー管理と速度制限 -->
+    <string name="max_concurrent_downloads">最大同時ダウンロード数</string>
+    <string name="max_concurrent_downloads_description">同時に実行できるダウンロードタスクの上限</string>
+    <string name="download_speed_limit">速度制限</string>
+    <string name="download_speed_limit_description">帯域幅を節約するためにダウンロード速度を制限</string>
+    <string name="speed_limit_unlimited">無制限</string>
+    <string name="queue_position">キュー位置：%d</string>
+    <string name="waiting_in_queue">キューで待機中</string>
+
+    <!-- 共有機能 -->
+    <string name="share_link">リンクを共有</string>
+    <string name="share_file">ファイルを共有</string>
+    <string name="share_files">%d 個のファイルを共有</string>
+    <string name="share_failed">共有に失敗しました</string>
+    <string name="file_not_exist">ファイルが存在しません</string>
+
+    <!-- ダウンロード優先度 -->
+    <string name="priority">優先度</string>
+    <string name="priority_low">低</string>
+    <string name="priority_normal">普通</string>
+    <string name="priority_high">高</string>
+    <string name="priority_changed">優先度が更新されました</string>
+
+    <!-- ダウンロード統計 -->
+    <string name="statistics_title">ダウンロード統計</string>
+    <string name="statistics_overview">概要</string>
+    <string name="total_downloads">合計</string>
+    <string name="completed_downloads">完了</string>
+    <string name="failed_downloads">失敗</string>
+    <string name="total_downloaded_size">合計ダウンロードサイズ</string>
+    <string name="file_type_distribution">ファイルタイプ分布</string>
+    <string name="file_type_details">タイプ詳細</string>
+    <string name="files_count_unit">件</string>
+    <string name="no_statistics_data">統計データがありません</string>
+    <string name="file_type_video">動画</string>
+    <string name="file_type_audio">音声</string>
+    <string name="file_type_image">画像</string>
+    <string name="file_type_document">ドキュメント</string>
+    <string name="file_type_archive">圧縮ファイル</string>
+    <string name="file_type_application">アプリケーション</string>
+    <string name="file_type_other">その他</string>
+    <string name="clear_statistics">統計をクリア</string>
+    <string name="clear_statistics_title">統計データをクリア</string>
+    <string name="clear_statistics_confirm">すべてのダウンロード統計をクリアしますか？この操作は元に戻せません。</string>
+
+    <!-- ダウンロード例外メッセージ -->
+    <string name="error_network_timeout">ネットワーク接続がタイムアウトしました。ネットワークを確認してください</string>
+    <string name="error_network_unavailable">ネットワークが利用できません。接続を確認してください</string>
+    <string name="error_connection_reset">接続がリセットされました。後でもう一度お試しください</string>
+    <string name="error_server_error">サーバーエラー (HTTP %d)。後でもう一度お試しください</string>
+    <string name="error_resource_not_found">リソースが見つかりません (404)</string>
+    <string name="error_access_denied">アクセスが拒否されました (403)</string>
+    <string name="error_too_many_requests">リクエストが多すぎます。後でもう一度お試しください</string>
+    <string name="error_insufficient_storage">ストレージ容量が不足しています</string>
+    <string name="error_storage_permission_denied">ストレージ権限が拒否されました。権限を付与してください</string>
+    <string name="error_file_creation_failed">ファイルの作成に失敗しました</string>
+    <string name="error_file_write_failed">ファイルの書き込みに失敗しました</string>
+    <string name="error_file_already_exists">ファイルは既に存在します</string>
+    <string name="error_ssl_certificate">SSL証明書の検証に失敗しました</string>
+    <string name="error_task_cancelled">タスクがキャンセルされました</string>
+    <string name="error_range_not_supported">サーバーはレジュームをサポートしていません</string>
+    <string name="error_part_corrupted">パートデータが破損しています。再ダウンロードします</string>
+    <string name="error_integrity_check_failed">ファイル整合性チェックに失敗しました</string>
+    <string name="error_unknown">不明なエラー</string>
+</resources>

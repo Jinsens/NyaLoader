@@ -7,7 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.nyapass.loader.R
 
 /**
  * 剪贴板监听首次使用提示对话框
@@ -35,7 +37,7 @@ fun ClipboardTipDialog(
         },
         title = {
             Text(
-                "智能剪贴板监听",
+                stringResource(R.string.clipboard_monitor_title),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -45,7 +47,7 @@ fun ClipboardTipDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "NyaLoader 可以自动识别剪贴板中的下载链接",
+                    text = stringResource(R.string.clipboard_monitor_dialog_description),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 
@@ -55,20 +57,20 @@ fun ClipboardTipDialog(
                 ) {
                     FeatureItem(
                         icon = Icons.Default.Link,
-                        title = "自动识别",
-                        description = "复制链接后打开应用立即识别"
+                        title = stringResource(R.string.clipboard_feature_auto_detect),
+                        description = stringResource(R.string.clipboard_feature_auto_detect_desc)
                     )
                     
                     FeatureItem(
                         icon = Icons.Default.ContentPaste,
-                        title = "智能提取",
-                        description = "从长文本中自动提取下载链接"
+                        title = stringResource(R.string.clipboard_feature_smart_extract),
+                        description = stringResource(R.string.clipboard_feature_smart_extract_desc)
                     )
                     
                     FeatureItem(
                         icon = Icons.Default.Speed,
-                        title = "快速下载",
-                        description = "一键开始下载，无需手动输入"
+                        title = stringResource(R.string.clipboard_feature_quick_download),
+                        description = stringResource(R.string.clipboard_feature_quick_download_desc)
                     )
                 }
                 
@@ -89,7 +91,7 @@ fun ClipboardTipDialog(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "可在设置中随时开启或关闭此功能",
+                            text = stringResource(R.string.clipboard_monitor_tip),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -108,7 +110,7 @@ fun ClipboardTipDialog(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("启用智能监听")
+                Text(stringResource(R.string.clipboard_enable))
             }
         },
         dismissButton = {
@@ -116,7 +118,7 @@ fun ClipboardTipDialog(
                 onClick = currentOnDisable,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("暂不启用")
+                Text(stringResource(R.string.clipboard_not_now))
             }
         }
     )

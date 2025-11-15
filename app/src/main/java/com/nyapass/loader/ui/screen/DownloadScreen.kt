@@ -1,15 +1,21 @@
 ﻿package com.nyapass.loader.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,9 +26,13 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nyapass.loader.R
+import com.nyapass.loader.data.model.DownloadTag
 import com.nyapass.loader.ui.components.AddDownloadDialog
 import com.nyapass.loader.ui.components.DownloadTaskItem
+import com.nyapass.loader.ui.components.SwipeableDownloadTaskItem
+import com.nyapass.loader.ui.components.TagManagementDialog
 import com.nyapass.loader.ui.screen.components.*
 import com.nyapass.loader.viewmodel.DownloadViewModel
 import com.nyapass.loader.viewmodel.TaskFilter
@@ -39,18 +49,25 @@ fun DownloadScreen(
     tempFolderPath: String? = null,  // 临时目录路径
     onResetTempFolder: (() -> Unit)? = null,  // 重置临时路径
     onOpenSettings: () -> Unit = {},
-    onOpenLicenses: () -> Unit = {}
+    onOpenLicenses: () -> Unit = {},
+    onOpenWebView: () -> Unit = {},
+    onOpenStatistics: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     
-    val uiState by viewModel.uiState.collectAsState()
-    val tasks by viewModel.filteredTasks.collectAsState()
-    val totalProgress by viewModel.totalProgress.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val tasks by viewModel.filteredTasks.collectAsStateWithLifecycle()
+    val totalProgress by viewModel.totalProgress.collectAsStateWithLifecycle()
+    val tags by viewModel.tags.collectAsStateWithLifecycle()
+    val tagStats by viewModel.tagStatistics.collectAsStateWithLifecycle()
     
     val drawerState = rememberDrawerState(
         initialValue = DrawerValue.Closed
     )
     val scope = rememberCoroutineScope()
+    var showTagManagerDialog by remember { mutableStateOf(false) }
+    var showClearCompletedDialog by remember { mutableStateOf(false) }
+    var showClearFailedDialog by remember { mutableStateOf(false) }
     
     // 记录滚动状态
     val listState = rememberLazyListState()
@@ -62,20 +79,26 @@ fun DownloadScreen(
         }
     }
     
-    // 处理返回键的优先级：搜索 > 侧边栏 > 过滤器
+    // 处理返回键的优先级：搜索 > 多选模式 > 侧边栏 > 过滤器
     // 1. 如果正在搜索，返回键关闭搜索
     if (uiState.isSearching) {
         androidx.activity.compose.BackHandler {
             viewModel.stopSearch()
         }
     }
-    // 2. 如果侧边栏打开，返回键关闭侧边栏
+    // 2. 如果在多选模式，返回键退出多选模式
+    else if (uiState.isMultiSelectMode) {
+        androidx.activity.compose.BackHandler {
+            viewModel.exitMultiSelectMode()
+        }
+    }
+    // 3. 如果侧边栏打开，返回键关闭侧边栏
     else if (drawerState.isOpen) {
         androidx.activity.compose.BackHandler {
             scope.launch { drawerState.close() }
         }
     }
-    // 3. 如果过滤器不是"全部"，返回键重置为"全部"
+    // 4. 如果过滤器不是"全部"，返回键重置为"全部"
     else if (uiState.filter != TaskFilter.ALL) {
         androidx.activity.compose.BackHandler {
             viewModel.updateFilter(TaskFilter.ALL)
@@ -92,20 +115,28 @@ fun DownloadScreen(
                     scope.launch { drawerState.close() }
                 },
                 onClearCompleted = {
-                    viewModel.clearCompletedTasks()
                     scope.launch { drawerState.close() }
+                    showClearCompletedDialog = true
                 },
                 onClearFailed = {
-                    viewModel.clearFailedTasks()
                     scope.launch { drawerState.close() }
+                    showClearFailedDialog = true
                 },
                 onOpenSettings = {
                     scope.launch { drawerState.close() }
                     onOpenSettings()
                 },
-                onOpenLicenses = {
+                onOpenTagManager = {
                     scope.launch { drawerState.close() }
-                    onOpenLicenses()
+                    showTagManagerDialog = true
+                },
+                onOpenWebView = {
+                    scope.launch { drawerState.close() }
+                    onOpenWebView()
+                },
+                onOpenStatistics = {
+                    scope.launch { drawerState.close() }
+                    onOpenStatistics()
                 }
             )
         }
@@ -113,48 +144,132 @@ fun DownloadScreen(
         Scaffold(
             contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             topBar = {
-                if (uiState.isSearching) {
-                    SearchTopBar(
-                        searchQuery = uiState.searchQuery,
-                        onSearchQueryChange = { viewModel.updateSearchQuery(it) },
-                        onCloseSearch = { viewModel.stopSearch() }
-                    )
-                } else {
-                    TopAppBar(
-                        title = { Text("NyaLoader") },
-                        navigationIcon = {
-                            IconButton(onClick = { 
-                                scope.launch { drawerState.open() }
-                            }) {
-                                Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu))
-                            }
-                        },
-                        actions = {
-                            // 搜索按钮
-                            IconButton(onClick = { viewModel.startSearch() }) {
-                                Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        windowInsets = TopAppBarDefaults.windowInsets
-                    )
+                when {
+                    uiState.isSearching -> {
+                        SearchTopBar(
+                            searchQuery = uiState.searchQuery,
+                            onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+                            onCloseSearch = { viewModel.stopSearch() }
+                        )
+                    }
+                    uiState.isMultiSelectMode -> {
+                        // 多选模式顶栏
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    stringResource(
+                                        R.string.multi_select_count,
+                                        uiState.selectedTaskIds.size
+                                    )
+                                )
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { viewModel.exitMultiSelectMode() }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = stringResource(R.string.cancel)
+                                    )
+                                }
+                            },
+                            actions = {
+                                // 全选按钮
+                                IconButton(onClick = { viewModel.selectAllTasks() }) {
+                                    Icon(
+                                        Icons.Default.SelectAll,
+                                        contentDescription = stringResource(R.string.select_all)
+                                    )
+                                }
+                                // 反选按钮
+                                IconButton(onClick = { viewModel.invertSelection() }) {
+                                    Icon(
+                                        Icons.Default.FlipToBack,
+                                        contentDescription = stringResource(R.string.invert_selection)
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            ),
+                            windowInsets = TopAppBarDefaults.windowInsets
+                        )
+                    }
+                    else -> {
+                        TopAppBar(
+                            title = { Text("NyaLoader") },
+                            navigationIcon = {
+                                IconButton(onClick = {
+                                    scope.launch { drawerState.open() }
+                                }) {
+                                    Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu))
+                                }
+                            },
+                            actions = {
+                                // 搜索按钮
+                                IconButton(onClick = { viewModel.startSearch() }) {
+                                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            windowInsets = TopAppBarDefaults.windowInsets
+                        )
+                    }
                 }
             },
             floatingActionButton = {
                 // 根据滚动状态展开或收起FAB，显示总进度条时向上偏移
-                Box(
-                    modifier = Modifier.padding(
-                        bottom = if (totalProgress.showProgress) 110.dp else 0.dp
-                    )
-                ) {
+                if (uiState.isMultiSelectMode) {
+                    // 多选模式：显示批量操作按钮
+                    Row(
+                        modifier = Modifier
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(
+                                bottom = if (totalProgress.showProgress) 110.dp else 0.dp
+                            ),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // 批量重试按钮
+                        FloatingActionButton(
+                            onClick = { 
+                                viewModel.retrySelectedTasks()
+                            },
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = stringResource(R.string.retry)
+                            )
+                        }
+                        
+                        // 批量删除按钮
+                        FloatingActionButton(
+                            onClick = {
+                                viewModel.deleteSelectedTasks()
+                            },
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                } else {
+                    // 正常模式：显示新建下载按钮
                     ExtendedFloatingActionButton(
                         onClick = { viewModel.showAddDialog() },
                         expanded = expandedFab,
                         icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_download)) },
-                        text = { Text(stringResource(R.string.new_download)) }
+                        text = { Text(stringResource(R.string.new_download)) },
+                        modifier = Modifier
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(
+                                bottom = if (totalProgress.showProgress) 110.dp else 0.dp
+                            )
                     )
                 }
             }
@@ -164,26 +279,43 @@ fun DownloadScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // 主要内容区域
-                Box(
+                TagFilterBar(
+                    tags = tags,
+                    selectedTagId = uiState.selectedTagId,
+                    showOnlyUntagged = uiState.showOnlyUntagged,
+                    onSelectAll = { viewModel.selectAllTags() },
+                    onSelectTag = { tagId -> viewModel.selectTag(tagId) },
+                    onSelectUntagged = { viewModel.selectUntagged() }
+                )
+                
+                // 主要内容区域 - 带下拉刷新
+                @OptIn(ExperimentalMaterial3Api::class)
+                PullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.refreshTasks() },
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
                     if (tasks.isEmpty()) {
                         // 空状态
-                        if (uiState.isSearching && uiState.searchQuery.isNotEmpty()) {
-                            // 搜索无结果
-                            SearchEmptyState(
-                                modifier = Modifier.align(Alignment.Center),
-                                searchQuery = uiState.searchQuery
-                            )
-                        } else {
-                            // 正常空状态
-                            EmptyState(
-                                modifier = Modifier.align(Alignment.Center),
-                                filter = uiState.filter
-                            )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState.isSearching && uiState.searchQuery.isNotEmpty()) {
+                                // 搜索无结果
+                                SearchEmptyState(
+                                    modifier = Modifier,
+                                    searchQuery = uiState.searchQuery
+                                )
+                            } else {
+                                // 正常空状态
+                                EmptyState(
+                                    modifier = Modifier,
+                                    filter = uiState.filter
+                                )
+                            }
                         }
                     } else {
                         // 任务列表
@@ -195,7 +327,7 @@ fun DownloadScreen(
                                 start = 16.dp,
                                 end = 16.dp,
                                 top = 16.dp,
-                                bottom = 16.dp
+                                bottom = 16.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                             ),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
@@ -204,14 +336,21 @@ fun DownloadScreen(
                                 key = { it.task.id },
                                 contentType = { "DownloadTaskItem" }
                             ) { taskWithProgress ->
-                                DownloadTaskItem(
+                                SwipeableDownloadTaskItem(
                                     taskWithProgress = taskWithProgress,
                                     onStart = { viewModel.startDownload(it) },
                                     onPause = { viewModel.pauseDownload(it) },
                                     onResume = { viewModel.resumeDownload(it) },
                                     onDelete = { viewModel.deleteTask(it) },
                                     onRetry = { viewModel.retryTask(it) },
-                                    onOpenFile = { filePath -> viewModel.openFile(context, filePath) }
+                                    onOpenFile = { selectedTask -> viewModel.openFile(context, selectedTask) },
+                                    onUpdateTags = { taskId, tagIds -> viewModel.updateTaskTags(taskId, tagIds) },
+                                    onCreateTag = { showTagManagerDialog = true },
+                                    availableTags = tags,
+                                    isMultiSelectMode = uiState.isMultiSelectMode,
+                                    isSelected = taskWithProgress.task.id in uiState.selectedTaskIds,
+                                    onLongPress = { taskId -> viewModel.enterMultiSelectMode(taskId) },
+                                    onToggleSelection = { taskId -> viewModel.toggleTaskSelection(taskId) }
                                 )
                             }
                         }
@@ -232,14 +371,92 @@ fun DownloadScreen(
                     // 对话框关闭时重置临时路径
                     onResetTempFolder?.invoke()
                 },
-                onConfirm = { url, fileName, threadCount, saveToPublicDir, customPath, userAgent ->
+                onConfirm = { url, fileName, threadCount, saveToPublicDir, customPath, userAgent, tagIds ->
                     // customPath是对话框内部的临时路径，传递给ViewModel
-                    viewModel.createDownloadTask(url, fileName, threadCount, saveToPublicDir, customPath, userAgent)
+                    viewModel.createDownloadTask(
+                        url = url,
+                        fileName = fileName,
+                        threadCount = threadCount,
+                        saveToPublicDir = saveToPublicDir,
+                        customPath = customPath,
+                        userAgent = userAgent,
+                        tagIds = tagIds
+                    )
                     // 下载开始后重置临时路径
                     onResetTempFolder?.invoke()
                 },
                 onSelectFolder = onSelectTempFolder,  // 使用临时目录选择
-                currentTempPath = tempFolderPath  // 传递当前临时路径
+                currentTempPath = tempFolderPath,  // 传递当前临时路径
+                availableTags = tags,
+                onCreateTag = { showTagManagerDialog = true }
+            )
+        }
+
+        if (showTagManagerDialog) {
+            TagManagementDialog(
+                tags = tags,
+                tagStats = tagStats,
+                onDismiss = { showTagManagerDialog = false },
+                onCreateTag = { name, color ->
+                    viewModel.createTag(name, color)
+                },
+                onUpdateTag = { tagId, name, color ->
+                    viewModel.updateTag(tagId, name, color)
+                },
+                onDeleteTag = { tagId ->
+                    viewModel.deleteTag(tagId)
+                },
+                onMoveTag = { firstId, secondId ->
+                    viewModel.swapTagOrder(firstId, secondId)
+                }
+            )
+        }
+        
+        // 清除已完成任务确认对话框
+        if (showClearCompletedDialog) {
+            AlertDialog(
+                onDismissRequest = { showClearCompletedDialog = false },
+                title = { Text(stringResource(R.string.clear_completed_dialog_title)) },
+                text = { Text(stringResource(R.string.clear_completed_dialog_message)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.clearCompletedTasks()
+                            showClearCompletedDialog = false
+                        }
+                    ) {
+                        Text(stringResource(R.string.confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showClearCompletedDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
+        }
+        
+        // 清除失败任务确认对话框
+        if (showClearFailedDialog) {
+            AlertDialog(
+                onDismissRequest = { showClearFailedDialog = false },
+                title = { Text(stringResource(R.string.clear_failed_dialog_title)) },
+                text = { Text(stringResource(R.string.clear_failed_dialog_message)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.clearFailedTasks()
+                            showClearFailedDialog = false
+                        }
+                    ) {
+                        Text(stringResource(R.string.confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showClearFailedDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
             )
         }
         
@@ -250,6 +467,54 @@ fun DownloadScreen(
                     viewModel.clearError()
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TagFilterBar(
+    tags: List<DownloadTag>,
+    selectedTagId: Long?,
+    showOnlyUntagged: Boolean,
+    onSelectAll: () -> Unit,
+    onSelectTag: (Long) -> Unit,
+    onSelectUntagged: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FilterChip(
+            selected = !showOnlyUntagged && selectedTagId == null,
+            onClick = onSelectAll,
+            label = { Text(stringResource(R.string.tag_filter_all)) }
+        )
+        FilterChip(
+            selected = showOnlyUntagged,
+            onClick = onSelectUntagged,
+            label = { Text(stringResource(R.string.tag_filter_untagged)) }
+        )
+        tags.forEach { tag ->
+            val color = Color(tag.color)
+            FilterChip(
+                selected = selectedTagId == tag.id,
+                onClick = { onSelectTag(tag.id) },
+                label = { Text(tag.name) },
+                leadingIcon = {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(color, shape = CircleShape)
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = color.copy(alpha = 0.2f)
+                )
+            )
         }
     }
 }

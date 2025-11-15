@@ -2,12 +2,12 @@
 <resources>
     <!-- 应用名称 -->
     <string name="app_name">NyaLoader</string>
-    
+
     <!-- 通知 -->
     <string name="download_notification_channel">下载通知</string>
     <string name="download_notification_title">NyaLoader</string>
-    <string name="download_notification_text">下载服务运行中</string>
-    
+    <string name="download_notification_text">下载服务正在运行</string>
+
     <!-- 通用 -->
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
@@ -16,14 +16,14 @@
     <string name="back">返回</string>
     <string name="save">保存</string>
     <string name="close">关闭</string>
-    
+
     <!-- 设置界面 -->
     <string name="settings">设置</string>
     <string name="appearance">外观</string>
     <string name="download_settings">下载设置</string>
     <string name="data_analytics">数据分析</string>
     <string name="other">其他</string>
-    
+
     <!-- 语言设置 -->
     <string name="language">语言</string>
     <string name="language_system">跟随系统</string>
@@ -31,12 +31,12 @@
     <string name="language_chinese_traditional">繁體中文</string>
     <string name="language_english">English</string>
     <string name="language_japanese">日本語</string>
-    
+
     <!-- 主题设置 -->
     <string name="theme_color">主题颜色</string>
     <string name="custom_color">自定义颜色</string>
-    <string name="dark_mode">暗色模式</string>
-    <string name="theme_color_dynamic">自动取色</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="theme_color_dynamic">动态取色</string>
     <string name="theme_color_blue">蓝色</string>
     <string name="theme_color_green">绿色</string>
     <string name="theme_color_purple">紫色</string>
@@ -52,98 +52,105 @@
     <string name="custom_color_hint">#RRGGBB</string>
     <string name="custom_color_preview">预览</string>
     <string name="click_to_set">点击设置</string>
-    
+
     <!-- 下载设置 -->
     <string name="default_save_location">默认保存位置</string>
     <string name="custom_directory">自定义目录</string>
     <string name="click_to_select">点击选择</string>
     <string name="default_thread_count">默认线程数</string>
-    <string name="default_user_agent">默认User-Agent</string>
-    <string name="use_webview_ua">使用WebView默认UA</string>
+    <string name="default_user_agent">默认 User-Agent</string>
+    <string name="use_webview_ua">使用 WebView 默认 UA</string>
     <string name="clipboard_monitor">剪贴板监听</string>
     <string name="clipboard_monitor_description">复制链接后自动弹窗，快速开始下载</string>
     <string name="save_location_public">公共下载目录</string>
     <string name="save_location_private">应用私有目录</string>
     <string name="save_location_custom">自定义目录</string>
-    
+
     <!-- User-Agent -->
-    <string name="user_agent_dialog_title">默认User-Agent</string>
+    <string name="user_agent_dialog_title">默认 User-Agent</string>
     <string name="user_agent_label">User-Agent</string>
     <string name="user_agent_show_presets">选择预设</string>
     <string name="user_agent_hide_presets">隐藏预设</string>
     <string name="user_agent_device">本设备</string>
     <string name="user_agent_custom_presets">自定义预设</string>
     <string name="user_agent_system_presets">系统预设</string>
-    <string name="user_agent_no_custom">暂无自定义预设，点击上方+号添加</string>
+    <string name="user_agent_no_custom">暂无自定义预设，点击上方 + 号添加</string>
     <string name="user_agent_add_preset">添加自定义预设</string>
     <string name="user_agent_preset_name">预设名称</string>
     <string name="user_agent_preset_name_hint">例如：我的浏览器</string>
-    <string name="user_agent_preset_ua_hint">输入User-Agent字符串</string>
+    <string name="user_agent_preset_ua_hint">请输入 User-Agent 字符串</string>
     <string name="user_agent_preset_name_error">请输入预设名称</string>
-    <string name="user_agent_preset_ua_error">请输入User-Agent</string>
+    <string name="user_agent_preset_ua_error">请输入 User-Agent</string>
     <string name="user_agent_chrome_windows">Chrome Windows</string>
     <string name="user_agent_chrome_mac">Chrome Mac</string>
     <string name="user_agent_firefox">Firefox</string>
     <string name="user_agent_android_chrome">Android Chrome</string>
-    
+
     <!-- Firebase -->
     <string name="firebase_analytics">Google Firebase 分析</string>
     <string name="firebase_description">帮助我们改进应用体验（需要重启应用生效）</string>
     <string name="firebase_permission_title">数据分析服务</string>
-    <string name="firebase_permission_description">我们使用 Google Firebase 来收集应用使用数据，帮助我们：</string>
-    <string name="firebase_permission_features">• 了解应用崩溃情况并修复问题\n• 分析用户行为以改进功能\n• 提供更好的用户体验</string>
-    <string name="firebase_permission_note">您可以随时在设置中更改此选项。</string>
+    <string name="firebase_permission_description">我们使用 Google Firebase 收集匿名使用数据，以便：</string>
+    <string name="firebase_permission_features">• 了解应用崩溃情况并修复问题\n• 分析用户行为以改进功能\n• 提供更好的使用体验</string>
+    <string name="firebase_permission_note">你可以随时在设置中修改此选项。</string>
     <string name="firebase_accept">同意并开启</string>
     <string name="firebase_decline">暂不开启</string>
-    
-    <!-- 关于与许可 -->
-    <string name="about_and_licenses">关于与许可</string>
-    <string name="about_and_licenses_description">查看应用信息和开源许可</string>
-    <string name="open_source_licenses">开源许可</string>
-    <string name="using_open_source_projects">本应用使用了以下开源项目</string>
+
+    <!-- 关于与开源 -->
+    <string name="about_and_licenses">关于与开源</string>
+    <string name="about_and_licenses_description">查看应用信息与开源许可证</string>
+    <string name="open_source_licenses">开源许可证</string>
+    <string name="using_open_source_projects">本应用使用了以下开源项目：</string>
     <string name="thanks_to_contributors">感谢所有开源项目的贡献者！</string>
     <string name="app_icon">应用图标</string>
-    <string name="multi_thread_downloader">多线程下载管理器</string>
+    <string name="multi_thread_downloader">多线程下载器</string>
     <string name="version">版本</string>
     <string name="version_format">版本 %s</string>
     <string name="author">作者</string>
     <string name="author_name">作者：小花生FMR</string>
     <string name="copyright">© 2025 小花生FMR</string>
-    <string name="open_source_license_agpl">基于 AGPL-3.0 许可证开源</string>
-    
+    <string name="open_source_license_agpl">基于 AGPL-3.0 协议开源</string>
+
     <!-- 开源库描述 -->
     <string name="lib_kotlin_desc">现代化的 JVM 编程语言</string>
     <string name="lib_jetpack_compose_desc">Android 现代化声明式 UI 框架</string>
     <string name="lib_material3_desc">Material Design 3 组件库</string>
-    <string name="lib_material_icons_desc">Material Design 扩展图标库</string>
+    <string name="lib_material_icons_desc">Material Design 扩展图标集</string>
     <string name="lib_androidx_core_desc">Android 核心库的 Kotlin 扩展</string>
     <string name="lib_lifecycle_desc">Android 生命周期感知组件</string>
-    <string name="lib_activity_compose_desc">Activity 与 Compose 的集成库</string>
-    <string name="lib_viewmodel_compose_desc">ViewModel 与 Compose 的集成</string>
+    <string name="lib_activity_compose_desc">Activity 与 Compose 集成库</string>
+    <string name="lib_viewmodel_compose_desc">ViewModel 与 Compose 集成库</string>
     <string name="lib_room_desc">Android SQLite 数据库抽象层</string>
     <string name="lib_navigation_desc">Jetpack Compose 导航组件</string>
-    <string name="lib_okhttp_desc">Square 开发的高效 HTTP 客户端库</string>
-    <string name="lib_coroutines_desc">Kotlin 协程库，用于异步编程</string>
+    <string name="lib_okhttp_desc">Square 出品的高效 HTTP 客户端</string>
+    <string name="lib_coroutines_desc">Kotlin 协程框架，用于异步编程</string>
     <string name="lib_serialization_desc">Kotlin 多平台序列化库</string>
     <string name="lib_workmanager_desc">Android 后台任务调度库</string>
     <string name="lib_gson_desc">Google 的 JSON 序列化/反序列化库</string>
-    
+    <string name="lib_hilt_desc">Android 依赖注入框架</string>
+    <string name="lib_firebase_desc">Google 移动应用开发平台</string>
+    <string name="lib_guava_desc">Google 核心 Java 库扩展</string>
+
     <!-- 主页面 -->
     <string name="menu">菜单</string>
     <string name="search">搜索</string>
     <string name="new_download">新建下载</string>
-    <string name="multithreaded_downloader">多线程下载器</string>
+    <string name="multithreaded_downloader">多线程下载管理器</string>
     <string name="task_filter">任务筛选</string>
     <string name="all">全部</string>
     <string name="downloading">下载中</string>
     <string name="completed">已完成</string>
     <string name="paused">已暂停</string>
-    <string name="failed">失败</string>
+    <string name="failed">已失败</string>
     <string name="task_management">任务管理</string>
     <string name="clear_completed">清除已完成</string>
     <string name="clear_failed">清除失败</string>
+    <string name="clear_completed_dialog_title">清除已完成任务</string>
+    <string name="clear_completed_dialog_message">确定要清除所有已完成的任务吗？此操作不可撤销。</string>
+    <string name="clear_failed_dialog_title">清除失败任务</string>
+    <string name="clear_failed_dialog_message">确定要清除所有失败的任务吗？此操作不可撤销。</string>
     <string name="more">更多</string>
-    
+
     <!-- 空状态 -->
     <string name="no_tasks">暂无下载任务</string>
     <string name="no_downloading_tasks">暂无正在下载的任务</string>
@@ -151,56 +158,77 @@
     <string name="no_paused_tasks">暂无已暂停的任务</string>
     <string name="no_failed_tasks">暂无失败的任务</string>
     <string name="tap_to_create">点击右下角按钮创建新任务</string>
-    <string name="no_search_results">未找到匹配的任务</string>
-    
+    <string name="no_search_results">没有找到匹配的任务</string>
+
     <!-- 搜索 -->
-    <string name="search_placeholder">搜索文件名、URL或路径</string>
+    <string name="search_placeholder">搜索文件名、URL 或路径</string>
     <string name="clear">清除</string>
-    
+
     <!-- 总进度 -->
     <string name="total_download_progress">总下载进度</string>
     <string name="tasks_count">%d 个任务</string>
-    
+
     <!-- 添加下载对话框 -->
     <string name="new_download_task">新建下载任务</string>
     <string name="download_link">下载链接</string>
-    <string name="enter_url">请输入URL</string>
-    <string name="enter_valid_url">请输入有效的URL</string>
+    <string name="enter_url">请输入 URL</string>
+    <string name="enter_valid_url">请输入有效的 URL</string>
     <string name="add_more_links">添加更多链接</string>
     <string name="batch_download_hint">批量下载：已添加 %d 个链接</string>
-    <string name="filename_only_first">仅对第一个链接有效</string>
+    <string name="filename_only_first">仅对第一个链接生效</string>
     <string name="filename_optional">文件名（可选）</string>
-    <string name="auto_extract_from_url">自动从URL提取</string>
+    <string name="auto_extract_from_url">未填写将自动从 URL 提取</string>
     <string name="thread_count">线程数</string>
-    <string name="thread_count_error">线程数必须在1-256之间</string>
-    <string name="thread_count_hint">建议使用32个线程，最大支持256</string>
+    <string name="thread_count_error">线程数需在 1-256 之间</string>
+    <string name="thread_count_hint">建议 32 线程，最大支持 256</string>
     <string name="advanced_options">高级选项</string>
     <string name="browser_identity">浏览器标识</string>
-    <string name="select_preset_ua">选择预设UA</string>
+    <string name="select_preset_ua">选择预设 UA</string>
     <string name="click_arrow_to_select">点击右侧箭头选择预设</string>
-    <string name="click_below_to_select">点击下方选择预设</string>
+    <string name="click_below_to_select">点击下方条目选择预设</string>
     <string name="this_device">本设备</string>
     <string name="default_settings">默认设置</string>
     <string name="temp_save_directory">临时保存目录</string>
     <string name="click_to_select_temp">点击选择（仅本次下载）</string>
     <string name="start_download">开始下载</string>
-    <string name="multithread_hint">多线程下载可提高下载速度，但会占用更多系统资源</string>
-    <string name="temp_dir_hint">临时目录仅用于本次下载，不会保存到设置中</string>
-    
-    <!-- 简化下载对话框 -->
+    <string name="multithread_hint">多线程下载可提升速度，但会占用更多系统资源</string>
+    <string name="temp_dir_hint">临时目录仅用于本次下载，不会写入设置</string>
+
+    <!-- 标签 -->
+    <string name="tag_section_title">标签</string>
+    <string name="tag_manage_button">管理标签</string>
+    <string name="tag_filter_all">全部标签</string>
+    <string name="tag_filter_untagged">未打标签</string>
+    <string name="tag_empty_hint">暂无标签，可在侧边栏中快速创建。</string>
+    <string name="tag_select_hint">未选择标签，将按照当前状态/搜索条件展示。</string>
+    <string name="tag_management_title">标签管理</string>
+    <string name="tag_name_label">标签名称</string>
+    <string name="tag_create_button">创建标签</string>
+    <string name="tag_stats_format">%1$d 个任务 • %2$s</string>
+    <string name="tag_manage_dialog_title">标签管理</string>
+    <string name="tag_create_section_title">新建标签</string>
+    <string name="tag_edit_dialog_title">编辑标签</string>
+    <string name="tag_delete_confirm_title">删除标签</string>
+    <string name="tag_delete_confirm_message">确定删除标签“%1$s”吗？相关任务仍会保留。</string>
+    <string name="tag_move_up">上移</string>
+    <string name="tag_move_down">下移</string>
+    <string name="tag_edit_button">编辑标签</string>
+    <string name="tag_delete_button">删除标签</string>
+
+    <!-- 简易下载对话框 -->
     <string name="download_address">下载地址</string>
     <string name="url_example">https://example.com/file.zip</string>
     <string name="enter_valid_download_link">请输入有效的下载链接</string>
-    <string name="auto_extract_filename">不填则自动从URL中提取</string>
-    <string name="auto_detect_filename">留空将自动识别文件名</string>
-    <string name="use_default_settings_hint">将使用默认设置进行下载\n如需更多选项，请使用右下角的新建下载按钮</string>
+    <string name="auto_extract_filename">留空将自动从 URL 提取</string>
+    <string name="auto_detect_filename">自动识别文件名</string>
+    <string name="use_default_settings_hint">将使用默认设置进行下载，如需更多选项请使用主界面新建。</string>
 
     <!-- 下载任务卡片 -->
     <string name="download_status_pending">等待中</string>
     <string name="download_status_running">下载中</string>
     <string name="download_status_paused">已暂停</string>
     <string name="download_status_completed">已完成</string>
-    <string name="download_status_failed">失败</string>
+    <string name="download_status_failed">已失败</string>
     <string name="download_status_cancelled">已取消</string>
 
     <string name="download_error_title">错误信息</string>
@@ -215,35 +243,197 @@
     <string name="yes">是</string>
     <string name="no">否</string>
 
-    <string name="download_url_copied">URL已复制</string>
+    <string name="download_url_copied">URL 已复制</string>
     <string name="download_path_copied">保存路径已复制</string>
 
+    <string name="retry">重试</string>
     <string name="download_redownload">重新下载</string>
     <string name="download_stop_and_delete">停止并删除</string>
     <string name="download_delete_task_title">确认删除</string>
-    <string name="download_delete_task_message">确定要删除这个下载任务吗？文件也将被删除。</string>
+    <string name="download_delete_task_message">确定要删除此下载任务吗？文件也将被删除。</string>
     <string name="download_open_file">打开</string>
-    <string name="copy_long_press_hint">长按复制</string>
-    
+    <string name="copy_long_press_hint">长按可复制</string>
+
     <!-- 更新对话框 -->
     <string name="update_dialog_title">发现新版本</string>
     <string name="update_dialog_download_now">立即更新</string>
     <string name="update_dialog_later">稍后再说</string>
     <string name="update_dialog_update_time">更新时间</string>
-    <string name="update_force_update_notice">⚠️ 这是强制更新，必须升级才能继续使用</string>
+    <string name="update_force_update_notice">⚠️ 这是强制更新，需升级后才能继续使用。</string>
     <string name="update_checking">正在检查更新…</string>
-    <string name="update_no_update">已是最新版本</string>
+    <string name="update_no_update">当前已是最新版本</string>
     <string name="update_check_failed">检查更新失败</string>
     <string name="update_download_success">下载完成，请点击安装</string>
     <string name="update_downloading">正在下载更新…</string>
     <string name="check_for_updates">检查更新</string>
-    <string name="check_for_updates_description">手动检查是否有新版本</string>
-    <string name="github_repo">GitHub 项目</string>
+    <string name="check_for_updates_description">手动检查是否有新版</string>
+    <string name="github_repo">GitHub 仓库</string>
     <string name="view_source_code">查看源代码</string>
-    
+
     <!-- 打开文件错误 -->
     <string name="file_not_found">文件不存在，可能已被删除</string>
-    <string name="no_app_to_open_file">没有应用可以打开此类型的文件</string>
+    <string name="no_app_to_open_file">没有可打开此类型文件的应用</string>
     <string name="open_file_failed">打开文件失败</string>
     <string name="choose_app_to_open">选择打开方式</string>
+    
+    <!-- 剪贴板监听对话框 -->
+    <string name="clipboard_monitor_title">智能剪贴板监听</string>
+    <string name="clipboard_monitor_dialog_description">NyaLoader 可以自动识别剪贴板中的下载链接</string>
+    <string name="clipboard_feature_auto_detect">自动识别</string>
+    <string name="clipboard_feature_auto_detect_desc">复制链接后打开应用立即识别</string>
+    <string name="clipboard_feature_smart_extract">智能提取</string>
+    <string name="clipboard_feature_smart_extract_desc">从长文本中自动提取下载链接</string>
+    <string name="clipboard_feature_quick_download">快速下载</string>
+    <string name="clipboard_feature_quick_download_desc">一键开始下载，无需手动输入</string>
+    <string name="clipboard_monitor_tip">可在设置中随时开启或关闭此功能</string>
+    <string name="clipboard_enable">启用智能监听</string>
+    <string name="clipboard_not_now">暂不启用</string>
+    <string name="clipboard_enabled_toast">已启用智能剪贴板监听</string>
+    <string name="clipboard_can_enable_later">可在设置中随时开启</string>
+    
+    <!-- Toast 提示 -->
+    <string name="language_changed_toast">语言已更改，请稍等</string>
+    <string name="directory_saved_toast">已保存默认目录: %s</string>
+    <string name="directory_selected_toast">已选择临时目录: %s</string>
+    
+    <!-- WebView -->
+    <string name="webview_title">浏览器</string>
+    <string name="webview_back">后退</string>
+    <string name="webview_forward">前进</string>
+    <string name="webview_refresh">刷新</string>
+    <string name="webview_cloud_game">云游戏</string>
+    <string name="webview_edit_url">编辑网址</string>
+    <string name="webview_url_label">输入网址</string>
+    <string name="webview_go">前往</string>
+    <string name="webview_download_captured">已捕获下载: %s</string>
+    <string name="tools">工具</string>
+    
+    <!-- 通知渠道和消息 -->
+    <string name="notification_channel_download">下载通知</string>
+    <string name="notification_channel_progress">下载进度</string>
+    <string name="notification_channel_progress_desc">显示文件下载进度</string>
+    <string name="notification_channel_complete">下载完成</string>
+    <string name="notification_channel_complete_desc">下载完成提醒</string>
+    <string name="notification_service_running">下载服务运行中</string>
+    <string name="notification_download_task">下载任务通知</string>
+    <string name="notification_calculating">计算中…</string>
+    <string name="notification_download_complete">下载完成</string>
+    <string name="notification_download_failed">下载失败</string>
+    <string name="notification_unknown_file">未知文件</string>
+    <string name="notification_unknown_error">未知错误</string>
+    
+    <!-- 错误消息 -->
+    <string name="error_url_empty">URL不能为空</string>
+    <string name="error_tag_name_empty">标签名称不能为空</string>
+    <string name="error_create_task_failed">创建任务失败: %s</string>
+    <string name="error_start_download_failed">启动下载失败: %s</string>
+    <string name="error_pause_download_failed">暂停下载失败: %s</string>
+    <string name="error_resume_download_failed">恢复下载失败: %s</string>
+    <string name="error_cancel_download_failed">取消下载失败: %s</string>
+    <string name="error_delete_task_failed">删除任务失败: %s</string>
+    <string name="error_retry_failed">重试失败: %s</string>
+    <string name="error_clear_failed">清除失败: %s</string>
+    <string name="error_create_tag_failed">创建标签失败: %s</string>
+    <string name="error_delete_tag_failed">删除标签失败: %s</string>
+    <string name="error_update_tag_failed">更新标签失败: %s</string>
+    <string name="error_reorder_tag_failed">调整标签顺序失败: %s</string>
+    <string name="error_batch_delete_failed">批量删除失败: %s</string>
+    <string name="error_batch_retry_failed">批量重试失败: %s</string>
+    <string name="error_update_task_tags_failed">更新任务标签失败: %s</string>
+
+    <!-- 任务标签选择对话框 -->
+    <string name="edit_tags">编辑标签</string>
+    <string name="task_tag_selection_title">选择标签</string>
+    <string name="task_tag_selection_hint">点击标签进行选择或取消选择</string>
+    <string name="no_tags_available">暂无可用标签，请先创建标签</string>
+
+    <!-- 多选模式 -->
+    <string name="multi_select_count">已选择 %d 项</string>
+    <string name="select_all">全选</string>
+    <string name="invert_selection">反选</string>
+
+    <!-- 存储空间检查 -->
+    <string name="disk_space_insufficient">存储空间不足，还需 %s</string>
+    <string name="disk_space_low">存储空间紧张，剩余 %s</string>
+    <string name="disk_space_sufficient">存储空间充足</string>
+    <string name="disk_space_check_failed">无法检查存储空间</string>
+
+    <!-- 重复检测 -->
+    <string name="duplicate_url_warning">此链接已存在下载任务</string>
+    <string name="duplicate_filename_warning">同名文件已存在</string>
+    <string name="duplicate_task_status">状态：%s</string>
+    <string name="continue_anyway">仍然下载</string>
+    <string name="view_existing">查看已有任务</string>
+
+    <!-- 智能线程数 -->
+    <string name="smart_thread_count">智能线程数</string>
+    <string name="smart_thread_count_description">根据网络类型和文件大小自动优化</string>
+    <string name="thread_count_auto">自动</string>
+    <string name="current_network">当前网络</string>
+    <string name="recommended_threads">推荐线程数</string>
+
+    <!-- 队列管理与限速 -->
+    <string name="max_concurrent_downloads">最大并发下载数</string>
+    <string name="max_concurrent_downloads_description">同时进行的下载任务数量上限</string>
+    <string name="download_speed_limit">下载限速</string>
+    <string name="download_speed_limit_description">限制下载速度以节省带宽</string>
+    <string name="speed_limit_unlimited">无限制</string>
+    <string name="queue_position">队列位置：%d</string>
+    <string name="waiting_in_queue">排队等待中</string>
+
+    <!-- 分享功能 -->
+    <string name="share_link">分享链接</string>
+    <string name="share_file">分享文件</string>
+    <string name="share_files">分享 %d 个文件</string>
+    <string name="share_failed">分享失败</string>
+    <string name="file_not_exist">文件不存在</string>
+
+    <!-- 下载优先级 -->
+    <string name="priority">优先级</string>
+    <string name="priority_low">低</string>
+    <string name="priority_normal">普通</string>
+    <string name="priority_high">高</string>
+    <string name="priority_changed">优先级已更新</string>
+
+    <!-- 下载统计 -->
+    <string name="statistics_title">下载统计</string>
+    <string name="statistics_overview">总览</string>
+    <string name="total_downloads">总下载</string>
+    <string name="completed_downloads">已完成</string>
+    <string name="failed_downloads">失败</string>
+    <string name="total_downloaded_size">总下载大小</string>
+    <string name="file_type_distribution">文件类型分布</string>
+    <string name="file_type_details">类型详情</string>
+    <string name="files_count_unit">个</string>
+    <string name="no_statistics_data">暂无统计数据</string>
+    <string name="file_type_video">视频</string>
+    <string name="file_type_audio">音频</string>
+    <string name="file_type_image">图片</string>
+    <string name="file_type_document">文档</string>
+    <string name="file_type_archive">压缩包</string>
+    <string name="file_type_application">应用程序</string>
+    <string name="file_type_other">其他</string>
+    <string name="clear_statistics">清除统计</string>
+    <string name="clear_statistics_title">清除统计数据</string>
+    <string name="clear_statistics_confirm">确定要清除所有下载统计数据吗？此操作不可恢复。</string>
+
+    <!-- 下载异常消息 -->
+    <string name="error_network_timeout">网络连接超时，请检查网络后重试</string>
+    <string name="error_network_unavailable">网络不可用，请检查网络连接</string>
+    <string name="error_connection_reset">连接被重置，请稍后重试</string>
+    <string name="error_server_error">服务器错误 (HTTP %d)，请稍后重试</string>
+    <string name="error_resource_not_found">资源不存在 (404)</string>
+    <string name="error_access_denied">访问被拒绝 (403)</string>
+    <string name="error_too_many_requests">请求过于频繁，请稍后重试</string>
+    <string name="error_insufficient_storage">存储空间不足</string>
+    <string name="error_storage_permission_denied">存储权限被拒绝，请授予权限</string>
+    <string name="error_file_creation_failed">文件创建失败</string>
+    <string name="error_file_write_failed">文件写入失败</string>
+    <string name="error_file_already_exists">文件已存在</string>
+    <string name="error_ssl_certificate">SSL证书验证失败</string>
+    <string name="error_task_cancelled">任务已取消</string>
+    <string name="error_range_not_supported">服务器不支持断点续传</string>
+    <string name="error_part_corrupted">分片数据损坏，将重新下载</string>
+    <string name="error_integrity_check_failed">文件完整性校验失败</string>
+    <string name="error_unknown">未知错误</string>
 </resources>

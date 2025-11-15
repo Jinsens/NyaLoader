@@ -152,7 +152,7 @@ class UpdateHandler(private val activity: ComponentActivity) {
                 }
             }
             
-            // 注册广播接收器
+            // 注册广播接收器 (Android 8.0+)
             activity.registerReceiver(
                 onDownloadComplete,
                 IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
@@ -180,16 +180,9 @@ class UpdateHandler(private val activity: ComponentActivity) {
             val uri = downloadManager.getUriForDownloadedFile(downloadId)
             if (uri != null) {
                 val intent = Intent(Intent.ACTION_VIEW)
-                
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    // Android 7.0+ 需要使用 FileProvider
-                    intent.setDataAndType(uri, "application/vnd.android.package-archive")
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                } else {
-                    @Suppress("DEPRECATION")
-                    intent.setDataAndType(uri, "application/vnd.android.package-archive")
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
+                // Android 7.0+ 使用 FileProvider
+                intent.setDataAndType(uri, "application/vnd.android.package-archive")
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
                 
                 activity.startActivity(intent)
                 
