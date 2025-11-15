@@ -44,7 +44,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateBack: () -> Unit,
     onSelectFolder: () -> Unit,
-    onOpenLicenses: () -> Unit = {}
+    onOpenLicenses: () -> Unit = {},
+    onCheckUpdate: () -> Unit = {}
 ) {
     val context = LocalContext.current
     
@@ -242,6 +243,16 @@ fun SettingsScreen(
             // 关于与许可
             item {
                 SettingsSectionHeader(stringResource(R.string.other))
+            }
+            
+            // 检查更新
+            item {
+                SettingsItem(
+                    icon = Icons.Default.SystemUpdate,
+                    title = stringResource(R.string.check_for_updates),
+                    subtitle = stringResource(R.string.check_for_updates_description),
+                    onClick = onCheckUpdate
+                )
             }
             
             item {

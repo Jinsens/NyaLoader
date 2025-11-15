@@ -224,5 +224,27 @@
     <string name="download_delete_task_message">Delete this download task and its file?</string>
     <string name="download_open_file">Open</string>
     <string name="copy_long_press_hint">Long press to copy</string>
+    
+    <!-- Update Dialog -->
+    <string name="update_dialog_title">New Version Available</string>
+    <string name="update_dialog_download_now">Update Now</string>
+    <string name="update_dialog_later">Later</string>
+    <string name="update_dialog_update_time">Update Time</string>
+    <string name="update_force_update_notice">⚠️ This is a mandatory update, you must upgrade to continue</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_no_update">You\'re up to date</string>
+    <string name="update_check_failed">Update check failed</string>
+    <string name="update_download_success">Download complete, please install</string>
+    <string name="update_downloading">Downloading update…</string>
+    <string name="check_for_updates">Check for Updates</string>
+    <string name="check_for_updates_description">Manually check for new versions</string>
+    <string name="github_repo">GitHub Repository</string>
+    <string name="view_source_code">View Source Code</string>
+    
+    <!-- Open file errors -->
+    <string name="file_not_found">File not found, may have been deleted</string>
+    <string name="no_app_to_open_file">No app can open this type of file</string>
+    <string name="open_file_failed">Failed to open file</string>
+    <string name="choose_app_to_open">Choose app to open</string>
 </resources>
 

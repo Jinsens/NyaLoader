@@ -17,6 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.nyapass.loader.R
+import android.content.Intent
+import android.net.Uri
 /**
  * 开源许可界面
  * 
@@ -42,7 +44,7 @@ fun LicensesScreen(
             }
             "${packageInfo.versionName} ($versionCode)"
         } catch (e: Exception) {
-            "1.1.0 (2)"
+            "1.2.0 (3)"
         }
     }
     
@@ -215,6 +217,29 @@ fun AppInfoCard(versionInfo: String) {
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // GitHub 项目按钮
+            FilledTonalButton(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Jinsens/NyaLoader"))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Code,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.view_source_code))
+            }
         }
     }
 }

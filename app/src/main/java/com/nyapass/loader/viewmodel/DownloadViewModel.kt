@@ -305,13 +305,21 @@ class DownloadViewModel(
     fun openFile(context: android.content.Context, filePath: String) {
         viewModelScope.launch {
             try {
-                val success = repository.openFile(context, filePath)
+                val chooserTitle = context.getString(com.nyapass.loader.R.string.choose_app_to_open)
+                val success = repository.openFile(context, filePath, chooserTitle)
                 if (!success) {
-                    _uiState.update { it.copy(error = "无法打开文件") }
+                    // 文件不存在或没有应用可以打开
+                    val file = java.io.File(filePath)
+                    val errorMsg = when {
+                        !file.exists() -> context.getString(com.nyapass.loader.R.string.file_not_found)
+                        else -> context.getString(com.nyapass.loader.R.string.no_app_to_open_file)
+                    }
+                    _uiState.update { it.copy(error = errorMsg) }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "打开文件失败: ${e.message}")
-                _uiState.update { it.copy(error = "打开文件失败: ${e.message}") }
+                Log.e(TAG, "打开文件失败: ${e.message}", e)
+                val errorMsg = context.getString(com.nyapass.loader.R.string.open_file_failed)
+                _uiState.update { it.copy(error = "$errorMsg: ${e.message}") }
             }
         }
     }

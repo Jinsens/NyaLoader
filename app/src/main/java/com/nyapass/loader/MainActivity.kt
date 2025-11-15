@@ -37,8 +37,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import android.content.DialogInterface
 import com.nyapass.loader.ui.screen.DownloadScreen
 import com.nyapass.loader.ui.screen.LicensesScreen
 import com.nyapass.loader.ui.screen.SettingsScreen
@@ -46,6 +49,9 @@ import com.nyapass.loader.ui.theme.getColorScheme
 import com.nyapass.loader.util.LocaleHelper
 import com.nyapass.loader.util.PermissionUtils
 import com.nyapass.loader.util.UrlValidator
+import com.nyapass.loader.util.UpdateChecker
+import com.nyapass.loader.util.VersionInfo
+import com.nyapass.loader.ui.components.UpdateDialog
 import com.nyapass.loader.viewmodel.DownloadViewModel
 import com.nyapass.loader.viewmodel.SettingsViewModel
 import com.nyapass.loader.viewmodel.ViewModelFactory
@@ -53,6 +59,12 @@ import com.nyapass.loader.data.preferences.Language
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import android.app.DownloadManager
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Environment
+import androidx.core.content.FileProvider
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     
@@ -233,6 +245,10 @@ class MainActivity : ComponentActivity() {
             val hasShownFirebaseTip by application.appPreferences.hasShownFirebaseTip.collectAsStateWithLifecycle()
             var showFirebaseDialog by remember { mutableStateOf(!hasShownFirebaseTip) }
             
+            // 更新检测状态
+            var updateInfo by remember { mutableStateOf<VersionInfo?>(null) }
+            var showUpdateDialog by remember { mutableStateOf(false) }
+            
             // 显示 Firebase 首次提醒对话框
             if (showFirebaseDialog) {
                 FirebasePermissionDialog(
@@ -251,6 +267,56 @@ class MainActivity : ComponentActivity() {
                         application.appPreferences.saveFirebaseEnabled(false)
                         application.appPreferences.saveHasShownFirebaseTip(true)
                         showFirebaseDialog = false
+                    }
+                )
+            }
+            
+            // 更新检测（在 Firebase 对话框关闭后）
+            LaunchedEffect(showFirebaseDialog) {
+                if (!showFirebaseDialog) {
+                    // 延迟 1 秒后检查更新，避免与 Firebase 对话框冲突
+                    kotlinx.coroutines.delay(1000)
+                    
+                    try {
+                        val currentVersionCode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                            packageManager.getPackageInfo(packageName, 0).longVersionCode.toInt()
+                        } else {
+                            @Suppress("DEPRECATION")
+                            packageManager.getPackageInfo(packageName, 0).versionCode
+                        }
+                        
+                        val versionInfo = UpdateChecker.checkForUpdate(
+                            context = this@MainActivity,
+                            currentVersionCode = currentVersionCode,
+                            okHttpClient = application.okHttpClient
+                        )
+                        
+                        if (versionInfo != null) {
+                            updateInfo = versionInfo
+                            showUpdateDialog = true
+                        }
+                    } catch (e: Exception) {
+                        // 更新检查失败，静默处理
+                        android.util.Log.e("MainActivity", "更新检查失败", e)
+                    }
+                }
+            }
+            
+            // 显示更新对话框
+            if (showUpdateDialog && updateInfo != null) {
+                UpdateDialog(
+                    versionInfo = updateInfo!!,
+                    onDismiss = {
+                        // 用户选择忽略更新
+                        UpdateChecker.ignoreVersion(this@MainActivity, updateInfo!!.versionCode)
+                        showUpdateDialog = false
+                        updateInfo = null
+                    },
+                    onConfirm = {
+                        // 用户选择更新，自动选择最佳架构的 APK
+                        showUpdateDialog = false
+                        downloadAndInstallApk(updateInfo!!.getBestApkUrl(), updateInfo!!.versionName)
+                        updateInfo = null
                     }
                 )
             }
@@ -309,6 +375,10 @@ class MainActivity : ComponentActivity() {
                         onResetTempFolder = {
                             // 重置临时路径
                             tempFolderPath = null
+                        },
+                        onCheckUpdate = {
+                            // 手动检查更新
+                            checkUpdateManually()
                         }
                     )
                 }
@@ -375,6 +445,196 @@ class MainActivity : ComponentActivity() {
                 allFilesAccessLauncher.launch(intent)
             }
         }
+    }
+    
+    /**
+     * 下载并安装 APK
+     * 使用系统的 DownloadManager 下载 APK 文件
+     * 
+     * @param apkUrl APK 下载地址
+     * @param versionName 版本名称
+     */
+    private fun downloadAndInstallApk(apkUrl: String, versionName: String) {
+        try {
+            val request = DownloadManager.Request(Uri.parse(apkUrl))
+                .setTitle("NyaLoader 更新")
+                .setDescription("正在下载 v$versionName")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalPublicDir(
+                    Environment.DIRECTORY_DOWNLOADS,
+                    "NyaLoader_${versionName}.apk"
+                )
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+            
+            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val downloadId = downloadManager.enqueue(request)
+            
+            Toast.makeText(
+                this,
+                getString(R.string.update_downloading),
+                Toast.LENGTH_LONG
+            ).show()
+            
+            // 监听下载完成，自动打开安装界面
+            val onDownloadComplete = object : android.content.BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                    if (id == downloadId) {
+                        // 下载完成，安装 APK
+                        installApk(downloadManager, downloadId)
+                        // 取消注册
+                        try {
+                            unregisterReceiver(this)
+                        } catch (e: Exception) {
+                            // 忽略
+                        }
+                    }
+                }
+            }
+            
+            // 注册广播接收器
+            registerReceiver(
+                onDownloadComplete,
+                android.content.IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                Context.RECEIVER_EXPORTED
+            )
+            
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "下载失败: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+            android.util.Log.e("MainActivity", "下载 APK 失败", e)
+        }
+    }
+    
+    /**
+     * 安装 APK
+     * 
+     * @param downloadManager 下载管理器
+     * @param downloadId 下载 ID
+     */
+    private fun installApk(downloadManager: DownloadManager, downloadId: Long) {
+        try {
+            val uri = downloadManager.getUriForDownloadedFile(downloadId)
+            if (uri != null) {
+                val intent = Intent(Intent.ACTION_VIEW)
+                
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    // Android 7.0+ 需要使用 FileProvider
+                    intent.setDataAndType(uri, "application/vnd.android.package-archive")
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.setDataAndType(uri, "application/vnd.android.package-archive")
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                
+                startActivity(intent)
+                
+                Toast.makeText(
+                    this,
+                    getString(R.string.update_download_success),
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                Toast.makeText(
+                    this,
+                    "下载的文件不存在",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "安装失败: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+            android.util.Log.e("MainActivity", "安装 APK 失败", e)
+        }
+    }
+    
+    /**
+     * 手动检查更新
+     * 用于用户主动点击"检查更新"按钮
+     */
+    private fun checkUpdateManually() {
+        val application = application as LoaderApplication
+        
+        // 显示检查中的提示
+        Toast.makeText(
+            this,
+            getString(R.string.update_checking),
+            Toast.LENGTH_SHORT
+        ).show()
+        
+        // 在协程中执行检查
+        lifecycleScope.launch {
+            try {
+                val currentVersionCode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    packageManager.getPackageInfo(packageName, 0).longVersionCode.toInt()
+                } else {
+                    @Suppress("DEPRECATION")
+                    packageManager.getPackageInfo(packageName, 0).versionCode
+                }
+                
+                // 手动检查更新（忽略时间限制和已忽略版本）
+                val versionInfo = UpdateChecker.checkForUpdateManually(
+                    context = this@MainActivity,
+                    currentVersionCode = currentVersionCode,
+                    okHttpClient = application.okHttpClient
+                )
+                
+                withContext(Dispatchers.Main) {
+                    if (versionInfo != null) {
+                        // 有新版本，显示更新对话框
+                        showUpdateDialogManual(versionInfo)
+                    } else {
+                        // 没有新版本
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.update_no_update),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    // 检查失败
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(R.string.update_check_failed),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                android.util.Log.e("MainActivity", "手动检查更新失败", e)
+            }
+        }
+    }
+    
+    /**
+     * 显示手动检查更新的对话框
+     * 注意：这需要在 setContent 外部处理，所以使用传统的 Dialog 方式
+     */
+    private fun showUpdateDialogManual(versionInfo: VersionInfo) {
+        // 使用 Android 原生 AlertDialog
+        android.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.update_dialog_title))
+            .setMessage("${versionInfo.versionName}\n\n${versionInfo.msg}")
+            .setPositiveButton(getString(R.string.update_dialog_download_now)) { dialog: DialogInterface, _: Int ->
+                downloadAndInstallApk(versionInfo.getBestApkUrl(), versionInfo.versionName)
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.update_dialog_later)) { dialog: DialogInterface, _: Int ->
+                if (!versionInfo.forceUpdate) {
+                    UpdateChecker.ignoreVersion(this, versionInfo.versionCode)
+                }
+                dialog.dismiss()
+            }
+            .setCancelable(!versionInfo.forceUpdate)
+            .show()
     }
     
     /**
@@ -482,7 +742,8 @@ fun AppNavigation(
     tempFolderPath: String?,  // 创建下载的临时路径
     onSelectPersistentFolder: () -> Unit,  // 设置界面选择目录（持久化）
     onSelectTempFolder: () -> Unit,  // 创建下载对话框选择目录（临时）
-    onResetTempFolder: () -> Unit  // 重置临时路径
+    onResetTempFolder: () -> Unit,  // 重置临时路径
+    onCheckUpdate: () -> Unit  // 手动检查更新
 ) {
     val navController = rememberNavController()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -640,7 +901,8 @@ fun AppNavigation(
                 onSelectFolder = onSelectPersistentFolder,  // 持久化目录选择
                 onOpenLicenses = {
                     navController.navigate("licenses")
-                }
+                },
+                onCheckUpdate = onCheckUpdate  // 手动检查更新
             )
         }
 

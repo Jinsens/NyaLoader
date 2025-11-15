@@ -1,0 +1,15 @@
+{
+  "versionCode": 3,
+  "versionName": "1.2.0",
+  "updateTime": "2025-11-15",
+  "forceUpdate": false,
+  "msg": "🎉 NyaLoader v1.2.0 重大更新！\n\n🔄 自动更新检查 - 启动时自动检查 GitHub 新版本\n📱 智能架构适配 - 自动下载最适合你设备的 APK\n⚙️ 手动检查更新 - 设置中随时检查更新\n📂 文件打开增强 - 点击任务直接打开文件\n✅ APK 安装修复 - 修复了 APK 文件打开的权限问题\n🔗 GitHub 链接 - 一键跳转到项目仓库\n\n点击「立即更新」自动下载并安装！",
+  "apkUrls": {
+    "universal": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.0/app-universal-release.apk",
+    "arm64-v8a": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.0/app-arm64-v8a-release.apk",
+    "armeabi-v7a": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.0/app-armeabi-v7a-release.apk",
+    "x86": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.0/app-x86-release.apk",
+    "x86_64": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.0/app-x86_64-release.apk"
+  }
+}
+

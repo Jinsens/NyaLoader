@@ -371,33 +371,132 @@ class DownloadRepository(
     
     /**
      * 打开已下载的文件
+     * 
+     * @param context 上下文
+     * @param filePath 文件路径
+     * @param chooserTitle 选择器标题（可选）
      */
-    fun openFile(context: android.content.Context, filePath: String): Boolean {
+    fun openFile(context: android.content.Context, filePath: String, chooserTitle: String? = null): Boolean {
         return try {
             val file = File(filePath)
+            Log.d(TAG, "尝试打开文件: $filePath")
+            Log.d(TAG, "文件存在: ${file.exists()}, 可读: ${file.canRead()}, 大小: ${file.length()} bytes")
+            
             if (!file.exists()) {
+                Log.e(TAG, "文件不存在: $filePath")
                 return false
             }
             
-            val uri = androidx.core.content.FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
+            if (!file.canRead()) {
+                Log.e(TAG, "文件无法读取: $filePath")
+                return false
+            }
             
+            // 尝试使用 FileProvider 获取 URI
+            val uri = try {
+                androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file
+                )
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "FileProvider 获取 URI 失败: ${e.message}", e)
+                Log.e(TAG, "文件路径可能不在 FileProvider 配置的路径中")
+                // 对于 Android 7.0 以下，可以尝试使用文件 URI
+                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N) {
+                    android.net.Uri.fromFile(file)
+                } else {
+                    throw e
+                }
+            }
+            
+            // 获取 MIME 类型
+            val extension = file.extension.lowercase()
             val mimeType = android.webkit.MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(file.extension) ?: "*/*"
+                .getMimeTypeFromExtension(extension) ?: "*/*"
             
+            Log.d(TAG, "文件信息:")
+            Log.d(TAG, "  - 路径: $filePath")
+            Log.d(TAG, "  - URI: $uri")
+            Log.d(TAG, "  - 扩展名: $extension")
+            Log.d(TAG, "  - MIME类型: $mimeType")
+            
+            // 创建打开文件的 Intent
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, mimeType)
                 addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             
-            context.startActivity(intent)
+            // 检查是否有应用可以处理这个 Intent
+            val packageManager = context.packageManager
+            val activities = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                packageManager.queryIntentActivities(
+                    intent,
+                    android.content.pm.PackageManager.ResolveInfoFlags.of(android.content.pm.PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.queryIntentActivities(intent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+            }
+            
+            Log.d(TAG, "可以打开此文件的应用数量: ${activities.size}")
+            activities.forEach { resolveInfo ->
+                Log.d(TAG, "  - ${resolveInfo.activityInfo.packageName}")
+            }
+            
+            if (activities.isEmpty()) {
+                Log.e(TAG, "没有应用可以打开此文件类型: $mimeType")
+                // 尝试使用通用 MIME 类型
+                if (mimeType != "*/*") {
+                    Log.d(TAG, "尝试使用通用 MIME 类型 */*")
+                    intent.setDataAndType(uri, "*/*")
+                    
+                    val genericActivities = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        packageManager.queryIntentActivities(
+                            intent,
+                            android.content.pm.PackageManager.ResolveInfoFlags.of(android.content.pm.PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                        )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        packageManager.queryIntentActivities(intent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+                    }
+                    
+                    if (genericActivities.isEmpty()) {
+                        return false
+                    }
+                } else {
+                    return false
+                }
+            }
+            
+            // 使用选择器让用户选择打开方式
+            val chooser = android.content.Intent.createChooser(
+                intent, 
+                chooserTitle ?: context.getString(com.nyapass.loader.R.string.choose_app_to_open)
+            )
+            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            
+            // 对于 APK 文件，检查是否有安装权限（Android 8.0+）
+            if (mimeType == "application/vnd.android.package-archive") {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    val canInstall = context.packageManager.canRequestPackageInstalls()
+                    Log.d(TAG, "APK 文件 - 是否有安装权限: $canInstall")
+                    
+                    if (!canInstall) {
+                        Log.w(TAG, "没有安装未知应用权限，需要用户授权")
+                        // 仍然尝试打开，让系统引导用户授权
+                    }
+                }
+            }
+            
+            Log.d(TAG, "启动应用选择器")
+            context.startActivity(chooser)
+            Log.d(TAG, "文件打开成功")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "打开文件失败: ${e.message}")
+            Log.e(TAG, "打开文件失败: ${e.message}", e)
+            e.printStackTrace()
             false
         }
     }

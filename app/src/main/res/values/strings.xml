@@ -224,4 +224,26 @@
     <string name="download_delete_task_message">确定要删除这个下载任务吗？文件也将被删除。</string>
     <string name="download_open_file">打开</string>
     <string name="copy_long_press_hint">长按复制</string>
+    
+    <!-- 更新对话框 -->
+    <string name="update_dialog_title">发现新版本</string>
+    <string name="update_dialog_download_now">立即更新</string>
+    <string name="update_dialog_later">稍后再说</string>
+    <string name="update_dialog_update_time">更新时间</string>
+    <string name="update_force_update_notice">⚠️ 这是强制更新，必须升级才能继续使用</string>
+    <string name="update_checking">正在检查更新…</string>
+    <string name="update_no_update">已是最新版本</string>
+    <string name="update_check_failed">检查更新失败</string>
+    <string name="update_download_success">下载完成，请点击安装</string>
+    <string name="update_downloading">正在下载更新…</string>
+    <string name="check_for_updates">检查更新</string>
+    <string name="check_for_updates_description">手动检查是否有新版本</string>
+    <string name="github_repo">GitHub 项目</string>
+    <string name="view_source_code">查看源代码</string>
+    
+    <!-- 打开文件错误 -->
+    <string name="file_not_found">文件不存在，可能已被删除</string>
+    <string name="no_app_to_open_file">没有应用可以打开此类型的文件</string>
+    <string name="open_file_failed">打开文件失败</string>
+    <string name="choose_app_to_open">选择打开方式</string>
 </resources>

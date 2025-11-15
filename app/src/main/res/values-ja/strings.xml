@@ -224,5 +224,27 @@
     <string name="download_delete_task_message">このダウンロードタスクとファイルを削除しますか？</string>
     <string name="download_open_file">開く</string>
     <string name="copy_long_press_hint">長押しでコピー</string>
+    
+    <!-- アップデートダイアログ -->
+    <string name="update_dialog_title">新しいバージョンが利用可能</string>
+    <string name="update_dialog_download_now">今すぐ更新</string>
+    <string name="update_dialog_later">後で</string>
+    <string name="update_dialog_update_time">更新日時</string>
+    <string name="update_force_update_notice">⚠️ これは必須アップデートです。続行するにはアップグレードが必要です</string>
+    <string name="update_checking">更新を確認中…</string>
+    <string name="update_no_update">最新バージョンです</string>
+    <string name="update_check_failed">更新の確認に失敗しました</string>
+    <string name="update_download_success">ダウンロード完了、インストールしてください</string>
+    <string name="update_downloading">更新をダウンロード中…</string>
+    <string name="check_for_updates">更新を確認</string>
+    <string name="check_for_updates_description">手動で新しいバージョンを確認</string>
+    <string name="github_repo">GitHub リポジトリ</string>
+    <string name="view_source_code">ソースコードを表示</string>
+    
+    <!-- ファイルを開くエラー -->
+    <string name="file_not_found">ファイルが見つかりません。削除された可能性があります</string>
+    <string name="no_app_to_open_file">このタイプのファイルを開くアプリがありません</string>
+    <string name="open_file_failed">ファイルを開けませんでした</string>
+    <string name="choose_app_to_open">開くアプリを選択</string>
 </resources>
 

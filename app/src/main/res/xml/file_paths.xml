@@ -1,18 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 公共Download目录 -->
     <external-path
         name="external_downloads"
         path="Download/" />
     
+    <!-- 公共Download/NyaLoader目录 -->
+    <external-path
+        name="external_downloads_nyaloader"
+        path="Download/NyaLoader/" />
+    
     <!-- 应用私有外部存储 -->
     <external-files-path
         name="external_files"
+        path="." />
+    
+    <!-- 应用私有外部存储Download目录 -->
+    <external-files-path
+        name="external_files_downloads"
         path="Download/" />
+    
+    <!-- 应用私有外部存储Download/NyaLoader目录 -->
+    <external-files-path
+        name="external_files_downloads_nyaloader"
+        path="Download/NyaLoader/" />
     
     <!-- 外部存储根目录 -->
     <external-path
-        name="external_storage"
+        name="external_storage_root"
+        path="." />
+    
+    <!-- 缓存目录 -->
+    <cache-path
+        name="cache"
         path="." />
 </paths>
 

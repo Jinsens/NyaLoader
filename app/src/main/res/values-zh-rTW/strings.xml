@@ -224,5 +224,27 @@
     <string name="download_delete_task_message">確定要刪除這個下載任務嗎？檔案也將被刪除。</string>
     <string name="download_open_file">開啟</string>
     <string name="copy_long_press_hint">長按複製</string>
+    
+    <!-- 更新對話框 -->
+    <string name="update_dialog_title">發現新版本</string>
+    <string name="update_dialog_download_now">立即更新</string>
+    <string name="update_dialog_later">稍後再說</string>
+    <string name="update_dialog_update_time">更新時間</string>
+    <string name="update_force_update_notice">⚠️ 這是強制更新，必須升級才能繼續使用</string>
+    <string name="update_checking">正在檢查更新…</string>
+    <string name="update_no_update">已是最新版本</string>
+    <string name="update_check_failed">檢查更新失敗</string>
+    <string name="update_download_success">下載完成，請點擊安裝</string>
+    <string name="update_downloading">正在下載更新…</string>
+    <string name="check_for_updates">檢查更新</string>
+    <string name="check_for_updates_description">手動檢查是否有新版本</string>
+    <string name="github_repo">GitHub 專案</string>
+    <string name="view_source_code">檢視原始碼</string>
+    
+    <!-- 開啟檔案錯誤 -->
+    <string name="file_not_found">檔案不存在，可能已被刪除</string>
+    <string name="no_app_to_open_file">沒有應用可以開啟此類型的檔案</string>
+    <string name="open_file_failed">開啟檔案失敗</string>
+    <string name="choose_app_to_open">選擇開啟方式</string>
 </resources>
 
