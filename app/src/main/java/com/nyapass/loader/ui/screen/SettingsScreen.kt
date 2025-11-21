@@ -20,6 +20,7 @@ import com.nyapass.loader.data.preferences.Language
 import com.nyapass.loader.data.preferences.SaveLocation
 import com.nyapass.loader.data.preferences.ThemeColor
 import com.nyapass.loader.util.UserAgentHelper
+import com.nyapass.loader.util.PathFormatter
 import com.nyapass.loader.util.getLocalizedName
 import com.nyapass.loader.viewmodel.SettingsViewModel
 import com.nyapass.loader.ui.screen.components.*
@@ -171,7 +172,7 @@ fun SettingsScreen(
                     SettingsItem(
                         icon = Icons.Default.FolderOpen,
                         title = stringResource(R.string.custom_directory),
-                        subtitle = customSavePath ?: stringResource(R.string.click_to_select),
+                        subtitle = PathFormatter.formatForDisplay(context, customSavePath) ?: stringResource(R.string.click_to_select),
                         onClick = onSelectFolder
                     )
                 }

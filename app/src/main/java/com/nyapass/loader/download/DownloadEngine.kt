@@ -1,6 +1,7 @@
 ﻿package com.nyapass.loader.download
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import com.nyapass.loader.data.dao.DownloadPartDao
 import com.nyapass.loader.data.dao.DownloadTaskDao
@@ -8,15 +9,20 @@ import com.nyapass.loader.data.model.DownloadPartInfo
 import com.nyapass.loader.data.model.DownloadStatus
 import com.nyapass.loader.data.model.DownloadTask
 import com.nyapass.loader.service.DownloadNotificationService
+import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.RandomAccessFile
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import android.webkit.MimeTypeMap
+import kotlin.math.min
 
 /**
  * 核心下载引擎
@@ -32,6 +38,9 @@ class DownloadEngine(
     private val okHttpClient: OkHttpClient
 ) {
     private val TAG = "DownloadEngine"
+    private val maxParallelPartsPerTask = 16
+    private val maxPartRetryCount = 3
+    private val baseRetryDelayMs = 300L
     
     // 是否已启动前台服务
     private var foregroundServiceStarted = false
@@ -143,6 +152,9 @@ class DownloadEngine(
         val file = File(task.filePath)
         
         // 确保目录存在
+        if (file.exists() && file.isDirectory) {
+            file.deleteRecursively()
+        }
         file.parentFile?.mkdirs()
         
         // 如果是新任务，需要初始化
@@ -181,19 +193,28 @@ class DownloadEngine(
         val request = requestBuilder.build()
         
         try {
-            val response = okHttpClient.newCall(request).execute()
+            var contentLength = 0L
+            var acceptRanges = false
             
-            if (!response.isSuccessful) {
-                response.close()
-                throw Exception("服务器响应错误: ${response.code}")
+            okHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    throw Exception("服务器响应错误: ${response.code}")
+                }
+                
+                contentLength = response.header("Content-Length")?.toLongOrNull()
+                    ?: response.body?.contentLength()
+                    ?: 0L
+                acceptRanges = response.header("Accept-Ranges")?.contains("bytes", true) == true
             }
             
-            val contentLength = response.header("Content-Length")?.toLongOrNull() ?: 0L
-            val acceptRanges = response.header("Accept-Ranges") == "bytes"
+            if (contentLength <= 0L) {
+                fetchContentLengthWithRange(task)?.let { fallback ->
+                    contentLength = fallback.first
+                    acceptRanges = acceptRanges || fallback.second
+                }
+            }
             
-            response.close()
-            
-            if (contentLength == 0L) {
+            if (contentLength <= 0L) {
                 throw Exception("无法获取文件大小")
             }
             
@@ -258,9 +279,13 @@ class DownloadEngine(
         // 为每个未完成的分片创建下载协程
         val incompleteParts = parts.filter { !it.isCompleted }
         
+        val parallelism = min(task.threadCount, maxParallelPartsPerTask).coerceAtLeast(1)
+        val semaphore = Semaphore(parallelism)
         val jobs = incompleteParts.map { part ->
             async {
-                downloadPart(task.id, part, task.url, file)
+                semaphore.withPermit {
+                    downloadPart(task.id, part, task.url, file)
+                }
             }
         }
         
@@ -319,12 +344,30 @@ class DownloadEngine(
             jobs.awaitAll()
             progressJob.cancel()
             
+            var finalDocument: DocumentFile? = null
+            if (!task.destinationUri.isNullOrBlank()) {
+                finalDocument = moveFileToSafDestination(task, file)
+                taskDao.updateFileLocation(
+                    taskId = task.id,
+                    filePath = finalDocument.uri.toString(),
+                    finalContentUri = finalDocument.uri.toString()
+                )
+                val documentName = finalDocument.name
+                if (!documentName.isNullOrBlank() && documentName != task.fileName) {
+                    taskDao.updateFileName(task.id, documentName)
+                }
+            }
+            
             // 标记任务完成
             taskDao.updateStatus(task.id, DownloadStatus.COMPLETED)
             taskDao.updateProgress(task.id, task.totalSize, 0)
             
             // 发送完成通知
-            DownloadNotificationService.notifyComplete(context, task.id, task.fileName)
+            DownloadNotificationService.notifyComplete(
+                context,
+                task.id,
+                task.fileName
+            )
             
             Log.i(TAG, "下载完成: ${task.fileName}")
         } catch (e: Exception) {
@@ -332,6 +375,36 @@ class DownloadEngine(
             progressJob.cancel()
             throw e
         }
+    }
+    
+    private suspend fun downloadPart(
+        taskId: Long,
+        part: DownloadPartInfo,
+        url: String,
+        file: File
+    ) {
+        var attempt = 0
+        var currentDelay = baseRetryDelayMs
+        var lastError: Exception? = null
+        
+        while (attempt < maxPartRetryCount) {
+            try {
+                performDownloadPart(taskId, part, url, file)
+                return
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                lastError = e
+                attempt++
+                if (attempt < maxPartRetryCount) {
+                    Log.w(TAG, "分片${part.partIndex}重试($attempt/$maxPartRetryCount): ${e.message}")
+                    delay(currentDelay)
+                    currentDelay = (currentDelay * 2).coerceAtMost(2000L)
+                }
+            }
+        }
+        
+        throw lastError ?: IllegalStateException("分片${part.partIndex}下载失败")
     }
     
     /**
@@ -343,7 +416,7 @@ class DownloadEngine(
      * 3. BufferedOutputStream
      * 4. 降低取消检查频率
      */
-    private suspend fun downloadPart(
+    private suspend fun performDownloadPart(
         taskId: Long,
         part: DownloadPartInfo,
         url: String,
@@ -445,6 +518,90 @@ class DownloadEngine(
         activeDownloads.values.forEach { it.cancel() }
         activeDownloads.clear()
         downloadScope.cancel()
+    }
+    
+    private fun moveFileToSafDestination(task: DownloadTask, localFile: File): DocumentFile {
+        val destinationUri = task.destinationUri ?: throw IllegalStateException("destinationUri 为空")
+        val treeUri = Uri.parse(destinationUri)
+        val parentDocument = DocumentFile.fromTreeUri(context, treeUri)
+            ?: throw IllegalStateException("无法访问所选目录")
+        
+        val mimeType = task.mimeType ?: guessMimeType(task.fileName)
+        val targetDocument = createUniqueDocumentFile(parentDocument, mimeType, task.fileName)
+            ?: throw IllegalStateException("无法在目标目录创建文件")
+        
+        context.contentResolver.openOutputStream(targetDocument.uri, "w")
+            ?.use { output ->
+                localFile.inputStream().use { input ->
+                    input.copyTo(output)
+                }
+            } ?: throw IllegalStateException("无法写入目标文件")
+        
+        if (localFile.exists()) {
+            localFile.delete()
+        }
+        
+        return targetDocument
+    }
+    
+    private fun createUniqueDocumentFile(
+        parent: DocumentFile,
+        mimeType: String,
+        baseName: String
+    ): DocumentFile? {
+        var name = baseName
+        var counter = 1
+        while (parent.findFile(name) != null) {
+            val ext = baseName.substringAfterLast('.', "")
+            val nameWithoutExt = if (ext.isNotEmpty()) baseName.substringBeforeLast('.') else baseName
+            name = if (ext.isNotEmpty()) {
+                "${nameWithoutExt}_$counter.$ext"
+            } else {
+                "${nameWithoutExt}_$counter"
+            }
+            counter++
+        }
+        return parent.createFile(mimeType, name)
+    }
+    
+    private fun guessMimeType(fileName: String): String {
+        val extension = fileName.substringAfterLast('.', "").lowercase()
+        if (extension.isEmpty()) return "application/octet-stream"
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+            ?: "application/octet-stream"
+    }
+    
+    private fun fetchContentLengthWithRange(task: DownloadTask): Pair<Long, Boolean>? {
+        val requestBuilder = Request.Builder()
+            .url(task.url)
+            .get()
+            .addHeader("Range", "bytes=0-0")
+        task.userAgent?.let { ua ->
+            requestBuilder.addHeader("User-Agent", ua)
+        }
+        
+        return try {
+            okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
+                if (response.code == 206 || response.isSuccessful) {
+                    val contentRange = response.header("Content-Range")
+                    val totalFromRange = contentRange?.substringAfterLast("/")?.toLongOrNull()
+                    val length = response.header("Content-Length")?.toLongOrNull()
+                        ?: response.body?.contentLength()
+                        ?: totalFromRange
+                        ?: 0L
+                    
+                    if (length > 0L) {
+                        val supportsRange = response.code == 206 ||
+                            response.header("Accept-Ranges")?.contains("bytes", true) == true
+                        return length to supportsRange
+                    }
+                }
+                null
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Range 检测文件大小失败: ${e.message}")
+            null
+        }
     }
 }
 

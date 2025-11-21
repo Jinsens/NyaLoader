@@ -1,11 +1,15 @@
 ﻿package com.nyapass.loader.viewmodel
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nyapass.loader.R
 import com.nyapass.loader.data.model.DownloadStatus
+import com.nyapass.loader.data.model.DownloadTag
 import com.nyapass.loader.data.model.DownloadTask
+import com.nyapass.loader.data.model.TagStatistics
 import com.nyapass.loader.data.model.getProgress
 import com.nyapass.loader.download.DownloadProgress
 import com.nyapass.loader.repository.DownloadRepository
@@ -22,7 +26,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
-    private val repository: DownloadRepository
+    private val repository: DownloadRepository,
+    private val application: Application
 ) : ViewModel() {
     
     private val TAG = "DownloadViewModel"
@@ -37,6 +42,30 @@ class DownloadViewModel @Inject constructor(
     
     // 下载进度
     val downloadProgress: StateFlow<Map<Long, DownloadProgress>> = repository.getDownloadProgress()
+
+    // 标签列表
+    val tags: StateFlow<List<DownloadTag>> = repository.getAllTags()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    // 标签统计
+    val tagStatistics: StateFlow<List<TagStatistics>> = repository.getTagStatistics()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    // 任务对应的标签
+    private val taskTags: StateFlow<Map<Long, List<DownloadTag>>> = repository.getTaskTags()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyMap()
+        )
     
     // UI状态
     private val _uiState = MutableStateFlow(DownloadUiState())
@@ -45,75 +74,84 @@ class DownloadViewModel @Inject constructor(
     // 组合任务和进度
     val tasksWithProgress: StateFlow<List<TaskWithProgress>> = combine(
         allTasks,
-        downloadProgress
-    ) { tasks, progress ->
+        downloadProgress,
+        taskTags
+    ) { tasks, progress, tags ->
         tasks.map { task ->
             val progressInfo = progress[task.id]
             TaskWithProgress(
                 task = task,
                 progress = progressInfo?.progress ?: task.getProgress(),
-                speed = progressInfo?.speed ?: task.speed
+                speed = progressInfo?.speed ?: task.speed,
+                tags = tags[task.id].orEmpty()
             )
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
     
     /**
      * 创建新下载任务
      */
     fun createDownloadTask(
-        url: String, 
-        fileName: String? = null, 
+        url: String,
+        fileName: String? = null,
         threadCount: Int = 4,
         saveToPublicDir: Boolean = true,
         customPath: String? = null,
-        userAgent: String? = null
+        userAgent: String? = null,
+        tagIds: List<Long> = emptyList()
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(isLoading = true, error = null) }
-                }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
                 
-                if (url.isBlank()) {
-                    withContext(Dispatchers.Main) {
-                        _uiState.update { it.copy(error = "URL不能为空", isLoading = false) }
-                    }
-                    return@launch
-                }
-                
+            if (url.isBlank()) {
+                _uiState.update { it.copy(error = application.getString(R.string.error_url_empty), isLoading = false) }
+                return@launch
+            }
+            
+            val taskId = try {
                 Log.i(TAG, "创建下载任务: url=$url, fileName=$fileName, threadCount=$threadCount")
-                val taskId = repository.createDownloadTask(url, fileName, threadCount, saveToPublicDir, customPath, userAgent)
-                Log.i(TAG, "任务创建成功: taskId=$taskId")
-                
-                // 等待一小段时间确保任务已写入数据库
-                kotlinx.coroutines.delay(100)
-                
-                // 立即启动下载
-                Log.i(TAG, "开始启动下载: taskId=$taskId")
-                try {
-                    repository.startDownload(taskId)
-                    Log.i(TAG, "✅ 下载启动完成: taskId=$taskId")
-                    
-                    // 等待一小段时间确保下载Job已开始执行
-                    kotlinx.coroutines.delay(100)
-                    Log.i(TAG, "下载Job应已开始执行: taskId=$taskId")
-                } catch (startError: Exception) {
-                    Log.e(TAG, "❌ 启动下载时出错: taskId=$taskId, error=${startError.message}", startError)
-                    throw startError
-                }
-                
-                withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(isLoading = false, showAddDialog = false) }
-                }
+                withContext(Dispatchers.IO) {
+                    repository.createDownloadTask(
+                        url = url,
+                        fileName = fileName,
+                        threadCount = threadCount,
+                        saveToPublicDir = saveToPublicDir,
+                        customPath = customPath,
+                        userAgent = userAgent,
+                        tagIds = tagIds
+                    )
+                }.also { Log.i(TAG, "任务创建成功: taskId=$it") }
             } catch (e: Exception) {
                 Log.e(TAG, "创建任务失败: ${e.message}", e)
+                _uiState.update { 
+                    it.copy(error = application.getString(R.string.error_create_task_failed, e.message ?: ""), isLoading = false) 
+                }
+                return@launch
+            }
+            
+            _uiState.update { it.copy(isLoading = false, showAddDialog = false) }
+            
+            startTaskAsync(taskId)
+        }
+    }
+    
+    private fun startTaskAsync(taskId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.i(TAG, "开始启动下载: taskId=$taskId")
+            try {
+                repository.startDownload(taskId)
+                Log.i(TAG, "下载启动完成: taskId=$taskId")
+            } catch (startError: Exception) {
+                Log.e(TAG, "启动下载时出错: taskId=$taskId, error=${startError.message}", startError)
                 withContext(Dispatchers.Main) {
                     _uiState.update { 
-                        it.copy(error = "创建任务失败: ${e.message}", isLoading = false) 
+                        it.copy(error = application.getString(R.string.error_start_download_failed, startError.message ?: "")) 
                     }
                 }
             }
@@ -132,7 +170,7 @@ class DownloadViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "启动下载失败: taskId=$taskId, error=${e.message}")
                 withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(error = "启动下载失败: ${e.message}") }
+                    _uiState.update { it.copy(error = application.getString(R.string.error_start_download_failed, e.message ?: "")) }
                 }
             }
         }
@@ -151,7 +189,7 @@ class DownloadViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "暂停下载失败: taskId=$taskId, error=${e.message}")
                 withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(error = "暂停下载失败: ${e.message}") }
+                    _uiState.update { it.copy(error = application.getString(R.string.error_pause_download_failed, e.message ?: "")) }
                 }
             }
         }
@@ -169,7 +207,7 @@ class DownloadViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "恢复下载失败: taskId=$taskId, error=${e.message}")
                 withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(error = "恢复下载失败: ${e.message}") }
+                    _uiState.update { it.copy(error = application.getString(R.string.error_resume_download_failed, e.message ?: "")) }
                 }
             }
         }
@@ -187,7 +225,7 @@ class DownloadViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "取消下载失败: taskId=$taskId, error=${e.message}")
                 withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(error = "取消下载失败: ${e.message}") }
+                    _uiState.update { it.copy(error = application.getString(R.string.error_cancel_download_failed, e.message ?: "")) }
                 }
             }
         }
@@ -205,7 +243,7 @@ class DownloadViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "删除任务失败: taskId=$taskId, error=${e.message}")
                 withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(error = "删除任务失败: ${e.message}") }
+                    _uiState.update { it.copy(error = application.getString(R.string.error_delete_task_failed, e.message ?: "")) }
                 }
             }
         }
@@ -223,7 +261,7 @@ class DownloadViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "重试任务失败: taskId=$taskId, error=${e.message}")
                 withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(error = "重试失败: ${e.message}") }
+                    _uiState.update { it.copy(error = application.getString(R.string.error_retry_failed, e.message ?: "")) }
                 }
             }
         }
@@ -237,7 +275,7 @@ class DownloadViewModel @Inject constructor(
             try {
                 repository.clearCompletedTasks()
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "清除失败: ${e.message}") }
+                _uiState.update { it.copy(error = application.getString(R.string.error_clear_failed, e.message ?: "")) }
             }
         }
     }
@@ -250,7 +288,7 @@ class DownloadViewModel @Inject constructor(
             try {
                 repository.clearFailedTasks()
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "清除失败: ${e.message}") }
+                _uiState.update { it.copy(error = application.getString(R.string.error_clear_failed, e.message ?: "")) }
             }
         }
     }
@@ -303,28 +341,202 @@ class DownloadViewModel @Inject constructor(
     fun stopSearch() {
         _uiState.update { it.copy(isSearching = false, searchQuery = "") }
     }
+
+    /**
+     * 重置标签筛选
+     */
+    fun selectAllTags() {
+        _uiState.update { it.copy(selectedTagId = null, showOnlyUntagged = false) }
+    }
+
+    /**
+     * 选择指定标签
+     */
+    fun selectTag(tagId: Long) {
+        _uiState.update { it.copy(selectedTagId = tagId, showOnlyUntagged = false) }
+    }
+
+    /**
+     * 筛选未打标签的任务
+     */
+    fun selectUntagged() {
+        _uiState.update { it.copy(selectedTagId = null, showOnlyUntagged = true) }
+    }
+
+    /**
+     * 创建新标签
+     */
+    fun createTag(name: String, color: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.createTag(name, color)
+            } catch (e: Exception) {
+                Log.e(TAG, "创建标签失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(error = application.getString(R.string.error_create_tag_failed, e.message ?: "")) }
+                }
+            }
+        }
+    }
+
+    /**
+     * 删除标签
+     */
+    fun deleteTag(tagId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.deleteTag(tagId)
+                withContext(Dispatchers.Main) {
+                    if (_uiState.value.selectedTagId == tagId) {
+                        selectAllTags()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "删除标签失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(error = application.getString(R.string.error_delete_tag_failed, e.message ?: "")) }
+                }
+            }
+        }
+    }
+
+    fun updateTag(tagId: Long, name: String, color: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.updateTag(tagId, name, color)
+            } catch (e: Exception) {
+                Log.e(TAG, "更新标签失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(error = application.getString(R.string.error_update_tag_failed, e.message ?: "")) }
+                }
+            }
+        }
+    }
+
+    fun swapTagOrder(firstTagId: Long, secondTagId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.swapTagOrder(firstTagId, secondTagId)
+            } catch (e: Exception) {
+                Log.e(TAG, "调整标签顺序失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(error = application.getString(R.string.error_reorder_tag_failed, e.message ?: "")) }
+                }
+            }
+        }
+    }
     
     /**
      * 打开文件
      */
-    fun openFile(context: android.content.Context, filePath: String) {
+    fun openFile(context: android.content.Context, task: DownloadTask) {
         viewModelScope.launch {
             try {
                 val chooserTitle = context.getString(com.nyapass.loader.R.string.choose_app_to_open)
-                val success = repository.openFile(context, filePath, chooserTitle)
+                val success = repository.openFile(context, task, chooserTitle)
                 if (!success) {
-                    // 文件不存在或没有应用可以打开
-                    val file = java.io.File(filePath)
-                    val errorMsg = when {
-                        !file.exists() -> context.getString(com.nyapass.loader.R.string.file_not_found)
-                        else -> context.getString(com.nyapass.loader.R.string.no_app_to_open_file)
-                    }
+                    val errorMsg = context.getString(com.nyapass.loader.R.string.open_file_failed)
                     _uiState.update { it.copy(error = errorMsg) }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "打开文件失败: ${e.message}", e)
                 val errorMsg = context.getString(com.nyapass.loader.R.string.open_file_failed)
-                _uiState.update { it.copy(error = "$errorMsg: ${e.message}") }
+                _uiState.update { it.copy(error = application.getString(R.string.open_file_failed)) }
+            }
+        }
+    }
+    
+    /**
+     * 进入多选模式
+     */
+    fun enterMultiSelectMode(initialTaskId: Long) {
+        _uiState.update {
+            it.copy(
+                isMultiSelectMode = true,
+                selectedTaskIds = setOf(initialTaskId)
+            )
+        }
+    }
+    
+    /**
+     * 退出多选模式
+     */
+    fun exitMultiSelectMode() {
+        _uiState.update {
+            it.copy(
+                isMultiSelectMode = false,
+                selectedTaskIds = emptySet()
+            )
+        }
+    }
+    
+    /**
+     * 切换任务选中状态
+     */
+    fun toggleTaskSelection(taskId: Long) {
+        _uiState.update { state ->
+            val newSelectedIds = if (taskId in state.selectedTaskIds) {
+                state.selectedTaskIds - taskId
+            } else {
+                state.selectedTaskIds + taskId
+            }
+            
+            // 如果没有选中的任务，自动退出多选模式
+            if (newSelectedIds.isEmpty()) {
+                state.copy(
+                    isMultiSelectMode = false,
+                    selectedTaskIds = emptySet()
+                )
+            } else {
+                state.copy(selectedTaskIds = newSelectedIds)
+            }
+        }
+    }
+    
+    /**
+     * 批量删除选中的任务
+     */
+    fun deleteSelectedTasks() {
+        val selectedIds = _uiState.value.selectedTaskIds
+        if (selectedIds.isEmpty()) return
+        
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                selectedIds.forEach { taskId ->
+                    repository.deleteTask(taskId)
+                }
+                withContext(Dispatchers.Main) {
+                    exitMultiSelectMode()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "批量删除失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(error = application.getString(R.string.error_batch_delete_failed, e.message ?: "")) }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 批量重试选中的任务
+     */
+    fun retrySelectedTasks() {
+        val selectedIds = _uiState.value.selectedTaskIds
+        if (selectedIds.isEmpty()) return
+        
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                selectedIds.forEach { taskId ->
+                    repository.retryFailedTask(taskId)
+                }
+                withContext(Dispatchers.Main) {
+                    exitMultiSelectMode()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "批量重试失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(error = application.getString(R.string.error_batch_retry_failed, e.message ?: "")) }
+                }
             }
         }
     }
@@ -353,15 +565,25 @@ class DownloadViewModel @Inject constructor(
             }
         }
         
+        // 标签过滤
+        val tagFiltered = when {
+            state.showOnlyUntagged -> statusFiltered.filter { it.tags.isEmpty() }
+            state.selectedTagId != null -> statusFiltered.filter { task ->
+                task.tags.any { tag -> tag.id == state.selectedTagId }
+            }
+            else -> statusFiltered
+        }
+        
         // 再按搜索关键词过滤
         if (state.searchQuery.isBlank()) {
-            statusFiltered
+            tagFiltered
         } else {
             val query = state.searchQuery.lowercase()
-            statusFiltered.filter { taskWithProgress ->
+            tagFiltered.filter { taskWithProgress ->
                 taskWithProgress.task.fileName.lowercase().contains(query) ||
                 taskWithProgress.task.url.lowercase().contains(query) ||
-                taskWithProgress.task.filePath.lowercase().contains(query)
+                taskWithProgress.task.filePath.lowercase().contains(query) ||
+                (taskWithProgress.task.finalContentUri?.lowercase()?.contains(query) == true)
             }
         }
     }.stateIn(
@@ -434,7 +656,11 @@ data class DownloadUiState(
     val showAddDialog: Boolean = false,
     val filter: TaskFilter = TaskFilter.ALL,
     val searchQuery: String = "",
-    val isSearching: Boolean = false
+    val isSearching: Boolean = false,
+    val selectedTagId: Long? = null,
+    val showOnlyUntagged: Boolean = false,
+    val isMultiSelectMode: Boolean = false,
+    val selectedTaskIds: Set<Long> = emptySet()
 )
 
 /**
@@ -455,7 +681,8 @@ enum class TaskFilter {
 data class TaskWithProgress(
     val task: DownloadTask,
     val progress: Float,
-    val speed: Long
+    val speed: Long,
+    val tags: List<DownloadTag> = emptyList()
 )
 
 /**
@@ -470,4 +697,3 @@ data class TotalProgress(
     val activeTaskCount: Int = 0,
     val totalSpeed: Long = 0L
 )
-

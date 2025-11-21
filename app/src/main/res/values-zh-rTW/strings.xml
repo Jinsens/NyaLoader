@@ -142,6 +142,10 @@
     <string name="task_management">任務管理</string>
     <string name="clear_completed">清除已完成</string>
     <string name="clear_failed">清除失敗</string>
+    <string name="clear_completed_dialog_title">清除已完成任務</string>
+    <string name="clear_completed_dialog_message">確定要清除所有已完成的任務嗎？此操作無法撤銷。</string>
+    <string name="clear_failed_dialog_title">清除失敗任務</string>
+    <string name="clear_failed_dialog_message">確定要清除所有失敗的任務嗎？此操作無法撤銷。</string>
     <string name="more">更多</string>
     
     <!-- 空狀態 -->
@@ -218,6 +222,7 @@
     <string name="download_url_copied">URL 已複製</string>
     <string name="download_path_copied">儲存路徑已複製</string>
 
+    <string name="retry">重試</string>
     <string name="download_redownload">重新下載</string>
     <string name="download_stop_and_delete">停止並刪除</string>
     <string name="download_delete_task_title">確認刪除</string>
@@ -246,5 +251,68 @@
     <string name="no_app_to_open_file">沒有應用可以開啟此類型的檔案</string>
     <string name="open_file_failed">開啟檔案失敗</string>
     <string name="choose_app_to_open">選擇開啟方式</string>
+    
+    <!-- 剪貼簿監聽對話框 -->
+    <string name="clipboard_monitor_title">智慧剪貼簿監聽</string>
+    <string name="clipboard_monitor_dialog_description">NyaLoader 可以自動識別剪貼簿中的下載連結</string>
+    <string name="clipboard_feature_auto_detect">自動識別</string>
+    <string name="clipboard_feature_auto_detect_desc">複製連結後開啟應用立即識別</string>
+    <string name="clipboard_feature_smart_extract">智慧提取</string>
+    <string name="clipboard_feature_smart_extract_desc">從長文字中自動提取下載連結</string>
+    <string name="clipboard_feature_quick_download">快速下載</string>
+    <string name="clipboard_feature_quick_download_desc">一鍵開始下載，無需手動輸入</string>
+    <string name="clipboard_monitor_tip">可在設定中隨時開啟或關閉此功能</string>
+    <string name="clipboard_enable">啟用智慧監聽</string>
+    <string name="clipboard_not_now">暫不啟用</string>
+    <string name="clipboard_enabled_toast">已啟用智慧剪貼簿監聽</string>
+    <string name="clipboard_can_enable_later">可在設定中隨時開啟</string>
+    
+    <!-- Toast 提示 -->
+    <string name="language_changed_toast">語言已變更，請稍等</string>
+    <string name="directory_saved_toast">已儲存預設目錄: %s</string>
+    <string name="directory_selected_toast">已選擇臨時目錄: %s</string>
+    
+    <!-- WebView -->
+    <string name="webview_title">瀏覽器</string>
+    <string name="webview_back">返回</string>
+    <string name="webview_forward">前進</string>
+    <string name="webview_refresh">重新整理</string>
+    <string name="webview_cloud_game">雲遊戲</string>
+    <string name="webview_edit_url">編輯網址</string>
+    <string name="webview_url_label">輸入網址</string>
+    <string name="webview_go">前往</string>
+    <string name="webview_download_captured">已捕獲下載: %s</string>
+    <string name="tools">工具</string>
+    
+    <!-- 通知頻道和訊息 -->
+    <string name="notification_channel_download">下載通知</string>
+    <string name="notification_channel_progress">下載進度</string>
+    <string name="notification_channel_progress_desc">顯示檔案下載進度</string>
+    <string name="notification_channel_complete">下載完成</string>
+    <string name="notification_channel_complete_desc">下載完成提醒</string>
+    <string name="notification_service_running">下載服務執行中</string>
+    <string name="notification_download_task">下載任務通知</string>
+    <string name="notification_calculating">計算中…</string>
+    <string name="notification_download_complete">下載完成</string>
+    <string name="notification_download_failed">下載失敗</string>
+    <string name="notification_unknown_file">未知檔案</string>
+    <string name="notification_unknown_error">未知錯誤</string>
+    
+    <!-- 錯誤訊息 -->
+    <string name="error_url_empty">URL不能為空</string>
+    <string name="error_tag_name_empty">標籤名稱不能為空</string>
+    <string name="error_create_task_failed">建立任務失敗: %s</string>
+    <string name="error_start_download_failed">開始下載失敗: %s</string>
+    <string name="error_pause_download_failed">暫停下載失敗: %s</string>
+    <string name="error_resume_download_failed">恢復下載失敗: %s</string>
+    <string name="error_cancel_download_failed">取消下載失敗: %s</string>
+    <string name="error_delete_task_failed">刪除任務失敗: %s</string>
+    <string name="error_retry_failed">重試失敗: %s</string>
+    <string name="error_clear_failed">清除失敗: %s</string>
+    <string name="error_create_tag_failed">建立標籤失敗: %s</string>
+    <string name="error_delete_tag_failed">刪除標籤失敗: %s</string>
+    <string name="error_update_tag_failed">更新標籤失敗: %s</string>
+    <string name="error_reorder_tag_failed">調整標籤順序失敗: %s</string>
+    <string name="error_batch_delete_failed">批次刪除失敗: %s</string>
+    <string name="error_batch_retry_failed">批次重試失敗: %s</string>
 </resources>
-

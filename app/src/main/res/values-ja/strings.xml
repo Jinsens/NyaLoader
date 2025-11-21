@@ -142,6 +142,10 @@
     <string name="task_management">タスク管理</string>
     <string name="clear_completed">完了済みを削除</string>
     <string name="clear_failed">失敗を削除</string>
+    <string name="clear_completed_dialog_title">完了済みタスクを削除</string>
+    <string name="clear_completed_dialog_message">すべての完了済みタスクを削除してもよろしいですか？この操作は元に戻せません。</string>
+    <string name="clear_failed_dialog_title">失敗したタスクを削除</string>
+    <string name="clear_failed_dialog_message">すべての失敗したタスクを削除してもよろしいですか？この操作は元に戻せません。</string>
     <string name="more">その他</string>
     
     <!-- 空の状態 -->
@@ -218,6 +222,7 @@
     <string name="download_url_copied">URL をコピーしました</string>
     <string name="download_path_copied">保存パスをコピーしました</string>
 
+    <string name="retry">再試行</string>
     <string name="download_redownload">再ダウンロード</string>
     <string name="download_stop_and_delete">停止して削除</string>
     <string name="download_delete_task_title">タスクを削除</string>
@@ -246,5 +251,68 @@
     <string name="no_app_to_open_file">このタイプのファイルを開くアプリがありません</string>
     <string name="open_file_failed">ファイルを開けませんでした</string>
     <string name="choose_app_to_open">開くアプリを選択</string>
+    
+    <!-- クリップボード監視ダイアログ -->
+    <string name="clipboard_monitor_title">スマートクリップボード監視</string>
+    <string name="clipboard_monitor_dialog_description">NyaLoader はクリップボード内のダウンロードリンクを自動検出できます</string>
+    <string name="clipboard_feature_auto_detect">自動検出</string>
+    <string name="clipboard_feature_auto_detect_desc">リンクをコピー後、アプリを開くとすぐに認識</string>
+    <string name="clipboard_feature_smart_extract">スマート抽出</string>
+    <string name="clipboard_feature_smart_extract_desc">長いテキストからダウンロードリンクを自動抽出</string>
+    <string name="clipboard_feature_quick_download">高速ダウンロード</string>
+    <string name="clipboard_feature_quick_download_desc">ワンタップでダウンロード開始、手動入力不要</string>
+    <string name="clipboard_monitor_tip">設定でいつでもこの機能を有効/無効にできます</string>
+    <string name="clipboard_enable">スマート監視を有効にする</string>
+    <string name="clipboard_not_now">後で</string>
+    <string name="clipboard_enabled_toast">スマートクリップボード監視を有効にしました</string>
+    <string name="clipboard_can_enable_later">設定でいつでも有効にできます</string>
+    
+    <!-- トーストメッセージ -->
+    <string name="language_changed_toast">言語が変更されました。お待ちください</string>
+    <string name="directory_saved_toast">デフォルトディレクトリを保存しました: %s</string>
+    <string name="directory_selected_toast">一時ディレクトリを選択しました: %s</string>
+    
+    <!-- WebView -->
+    <string name="webview_title">ブラウザ</string>
+    <string name="webview_back">戻る</string>
+    <string name="webview_forward">進む</string>
+    <string name="webview_refresh">更新</string>
+    <string name="webview_cloud_game">クラウドゲーム</string>
+    <string name="webview_edit_url">URLを編集</string>
+    <string name="webview_url_label">URLを入力</string>
+    <string name="webview_go">移動</string>
+    <string name="webview_download_captured">ダウンロードを検出しました: %s</string>
+    <string name="tools">ツール</string>
+    
+    <!-- 通知チャンネルとメッセージ -->
+    <string name="notification_channel_download">ダウンロード通知</string>
+    <string name="notification_channel_progress">ダウンロード進行状況</string>
+    <string name="notification_channel_progress_desc">ファイルのダウンロード進行状況を表示</string>
+    <string name="notification_channel_complete">ダウンロード完了</string>
+    <string name="notification_channel_complete_desc">ダウンロード完了通知</string>
+    <string name="notification_service_running">ダウンロードサービス実行中</string>
+    <string name="notification_download_task">ダウンロードタスク通知</string>
+    <string name="notification_calculating">計算中…</string>
+    <string name="notification_download_complete">ダウンロード完了</string>
+    <string name="notification_download_failed">ダウンロード失敗</string>
+    <string name="notification_unknown_file">不明なファイル</string>
+    <string name="notification_unknown_error">不明なエラー</string>
+    
+    <!-- エラーメッセージ -->
+    <string name="error_url_empty">URLを空にすることはできません</string>
+    <string name="error_tag_name_empty">タグ名を空にすることはできません</string>
+    <string name="error_create_task_failed">タスクの作成に失敗しました: %s</string>
+    <string name="error_start_download_failed">ダウンロードの開始に失敗しました: %s</string>
+    <string name="error_pause_download_failed">ダウンロードの一時停止に失敗しました: %s</string>
+    <string name="error_resume_download_failed">ダウンロードの再開に失敗しました: %s</string>
+    <string name="error_cancel_download_failed">ダウンロードのキャンセルに失敗しました: %s</string>
+    <string name="error_delete_task_failed">タスクの削除に失敗しました: %s</string>
+    <string name="error_retry_failed">再試行に失敗しました: %s</string>
+    <string name="error_clear_failed">クリアに失敗しました: %s</string>
+    <string name="error_create_tag_failed">タグの作成に失敗しました: %s</string>
+    <string name="error_delete_tag_failed">タグの削除に失敗しました: %s</string>
+    <string name="error_update_tag_failed">タグの更新に失敗しました: %s</string>
+    <string name="error_reorder_tag_failed">タグの並び替えに失敗しました: %s</string>
+    <string name="error_batch_delete_failed">一括削除に失敗しました: %s</string>
+    <string name="error_batch_retry_failed">一括再試行に失敗しました: %s</string>
 </resources>
-

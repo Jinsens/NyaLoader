@@ -2,16 +2,26 @@
 
 import androidx.compose.runtime.Immutable
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Immutable
-@Entity(tableName = "download_tasks")
+@Entity(
+    tableName = "download_tasks",
+    indices = [
+        Index(value = ["status"]),
+        Index(value = ["createdAt"])
+    ]
+)
 data class DownloadTask(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val url: String,
     val fileName: String,
     val filePath: String,
+    val mimeType: String? = null,
+    val destinationUri: String? = null, // SAF 目录 URI（需要复制）
+    val finalContentUri: String? = null, // SAF 文件 URI（复制完成后）
     val totalSize: Long = 0,
     val downloadedSize: Long = 0,
     val status: DownloadStatus = DownloadStatus.PENDING,
@@ -42,4 +52,8 @@ fun DownloadTask.getProgress(): Float {
     } else {
         0f
     }
+}
+
+fun DownloadTask.getDisplayLocation(): String {
+    return finalContentUri ?: filePath
 }

@@ -1,11 +1,19 @@
 package com.nyapass.loader.ui.screen.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -14,7 +22,7 @@ import com.nyapass.loader.R
 import com.nyapass.loader.viewmodel.TaskFilter
 
 /**
- * 侧滑导航抽屉内容
+ * 侧边导航内容
  */
 @Composable
 fun NavigationDrawerContent(
@@ -23,48 +31,52 @@ fun NavigationDrawerContent(
     onClearCompleted: () -> Unit,
     onClearFailed: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenLicenses: () -> Unit
+    onOpenTagManager: () -> Unit,
+    onOpenWebView: () -> Unit
 ) {
     ModalDrawerSheet {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .width(280.dp)
-                .statusBarsPadding()  // 处理状态栏沉浸
+                .verticalScroll(rememberScrollState())
+                .statusBarsPadding()
         ) {
-            // 抽屉头部
             DrawerHeader()
-            
+
             HorizontalDivider()
-            
-            // 过滤选项
+
             FilterSection(
                 currentFilter = currentFilter,
                 onFilterSelected = onFilterSelected
             )
-            
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            
-            // 清理操作
+
             ManagementSection(
                 onClearCompleted = onClearCompleted,
-                onClearFailed = onClearFailed
+                onClearFailed = onClearFailed,
+                onOpenTagManager = onOpenTagManager
             )
-            
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            
-            // 更多选项
-            MoreOptionsSection(onOpenSettings = onOpenSettings)
+
+            ToolsSection(
+                onOpenWebView = onOpenWebView
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            MoreOptionsSection(
+                onOpenSettings = onOpenSettings
+            )
         }
     }
 }
 
-/**
- * 抽屉头部
- */
 @Composable
 private fun DrawerHeader() {
-    Box(
+    androidx.compose.foundation.layout.Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp)
@@ -78,7 +90,7 @@ private fun DrawerHeader() {
                 modifier = Modifier.size(48.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineSmall,
@@ -93,9 +105,6 @@ private fun DrawerHeader() {
     }
 }
 
-/**
- * 过滤选项部分
- */
 @Composable
 private fun FilterSection(
     currentFilter: TaskFilter,
@@ -107,7 +116,7 @@ private fun FilterSection(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
-    
+
     NavigationDrawerItem(
         icon = { Icon(Icons.AutoMirrored.Filled.List, null) },
         label = { Text(stringResource(R.string.all)) },
@@ -115,7 +124,7 @@ private fun FilterSection(
         onClick = { onFilterSelected(TaskFilter.ALL) },
         modifier = Modifier.padding(horizontal = 12.dp)
     )
-    
+
     NavigationDrawerItem(
         icon = { Icon(Icons.Default.Download, null) },
         label = { Text(stringResource(R.string.downloading)) },
@@ -123,7 +132,7 @@ private fun FilterSection(
         onClick = { onFilterSelected(TaskFilter.DOWNLOADING) },
         modifier = Modifier.padding(horizontal = 12.dp)
     )
-    
+
     NavigationDrawerItem(
         icon = { Icon(Icons.Default.CheckCircle, null) },
         label = { Text(stringResource(R.string.completed)) },
@@ -131,7 +140,7 @@ private fun FilterSection(
         onClick = { onFilterSelected(TaskFilter.COMPLETED) },
         modifier = Modifier.padding(horizontal = 12.dp)
     )
-    
+
     NavigationDrawerItem(
         icon = { Icon(Icons.Default.Pause, null) },
         label = { Text(stringResource(R.string.paused)) },
@@ -139,7 +148,7 @@ private fun FilterSection(
         onClick = { onFilterSelected(TaskFilter.PAUSED) },
         modifier = Modifier.padding(horizontal = 12.dp)
     )
-    
+
     NavigationDrawerItem(
         icon = { Icon(Icons.Default.Error, null) },
         label = { Text(stringResource(R.string.failed)) },
@@ -149,13 +158,11 @@ private fun FilterSection(
     )
 }
 
-/**
- * 任务管理部分
- */
 @Composable
 private fun ManagementSection(
     onClearCompleted: () -> Unit,
-    onClearFailed: () -> Unit
+    onClearFailed: () -> Unit,
+    onOpenTagManager: () -> Unit
 ) {
     Text(
         text = stringResource(R.string.task_management),
@@ -163,7 +170,7 @@ private fun ManagementSection(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
-    
+
     NavigationDrawerItem(
         icon = { Icon(Icons.Default.Clear, null) },
         label = { Text(stringResource(R.string.clear_completed)) },
@@ -171,7 +178,7 @@ private fun ManagementSection(
         onClick = onClearCompleted,
         modifier = Modifier.padding(horizontal = 12.dp)
     )
-    
+
     NavigationDrawerItem(
         icon = { Icon(Icons.Default.Clear, null) },
         label = { Text(stringResource(R.string.clear_failed)) },
@@ -179,20 +186,47 @@ private fun ManagementSection(
         onClick = onClearFailed,
         modifier = Modifier.padding(horizontal = 12.dp)
     )
+
+    NavigationDrawerItem(
+        icon = { Icon(Icons.AutoMirrored.Filled.Label, null) },
+        label = { Text(stringResource(R.string.tag_management_title)) },
+        selected = false,
+        onClick = onOpenTagManager,
+        modifier = Modifier.padding(horizontal = 12.dp)
+    )
 }
 
-/**
- * 更多选项部分
- */
 @Composable
-private fun MoreOptionsSection(onOpenSettings: () -> Unit) {
+private fun ToolsSection(
+    onOpenWebView: () -> Unit
+) {
+    Text(
+        text = stringResource(R.string.tools),
+        style = MaterialTheme.typography.labelLarge,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+
+    NavigationDrawerItem(
+        icon = { Icon(Icons.Default.Language, null) },
+        label = { Text(stringResource(R.string.webview_title)) },
+        selected = false,
+        onClick = onOpenWebView,
+        modifier = Modifier.padding(horizontal = 12.dp)
+    )
+}
+
+@Composable
+private fun MoreOptionsSection(
+    onOpenSettings: () -> Unit
+) {
     Text(
         text = stringResource(R.string.more),
         style = MaterialTheme.typography.labelLarge,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
-    
+
     NavigationDrawerItem(
         icon = { Icon(Icons.Default.Settings, null) },
         label = { Text(stringResource(R.string.settings)) },
@@ -201,4 +235,3 @@ private fun MoreOptionsSection(onOpenSettings: () -> Unit) {
         modifier = Modifier.padding(horizontal = 12.dp)
     )
 }
-

@@ -33,6 +33,7 @@ import com.nyapass.loader.ui.components.UpdateDialog
 import com.nyapass.loader.ui.screen.DownloadScreen
 import com.nyapass.loader.ui.screen.LicensesScreen
 import com.nyapass.loader.ui.screen.SettingsScreen
+import com.nyapass.loader.ui.screen.WebViewScreen
 import com.nyapass.loader.ui.theme.getColorScheme
 import com.nyapass.loader.util.*
 import com.nyapass.loader.viewmodel.DownloadViewModel
@@ -73,16 +74,14 @@ class MainActivity : ComponentActivity() {
                 android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             
-            // 将Uri转换为路径（用于显示）
-            val path = it.path?.replace("/tree/primary:", "/storage/emulated/0/") ?: it.toString()
-            selectedFolderPath = path
+            val rawUri = it.toString()
+            selectedFolderPath = rawUri
             
-            // 持久化保存到设置
-            appPreferences.saveCustomSavePath(path)
+            appPreferences.saveCustomSavePath(rawUri)
             
             Toast.makeText(
                 this,
-                "已保存默认目录: $path",
+                getString(R.string.directory_saved_toast, PathFormatter.formatForDisplay(this, rawUri) ?: rawUri),
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -100,15 +99,12 @@ class MainActivity : ComponentActivity() {
                 android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             
-            // 将Uri转换为路径（用于显示）
-            val path = it.path?.replace("/tree/primary:", "/storage/emulated/0/") ?: it.toString()
-            
-            // 仅设置临时路径，不持久化
-            tempFolderPath = path
+            val rawUri = it.toString()
+            tempFolderPath = rawUri
             
             Toast.makeText(
                 this,
-                "已选择临时目录: $path",
+                getString(R.string.directory_selected_toast, PathFormatter.formatForDisplay(this, rawUri) ?: rawUri),
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -182,7 +178,7 @@ class MainActivity : ComponentActivity() {
         // 当语言变化时重启Activity
         LaunchedEffect(language) {
             if (previousLanguage != null && previousLanguage != language) {
-                Toast.makeText(this@MainActivity, "语言已更改，请稍等", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, getString(R.string.language_changed_toast), Toast.LENGTH_SHORT).show()
                 kotlinx.coroutines.delay(500)
                 recreate()
             }
@@ -397,13 +393,13 @@ fun AppNavigation(
                 app.appPreferences.saveClipboardMonitorEnabled(true)
                 app.appPreferences.saveHasShownClipboardTip(true)
                 showClipboardTip = false
-                Toast.makeText(context, "已启用智能剪贴板监听", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.clipboard_enabled_toast), Toast.LENGTH_SHORT).show()
             },
             onDisable = {
                 app.appPreferences.saveClipboardMonitorEnabled(false)
                 app.appPreferences.saveHasShownClipboardTip(true)
                 showClipboardTip = false
-                Toast.makeText(context, "可在设置中随时开启", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.clipboard_can_enable_later), Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -450,7 +446,41 @@ fun AppNavigation(
                 tempFolderPath = tempFolderPath,
                 onResetTempFolder = onResetTempFolder,
                 onOpenSettings = { navController.navigate("settings") },
-                onOpenLicenses = { }
+                onOpenLicenses = { },
+                onOpenWebView = { navController.navigate("webview") }
+            )
+        }
+
+        composable(
+            route = "webview",
+            enterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            exitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popEnterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popExitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            }
+        ) {
+            WebViewScreen(
+                viewModel = downloadViewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -581,4 +611,3 @@ fun FirebasePermissionDialog(
         }
     )
 }
-

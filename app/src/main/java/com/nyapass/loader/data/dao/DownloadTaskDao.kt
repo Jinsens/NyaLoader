@@ -19,6 +19,9 @@ interface DownloadTaskDao {
     
     @Query("SELECT * FROM download_tasks WHERE status = :status")
     fun getTasksByStatus(status: DownloadStatus): Flow<List<DownloadTask>>
+
+    @Query("SELECT id FROM download_tasks WHERE status = :status")
+    suspend fun getTaskIdsByStatus(status: DownloadStatus): List<Long>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: DownloadTask): Long
@@ -40,6 +43,12 @@ interface DownloadTaskDao {
     
     @Query("UPDATE download_tasks SET status = :status, errorMessage = :errorMessage, updatedAt = :updatedAt WHERE id = :taskId")
     suspend fun updateStatusWithError(taskId: Long, status: DownloadStatus, errorMessage: String?, updatedAt: Long = System.currentTimeMillis())
+    
+    @Query("UPDATE download_tasks SET filePath = :filePath, finalContentUri = :finalContentUri, updatedAt = :updatedAt WHERE id = :taskId")
+    suspend fun updateFileLocation(taskId: Long, filePath: String, finalContentUri: String?, updatedAt: Long = System.currentTimeMillis())
+    
+    @Query("UPDATE download_tasks SET fileName = :fileName, updatedAt = :updatedAt WHERE id = :taskId")
+    suspend fun updateFileName(taskId: Long, fileName: String, updatedAt: Long = System.currentTimeMillis())
     
     @Query("UPDATE download_tasks SET errorMessage = NULL WHERE id = :taskId")
     suspend fun clearErrorMessage(taskId: Long)

@@ -1,5 +1,6 @@
 ﻿package com.nyapass.loader.viewmodel
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.nyapass.loader.data.preferences.AppPreferences
@@ -7,9 +8,12 @@ import com.nyapass.loader.repository.DownloadRepository
 
 /**
  * ViewModel工厂
+ * 注意：此类已被 Hilt 替代，保留仅用于向后兼容
  */
+@Deprecated("Use Hilt for dependency injection instead")
 class ViewModelFactory(
     private val repository: DownloadRepository,
+    private val application: Application,
     private val preferences: AppPreferences? = null
 ) : ViewModelProvider.Factory {
     
@@ -17,7 +21,7 @@ class ViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
             modelClass.isAssignableFrom(DownloadViewModel::class.java) -> {
-                DownloadViewModel(repository) as T
+                DownloadViewModel(repository, application) as T
             }
             modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
                 requireNotNull(preferences) { "AppPreferences is required for SettingsViewModel" }

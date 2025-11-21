@@ -142,6 +142,10 @@
     <string name="task_management">Task Management</string>
     <string name="clear_completed">Clear Completed</string>
     <string name="clear_failed">Clear Failed</string>
+    <string name="clear_completed_dialog_title">Clear Completed Tasks</string>
+    <string name="clear_completed_dialog_message">Are you sure you want to clear all completed tasks? This action cannot be undone.</string>
+    <string name="clear_failed_dialog_title">Clear Failed Tasks</string>
+    <string name="clear_failed_dialog_message">Are you sure you want to clear all failed tasks? This action cannot be undone.</string>
     <string name="more">More</string>
     
     <!-- Empty States -->
@@ -218,6 +222,7 @@
     <string name="download_url_copied">URL copied</string>
     <string name="download_path_copied">Path copied</string>
 
+    <string name="retry">Retry</string>
     <string name="download_redownload">Download again</string>
     <string name="download_stop_and_delete">Stop and delete</string>
     <string name="download_delete_task_title">Delete task</string>
@@ -246,5 +251,68 @@
     <string name="no_app_to_open_file">No app can open this type of file</string>
     <string name="open_file_failed">Failed to open file</string>
     <string name="choose_app_to_open">Choose app to open</string>
+    
+    <!-- Clipboard monitoring dialog -->
+    <string name="clipboard_monitor_title">Smart Clipboard Monitoring</string>
+    <string name="clipboard_monitor_dialog_description">NyaLoader can automatically detect download links in your clipboard</string>
+    <string name="clipboard_feature_auto_detect">Auto Detect</string>
+    <string name="clipboard_feature_auto_detect_desc">Instantly recognizes links when you open the app after copying</string>
+    <string name="clipboard_feature_smart_extract">Smart Extract</string>
+    <string name="clipboard_feature_smart_extract_desc">Automatically extracts download links from long text</string>
+    <string name="clipboard_feature_quick_download">Quick Download</string>
+    <string name="clipboard_feature_quick_download_desc">Start downloading with one tap, no manual input needed</string>
+    <string name="clipboard_monitor_tip">You can enable or disable this feature anytime in settings</string>
+    <string name="clipboard_enable">Enable Smart Monitoring</string>
+    <string name="clipboard_not_now">Not Now</string>
+    <string name="clipboard_enabled_toast">Smart clipboard monitoring enabled</string>
+    <string name="clipboard_can_enable_later">You can enable it anytime in settings</string>
+    
+    <!-- Toast messages -->
+    <string name="language_changed_toast">Language changed, please wait</string>
+    <string name="directory_saved_toast">Default directory saved: %s</string>
+    <string name="directory_selected_toast">Temporary directory selected: %s</string>
+    
+    <!-- WebView -->
+    <string name="webview_title">Browser</string>
+    <string name="webview_back">Back</string>
+    <string name="webview_forward">Forward</string>
+    <string name="webview_refresh">Refresh</string>
+    <string name="webview_cloud_game">Cloud Game</string>
+    <string name="webview_edit_url">Edit URL</string>
+    <string name="webview_url_label">Enter URL</string>
+    <string name="webview_go">Go</string>
+    <string name="webview_download_captured">Download captured: %s</string>
+    <string name="tools">Tools</string>
+    
+    <!-- Notification channels and messages -->
+    <string name="notification_channel_download">Download Notification</string>
+    <string name="notification_channel_progress">Download Progress</string>
+    <string name="notification_channel_progress_desc">Shows file download progress</string>
+    <string name="notification_channel_complete">Download Complete</string>
+    <string name="notification_channel_complete_desc">Download completion notification</string>
+    <string name="notification_service_running">Download service running</string>
+    <string name="notification_download_task">Download task notification</string>
+    <string name="notification_calculating">Calculating…</string>
+    <string name="notification_download_complete">Download Complete</string>
+    <string name="notification_download_failed">Download Failed</string>
+    <string name="notification_unknown_file">Unknown File</string>
+    <string name="notification_unknown_error">Unknown Error</string>
+    
+    <!-- Error messages -->
+    <string name="error_url_empty">URL cannot be empty</string>
+    <string name="error_tag_name_empty">Tag name cannot be empty</string>
+    <string name="error_create_task_failed">Failed to create task: %s</string>
+    <string name="error_start_download_failed">Failed to start download: %s</string>
+    <string name="error_pause_download_failed">Failed to pause download: %s</string>
+    <string name="error_resume_download_failed">Failed to resume download: %s</string>
+    <string name="error_cancel_download_failed">Failed to cancel download: %s</string>
+    <string name="error_delete_task_failed">Failed to delete task: %s</string>
+    <string name="error_retry_failed">Failed to retry: %s</string>
+    <string name="error_clear_failed">Failed to clear: %s</string>
+    <string name="error_create_tag_failed">Failed to create tag: %s</string>
+    <string name="error_delete_tag_failed">Failed to delete tag: %s</string>
+    <string name="error_update_tag_failed">Failed to update tag: %s</string>
+    <string name="error_reorder_tag_failed">Failed to reorder tag: %s</string>
+    <string name="error_batch_delete_failed">Failed to batch delete: %s</string>
+    <string name="error_batch_retry_failed">Failed to batch retry: %s</string>
 </resources>
-

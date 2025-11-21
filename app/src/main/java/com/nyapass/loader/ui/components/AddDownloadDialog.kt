@@ -1,7 +1,11 @@
 ﻿package com.nyapass.loader.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -11,39 +15,56 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nyapass.loader.R
+import com.nyapass.loader.data.model.DownloadTag
 import com.nyapass.loader.data.preferences.UserAgentPreset
+import com.nyapass.loader.util.PathFormatter
 import com.nyapass.loader.util.UserAgentHelper
 
 /**
  * 添加下载对话框
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddDownloadDialog(
     onDismiss: () -> Unit,
-    onConfirm: (url: String, fileName: String?, threadCount: Int, saveToPublicDir: Boolean, customPath: String?, userAgent: String?) -> Unit,
+    onConfirm: (url: String, fileName: String?, threadCount: Int, saveToPublicDir: Boolean, customPath: String?, userAgent: String?, tagIds: List<Long>) -> Unit,
     onSelectFolder: (() -> Unit)? = null,
-    currentTempPath: String? = null  // 当前的临时路径（从外部传入）
+    currentTempPath: String? = null,
+    availableTags: List<DownloadTag> = emptyList()
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as com.nyapass.loader.LoaderApplication
     
     // 从设置中获取默认值
-    val defaultUserAgentFromSettings by app.appPreferences.defaultUserAgent.collectAsState()
-    val customUserAgentPresets by app.appPreferences.customUserAgentPresets.collectAsState()
-    val defaultThreadCountFromSettings by app.appPreferences.defaultThreadCount.collectAsState()
+    val defaultUserAgentFromSettings by app.appPreferences.defaultUserAgent.collectAsStateWithLifecycle()
+    val customUserAgentPresets by app.appPreferences.customUserAgentPresets.collectAsStateWithLifecycle()
+    val defaultThreadCountFromSettings by app.appPreferences.defaultThreadCount.collectAsStateWithLifecycle()
     val webViewUA = remember { UserAgentHelper.getDefaultUserAgent(context) }
     
     // 使用rememberUpdatedState避免闭包捕获旧值
     val currentOnDismiss by rememberUpdatedState(onDismiss)
     val currentOnConfirm by rememberUpdatedState(onConfirm)
     val currentOnSelectFolder by rememberUpdatedState(onSelectFolder)
+    
+    // 标签选择
+    val selectedTagIds = remember { mutableStateListOf<Long>() }
+    LaunchedEffect(availableTags) {
+        val validIds = availableTags.map { it.id }.toSet()
+        val iterator = selectedTagIds.iterator()
+        while (iterator.hasNext()) {
+            if (!validIds.contains(iterator.next())) {
+                iterator.remove()
+            }
+        }
+    }
     
     // 批量下载：使用URL列表
     val urls = remember { mutableStateListOf("") }
@@ -64,6 +85,9 @@ fun AddDownloadDialog(
     
     // 使用外部传入的临时路径
     val customPath = currentTempPath
+    val displayPath = remember(customPath) {
+        PathFormatter.formatForDisplay(context, customPath)
+    }
     
     AlertDialog(
         onDismissRequest = currentOnDismiss,
@@ -213,6 +237,63 @@ fun AddDownloadDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+                
+                // 标签选择
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.tag_section_title),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    if (availableTags.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.tag_empty_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            availableTags.forEach { tag ->
+                                val selected = tag.id in selectedTagIds
+                                val tagColor = Color(tag.color)
+                                FilterChip(
+                                    selected = selected,
+                                    onClick = {
+                                        if (selected) {
+                                            selectedTagIds.remove(tag.id)
+                                        } else {
+                                            selectedTagIds.add(tag.id)
+                                        }
+                                    },
+                                    label = { Text(tag.name) },
+                                    leadingIcon = {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(12.dp)
+                                                .background(tagColor, CircleShape)
+                                        )
+                                    },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = tagColor.copy(alpha = 0.2f)
+                                    )
+                                )
+                            }
+                        }
+                        if (selectedTagIds.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.tag_select_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
                 
                 // 高级选项展开按钮
                 OutlinedCard(
@@ -376,7 +457,7 @@ fun AddDownloadDialog(
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     Text(
-                                        text = customPath ?: stringResource(R.string.click_to_select_temp),
+                                        text = displayPath ?: customPath ?: stringResource(R.string.click_to_select_temp),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (customPath != null) {
                                             MaterialTheme.colorScheme.primary
@@ -484,7 +565,8 @@ fun AddDownloadDialog(
                                     threads,
                                     true, // 始终使用默认设置
                                     customPath, // 临时自定义路径
-                                    userAgent.trim().ifBlank { null }
+                                    userAgent.trim().ifBlank { null },
+                                    selectedTagIds.toList()
                                 )
                             }
                         }

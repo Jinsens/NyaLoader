@@ -1,21 +1,31 @@
 ﻿package com.nyapass.loader.repository
 
 import android.content.Context
+import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import android.webkit.MimeTypeMap
+import androidx.documentfile.provider.DocumentFile
+import com.nyapass.loader.R
 import com.nyapass.loader.data.dao.DownloadPartDao
+import com.nyapass.loader.data.dao.DownloadTagDao
 import com.nyapass.loader.data.dao.DownloadTaskDao
 import com.nyapass.loader.data.model.DownloadStatus
+import com.nyapass.loader.data.model.DownloadTag
 import com.nyapass.loader.data.model.DownloadTask
+import com.nyapass.loader.data.model.TagStatistics
 import com.nyapass.loader.download.DownloadEngine
 import com.nyapass.loader.download.DownloadProgress
+import com.nyapass.loader.util.FileUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import java.io.File
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 下载仓库层
@@ -25,11 +35,13 @@ class DownloadRepository(
     private val context: Context,
     private val taskDao: DownloadTaskDao,
     private val partDao: DownloadPartDao,
+    private val tagDao: DownloadTagDao,
     private val downloadEngine: DownloadEngine,
     private val okHttpClient: OkHttpClient
 ) {
     
     private val TAG = "DownloadRepository"
+    private val remoteFileInfoCache = ConcurrentHashMap<String, RemoteFileInfo>()
     
     /**
      * 获取所有下载任务
@@ -65,6 +77,74 @@ class DownloadRepository(
     fun getDownloadProgress(): StateFlow<Map<Long, DownloadProgress>> {
         return downloadEngine.downloadProgress
     }
+
+    /**
+     * 获取全部标签
+     */
+    fun getAllTags(): Flow<List<DownloadTag>> {
+        return tagDao.getAllTags()
+    }
+
+    /**
+     * 获取任务标签映射
+     */
+    fun getTaskTags(): Flow<Map<Long, List<DownloadTag>>> {
+        return tagDao.getTaskTags().map { relations ->
+            relations.groupBy { it.taskId }
+                .mapValues { entry -> entry.value.map { it.tag } }
+        }
+    }
+
+    /**
+     * 获取标签统计
+     */
+    fun getTagStatistics(): Flow<List<TagStatistics>> {
+        return tagDao.getTagStatistics()
+    }
+
+    /**
+     * 创建新标签
+     */
+    suspend fun createTag(name: String, color: Long): Long {
+        val trimmed = name.trim()
+        require(trimmed.isNotEmpty()) { context.getString(R.string.error_tag_name_empty) }
+        val nextOrder = tagDao.getMaxSortOrder() + 1
+        return tagDao.insertTag(
+            DownloadTag(
+                name = trimmed,
+                color = color,
+                sortOrder = nextOrder
+            )
+        )
+    }
+
+    suspend fun updateTag(tagId: Long, name: String, color: Long) {
+        val existing = tagDao.getTagById(tagId) ?: return
+        val trimmed = name.trim()
+        require(trimmed.isNotEmpty()) { context.getString(R.string.error_tag_name_empty) }
+        tagDao.updateTag(
+            existing.copy(
+                name = trimmed,
+                color = color
+            )
+        )
+    }
+
+    /**
+     * 删除标签
+     */
+    suspend fun deleteTag(tagId: Long) {
+        tagDao.deleteTag(tagId)
+    }
+
+    suspend fun swapTagOrder(firstId: Long, secondId: Long) {
+        if (firstId == secondId) return
+        val first = tagDao.getTagById(firstId)
+        val second = tagDao.getTagById(secondId)
+        if (first != null && second != null) {
+            tagDao.swapTagOrder(firstId, first.sortOrder, secondId, second.sortOrder)
+        }
+    }
     
     /**
      * 创建新的下载任务
@@ -75,79 +155,120 @@ class DownloadRepository(
         threadCount: Int = 4,
         saveToPublicDir: Boolean = true,
         customPath: String? = null,
-        userAgent: String? = null
+        userAgent: String? = null,
+        tagIds: List<Long> = emptyList()
     ): Long {
-        // 优先使用服务器提供的文件名（Content-Disposition / 重定向后的URL），否则再回退到URL路径
-        val finalFileName = fileName ?: resolveFileNameFromServer(url)
-        
-        // 构建文件路径
-        val filePath = if (customPath != null) {
-            File(customPath, finalFileName).absolutePath
-        } else if (saveToPublicDir) {
-            val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            val loaderDir = File(downloadDir, "NyaLoader")
-            loaderDir.mkdirs()
-            File(loaderDir, finalFileName).absolutePath
+        val remoteFileInfo = resolveFileInfoFromServer(url, userAgent)
+        val safeFileName = buildSafeFileName(fileName ?: remoteFileInfo.fileName, remoteFileInfo.mimeType)
+        val useSaf = isSafPath(customPath)
+        val workingDirectory = if (useSaf) {
+            FileUtils.getCacheDirectory(context)
         } else {
-            val downloadDir = File(
-                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                "NyaLoader"
-            )
-            downloadDir.mkdirs()
-            File(downloadDir, finalFileName).absolutePath
+            determineTargetDirectory(customPath, saveToPublicDir)
         }
+        val uniqueFileName = FileUtils.generateUniqueFileName(workingDirectory, safeFileName)
+        val filePath = File(workingDirectory, uniqueFileName).absolutePath
         
-        // 创建任务
         val task = DownloadTask(
             url = url,
-            fileName = finalFileName,
+            fileName = uniqueFileName,
             filePath = filePath,
+            mimeType = remoteFileInfo.mimeType,
+            destinationUri = if (useSaf) customPath else null,
             threadCount = threadCount,
             status = DownloadStatus.PENDING,
             saveToPublicDir = saveToPublicDir,
             userAgent = userAgent
         )
         
-        return taskDao.insertTask(task)
+        val taskId = taskDao.insertTask(task)
+        tagDao.replaceTagsForTask(taskId, tagIds.distinct())
+        return taskId
     }
-
     /**
-     * 从服务器获取更准确的文件名
-     * 1. 先尝试读取 Content-Disposition 的 filename / filename*
-     * 2. 再尝试使用最终 URL 的路径名
-     * 3. 最后回退到原始 URL 的最后一段
+     * 获取文件名和 MIME 信息，带有简单缓存与 Range 兜底
      */
-    private fun resolveFileNameFromServer(url: String): String {
+    private fun resolveFileInfoFromServer(url: String, userAgent: String?): RemoteFileInfo {
+        val cacheKey = buildCacheKey(url, userAgent)
+        remoteFileInfoCache[cacheKey]?.let { return it }
+        
+        val fallbackName = extractFileNameFromUrl(url).ifBlank { "download.bin" }
+        val info = fetchFileInfoViaHead(url, userAgent, fallbackName)
+            ?: fetchFileInfoViaRange(url, userAgent, fallbackName)
+            ?: RemoteFileInfo(
+                fileName = fallbackName,
+                mimeType = guessMimeTypeFromName(fallbackName)
+            )
+        
+        remoteFileInfoCache[cacheKey] = info
+        return info
+    }
+    
+    private fun buildCacheKey(url: String, userAgent: String?): String {
+        return "$url|${userAgent ?: ""}"
+    }
+    
+    private fun fetchFileInfoViaHead(
+        url: String,
+        userAgent: String?,
+        fallbackName: String
+    ): RemoteFileInfo? {
+        val requestBuilder = Request.Builder().url(url).head()
+        userAgent?.let { requestBuilder.header("User-Agent", it) }
+        
         return try {
-            val request = Request.Builder()
-                .url(url)
-                .head()
-                .build()
-
-            okHttpClient.newCall(request).execute().use { response ->
-                if (response.isSuccessful) {
-                    // 1. Content-Disposition: attachment; filename="xxx.ext"
-                    val disposition = response.header("Content-Disposition") ?: response.header("content-disposition")
-                    val cdFileName = disposition?.let { parseFileNameFromContentDisposition(it) }
-                    if (!cdFileName.isNullOrBlank()) {
-                        return@use cdFileName
-                    }
-
-                    // 2. 最终 URL 的路径
-                    val finalUrl = response.request.url.toString()
-                    val pathName = extractFileNameFromUrl(finalUrl)
-                    if (pathName.isNotBlank()) {
-                        return@use pathName
-                    }
-                }
-
-                // 3. 回退到原始 URL
-                extractFileNameFromUrl(url)
+            okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
+                if (!response.isSuccessful) return null
+                buildRemoteFileInfo(response, fallbackName)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "从服务器解析文件名失败: ${e.message}")
-            extractFileNameFromUrl(url)
+            Log.w(TAG, "HEAD 请求文件信息失败: ${e.message}")
+            null
         }
+    }
+    
+    private fun fetchFileInfoViaRange(
+        url: String,
+        userAgent: String?,
+        fallbackName: String
+    ): RemoteFileInfo? {
+        val requestBuilder = Request.Builder()
+            .url(url)
+            .get()
+            .addHeader("Range", "bytes=0-0")
+        userAgent?.let { requestBuilder.header("User-Agent", it) }
+        
+        return try {
+            okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
+                if (!(response.code == 206 || response.isSuccessful)) return null
+                buildRemoteFileInfo(response, fallbackName)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Range 请求文件信息失败: ${e.message}")
+            null
+        }
+    }
+    
+    private fun buildRemoteFileInfo(response: okhttp3.Response, fallbackName: String): RemoteFileInfo {
+        val disposition = response.header("Content-Disposition") ?: response.header("content-disposition")
+        val cdFileName = disposition?.let { parseFileNameFromContentDisposition(it) }
+        val redirectedUrl = response.request.url.toString()
+        
+        val resolvedName = when {
+            !cdFileName.isNullOrBlank() -> cdFileName
+            else -> extractFileNameFromUrl(redirectedUrl)
+        }.ifBlank { fallbackName }
+        
+        val mimeType = response.header("Content-Type")
+            ?.substringBefore(";")
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: guessMimeTypeFromName(resolvedName)
+        
+        return RemoteFileInfo(
+            fileName = resolvedName,
+            mimeType = mimeType
+        )
     }
 
     /**
@@ -220,6 +341,129 @@ class DownloadRepository(
     }
     
     /**
+     * 构建安全的文件名
+     */
+    private fun buildSafeFileName(preferredName: String?, mimeType: String?): String {
+        var candidate = preferredName?.trim().takeUnless { it.isNullOrEmpty() }
+            ?: "download_${System.currentTimeMillis()}"
+        
+        candidate = FileUtils.sanitizeFileName(candidate).ifBlank {
+            "download_${System.currentTimeMillis()}"
+        }
+        
+        candidate = candidate.replace(Regex("[/\\\\]+"), "_")
+        
+        if (!candidate.contains('.') || candidate.endsWith(".")) {
+            val extension = guessExtensionFromMimeType(mimeType)
+            candidate = if (!extension.isNullOrBlank()) {
+                candidate.trimEnd('.') + "." + extension
+            } else {
+                if (candidate.endsWith(".bin")) candidate else "$candidate.bin"
+            }
+        }
+        
+        val maxLength = 128
+        if (candidate.length > maxLength) {
+            val ext = candidate.substringAfterLast('.', "")
+            val nameWithoutExt = if (ext.isNotEmpty()) candidate.substringBeforeLast('.') else candidate
+            val trimmed = nameWithoutExt.take(maxLength - if (ext.isNotEmpty()) ext.length + 1 else 0)
+                .ifBlank { "download_${System.currentTimeMillis()}" }
+            candidate = if (ext.isNotEmpty()) "$trimmed.$ext" else trimmed
+        }
+        
+        return candidate
+    }
+    
+    /**
+     * 确认存储目录
+     */
+    private fun determineTargetDirectory(customPath: String?, saveToPublicDir: Boolean): File {
+        customPath?.trim()?.takeIf { it.isNotEmpty() }?.let { rawPath ->
+            if (!isSafPath(rawPath)) {
+                val customDir = File(rawPath)
+                if (!customDir.exists()) {
+                    runCatching { customDir.mkdirs() }.onFailure {
+                        Log.w(TAG, "无法创建自定义目录: $rawPath - ${it.message}")
+                    }
+                }
+                
+                if (customDir.isDirectory && customDir.canWrite()) {
+                    return customDir
+                } else {
+                    Log.w(TAG, "自定义目录无法写入, 回退至默认路径: $rawPath")
+                }
+            } else {
+                Log.w(TAG, "content:// 路径无法通过 File API 直接访问, 回退至默认目录: $rawPath")
+            }
+        }
+        
+        val defaultDir = if (saveToPublicDir) {
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        } else {
+            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        } ?: context.filesDir
+        
+        if (!defaultDir.exists()) {
+            defaultDir.mkdirs()
+        }
+        
+        return defaultDir
+    }
+    
+    private fun isSafPath(path: String?): Boolean {
+        return path?.startsWith("content://") == true
+    }
+    
+    private fun guessMimeTypeFromName(fileName: String?): String? {
+        if (fileName.isNullOrBlank()) return null
+        val extension = fileName.substringAfterLast('.', "").lowercase()
+        if (extension.isEmpty()) return null
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+    }
+    
+    private fun guessExtensionFromMimeType(mimeType: String?): String? {
+        if (mimeType.isNullOrBlank()) return null
+        val normalized = mimeType.substringBefore(";").trim().lowercase()
+        if (normalized.isEmpty()) return null
+        return MimeTypeMap.getSingleton().getExtensionFromMimeType(normalized)
+    }
+    
+    private data class RemoteFileInfo(
+        val fileName: String,
+        val mimeType: String?
+    )
+    
+    private fun deleteTaskFile(task: DownloadTask) {
+        val safUri = task.finalContentUri ?: task.filePath.takeIf { isSafPath(it) }
+        if (safUri != null && safUri.startsWith("content://")) {
+            DocumentFile.fromSingleUri(context, Uri.parse(safUri))?.let { document ->
+                if (document.exists()) {
+                    document.delete()
+                }
+            }
+        } else {
+            val file = File(task.filePath)
+            if (file.exists()) {
+                file.delete()
+            }
+        }
+    }
+    
+    private fun resolveWorkingFilePath(task: DownloadTask): String {
+        val shouldUseCache = task.finalContentUri != null || isSafPath(task.filePath)
+        val directory = if (shouldUseCache) {
+            FileUtils.getCacheDirectory(context)
+        } else {
+            File(task.filePath).parentFile ?: FileUtils.getDownloadDirectory(context)
+        }
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+        val uniqueName = FileUtils.generateUniqueFileName(directory, task.fileName)
+        return File(directory, uniqueName).absolutePath
+    }
+    
+    /**
      * 开始下载
      */
     suspend fun startDownload(taskId: Long) {
@@ -266,15 +510,11 @@ class DownloadRepository(
         }
         
         // 删除文件
-        task?.let {
-            val file = File(it.filePath)
-            if (file.exists()) {
-                file.delete()
-            }
-        }
+        task?.let { deleteTaskFile(it) }
         
         // 删除数据库记录
         partDao.deletePartsByTaskId(taskId)
+        tagDao.deleteTagsForTask(taskId)
         taskDao.deleteTaskById(taskId)
     }
     
@@ -282,6 +522,10 @@ class DownloadRepository(
      * 清除已完成的任务
      */
     suspend fun clearCompletedTasks() {
+        val taskIds = taskDao.getTaskIdsByStatus(DownloadStatus.COMPLETED)
+        if (taskIds.isNotEmpty()) {
+            tagDao.deleteTagsForTasks(taskIds)
+        }
         taskDao.deleteTasksByStatus(DownloadStatus.COMPLETED)
     }
     
@@ -289,6 +533,10 @@ class DownloadRepository(
      * 清除失败的任务
      */
     suspend fun clearFailedTasks() {
+        val taskIds = taskDao.getTaskIdsByStatus(DownloadStatus.FAILED)
+        if (taskIds.isNotEmpty()) {
+            tagDao.deleteTagsForTasks(taskIds)
+        }
         taskDao.deleteTasksByStatus(DownloadStatus.FAILED)
     }
     
@@ -300,29 +548,22 @@ class DownloadRepository(
         
         // 如果是已完成的任务,需要重置下载数据
         if (task.status == DownloadStatus.COMPLETED) {
-            // 先取消可能存在的下载任务
             try {
                 downloadEngine.cancelDownload(taskId)
-            } catch (e: Exception) {
-                // 忽略
+            } catch (_: Exception) {
             }
             
-            // 删除已下载的文件
-            val file = File(task.filePath)
-            if (file.exists()) {
-                file.delete()
-            }
-            
-            // 删除所有分片记录
+            deleteTaskFile(task)
             partDao.deletePartsByTaskId(taskId)
             
-            // 重置任务的下载数据
             val resetTask = task.copy(
                 downloadedSize = 0L,
                 totalSize = 0L,
                 status = DownloadStatus.PENDING,
                 speed = 0L,
                 errorMessage = null,
+                finalContentUri = null,
+                filePath = resolveWorkingFilePath(task),
                 updatedAt = System.currentTimeMillis()
             )
             taskDao.updateTask(resetTask)
@@ -350,7 +591,16 @@ class DownloadRepository(
      * @param filePath 文件路径
      * @param chooserTitle 选择器标题（可选）
      */
-    fun openFile(context: android.content.Context, filePath: String, chooserTitle: String? = null): Boolean {
+    fun openFile(context: android.content.Context, task: DownloadTask, chooserTitle: String? = null): Boolean {
+        val safUri = task.finalContentUri ?: task.filePath.takeIf { isSafPath(it) }
+        return if (safUri != null && safUri.startsWith("content://")) {
+            openSafFile(context, Uri.parse(safUri), chooserTitle)
+        } else {
+            openLocalFile(context, task.filePath, chooserTitle)
+        }
+    }
+    
+    private fun openLocalFile(context: android.content.Context, filePath: String, chooserTitle: String?): Boolean {
         return try {
             val file = File(filePath)
             Log.d(TAG, "尝试打开文件: $filePath")
@@ -376,12 +626,7 @@ class DownloadRepository(
             } catch (e: IllegalArgumentException) {
                 Log.e(TAG, "FileProvider 获取 URI 失败: ${e.message}", e)
                 Log.e(TAG, "文件路径可能不在 FileProvider 配置的路径中")
-                // 对于 Android 7.0 以下，可以尝试使用文件 URI
-                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N) {
-                    android.net.Uri.fromFile(file)
-                } else {
-                    throw e
-                }
+                throw e
             }
             
             // 获取 MIME 类型
@@ -451,16 +696,14 @@ class DownloadRepository(
             )
             chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             
-            // 对于 APK 文件，检查是否有安装权限（Android 8.0+）
+            // 对于 APK 文件，检查是否有安装权限
             if (mimeType == "application/vnd.android.package-archive") {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    val canInstall = context.packageManager.canRequestPackageInstalls()
-                    Log.d(TAG, "APK 文件 - 是否有安装权限: $canInstall")
-                    
-                    if (!canInstall) {
-                        Log.w(TAG, "没有安装未知应用权限，需要用户授权")
-                        // 仍然尝试打开，让系统引导用户授权
-                    }
+                val canInstall = context.packageManager.canRequestPackageInstalls()
+                Log.d(TAG, "APK 文件 - 是否有安装权限: $canInstall")
+                
+                if (!canInstall) {
+                    Log.w(TAG, "没有安装未知应用权限，需要用户授权")
+                    // 仍然尝试打开，让系统引导用户授权
                 }
             }
             
@@ -475,6 +718,31 @@ class DownloadRepository(
         }
     }
     
+    private fun openSafFile(context: android.content.Context, uri: Uri, chooserTitle: String?): Boolean {
+        return try {
+            val document = DocumentFile.fromSingleUri(context, uri)
+            if (document == null || !document.exists()) {
+                Log.e(TAG, "SAF 文件不存在: $uri")
+                return false
+            }
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, context.contentResolver.getType(uri) ?: "*/*")
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            val chooser = android.content.Intent.createChooser(
+                intent,
+                chooserTitle ?: context.getString(com.nyapass.loader.R.string.choose_app_to_open)
+            )
+            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "通过 SAF 打开文件失败: ${e.message}", e)
+            false
+        }
+    }
+    
     /**
      * 清理资源
      */
@@ -482,3 +750,4 @@ class DownloadRepository(
         downloadEngine.cleanup()
     }
 }
+

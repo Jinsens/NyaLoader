@@ -1,14 +1,14 @@
 {
-  "versionCode": 4,
-  "versionName": "1.2.5",
-  "updateTime": "2025-11-15",
+  "versionCode": 5,
+  "versionName": "2.0.0",
+  "updateTime": "2025-11-21",
   "forceUpdate": false,
-  "msg": "NyaLoader v1.2.5 性能优化版本！\n\n⚡ 极限性能优化\n• 下载速度提升 5-6 倍（优化缓冲区和数据库操作）\n• 平衡的网络配置（避免连接被拒绝）\n• 智能重试机制（自动处理 429/5xx 错误）\n\n🎨 UI/UX 优化\n• @Immutable 注解优化（减少不必要的重组）\n• LazyColumn 性能优化（更流畅的滚动）\n• 应用启动速度提升 10-15%\n\n🔧 稳定性提升\n• 修复 hiltViewModel 弃用警告\n• 大幅简化调试日志（减少 58% 日志量）\n• 延迟初始化非关键组件\n\n💪 技术改进\n• 256KB 大缓冲区（vs 8KB）\n• 批量数据库更新（减少 99% 写入次数）\n• BufferedOutputStream 优化\n\n点击「立即更新」体验极速下载！",
+  "msg": "NyaLoader v2.0.0 重大更新！内置浏览器功能上线！\n\n🌐 全新功能 - 内置浏览器\n• 完整的 WebView 浏览器功能\n• 前进/后退/刷新/网址编辑\n• 自动捕获下载请求（无需手动复制链接）\n• 智能文件名识别和 User-Agent 传递\n• HTTPS 安全指示器和加载进度条\n• 一键跳转云游戏快捷按钮 ☁️\n\n✨ 体验优化\n• 在浏览器中点击下载链接自动添加到下载列表\n• 32线程高速下载，无缝衔接\n• 支持 JavaScript 和混合内容\n• Material Design 3 现代化界面\n\n🔧 技术改进\n• 修复资源文件重复定义问题\n• 修复 Hilt 依赖注入兼容性\n• 更新为最新的 AutoMirrored 图标（支持 RTL）\n• 移除已废弃的 WebView API\n• 零编译警告，代码更规范\n\n🌏 多语言支持\n• 简体中文 / English / 日本語 / 繁體中文\n• 完整翻译所有新增功能\n\n打开侧边栏 → 工具 → 浏览器，开始全新体验！",
   "apkUrls": {
-    "universal": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.5/app-universal-release.apk",
-    "arm64-v8a": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.5/app-arm64-v8a-release.apk",
-    "armeabi-v7a": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.5/app-armeabi-v7a-release.apk",
-    "x86": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.5/app-x86-release.apk",
-    "x86_64": "https://github.com/Jinsens/NyaLoader/releases/download/v1.2.5/app-x86_64-release.apk"
+    "universal": "https://github.com/Jinsens/NyaLoader/releases/download/v2.0.0/app-universal-release.apk",
+    "arm64-v8a": "https://github.com/Jinsens/NyaLoader/releases/download/v2.0.0/app-arm64-v8a-release.apk",
+    "armeabi-v7a": "https://github.com/Jinsens/NyaLoader/releases/download/v2.0.0/app-armeabi-v7a-release.apk",
+    "x86": "https://github.com/Jinsens/NyaLoader/releases/download/v2.0.0/app-x86-release.apk",
+    "x86_64": "https://github.com/Jinsens/NyaLoader/releases/download/v2.0.0/app-x86_64-release.apk"
   }
 }

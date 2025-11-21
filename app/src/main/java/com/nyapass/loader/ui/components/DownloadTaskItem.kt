@@ -1,4 +1,5 @@
-﻿package com.nyapass.loader.ui.components
+﻿
+package com.nyapass.loader.ui.components
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -10,28 +11,37 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nyapass.loader.R
 import com.nyapass.loader.data.model.DownloadStatus
 import com.nyapass.loader.viewmodel.TaskWithProgress
+import com.nyapass.loader.data.model.DownloadTask
+import com.nyapass.loader.data.model.getDisplayLocation
 import kotlin.math.pow
 
 /**
  * 下载任务卡片组件
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun DownloadTaskItem(
     taskWithProgress: TaskWithProgress,
@@ -40,17 +50,23 @@ fun DownloadTaskItem(
     onResume: (Long) -> Unit,
     onDelete: (Long) -> Unit,
     onRetry: (Long) -> Unit,
-    onOpenFile: ((String) -> Unit)? = null
+    onOpenFile: ((DownloadTask) -> Unit)? = null,
+    isMultiSelectMode: Boolean = false,
+    isSelected: Boolean = false,
+    onLongPress: (Long) -> Unit = {},
+    onToggleSelection: (Long) -> Unit = {}
 ) {
     val task = taskWithProgress.task
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     
     // 使用key确保状态与任务ID关联，避免复用导致的问题
     // 完成的任务和失败的任务默认展开
-    var expanded by remember(task.id) { 
+    var expanded by rememberSaveable(task.id) { 
         mutableStateOf(task.status == DownloadStatus.COMPLETED || task.status == DownloadStatus.FAILED) 
     }
     var showDeleteDialog by remember(task.id) { mutableStateOf(false) }
+    var showContextMenu by remember(task.id) { mutableStateOf(false) }
     
     // 使用rememberUpdatedState避免回调闭包问题
     val currentOnPause by rememberUpdatedState(onPause)
@@ -62,11 +78,35 @@ fun DownloadTaskItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            .animateContentSize()
+            .combinedClickable(
+                onClick = {
+                    if (isMultiSelectMode) {
+                        onToggleSelection(task.id)
+                    }
+                },
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (!isMultiSelectMode) {
+                        onLongPress(task.id)
+                    }
+                }
+            ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 0.dp else 2.dp
+        ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
+        border = if (isSelected) {
+            androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+        } else {
+            null
+        }
     ) {
         Column(
             modifier = Modifier
@@ -79,12 +119,45 @@ fun DownloadTaskItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // 多选模式下显示选择圆点
+                if (isMultiSelectMode) {
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 12.dp)
+                            .size(16.dp)
+                            .then(
+                                if (!isSelected) {
+                                    Modifier.border(
+                                        width = 1.dp,
+                                        color = Color.White,
+                                        shape = CircleShape
+                                    )
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .clickable { onToggleSelection(task.id) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isSelected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        shape = CircleShape
+                                    )
+                            )
+                        }
+                    }
+                }
+                
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .then(
-                            if (task.status == DownloadStatus.COMPLETED && onOpenFile != null) {
-                                Modifier.clickable { onOpenFile(task.filePath) }
+                            if (task.status == DownloadStatus.COMPLETED && onOpenFile != null && !isMultiSelectMode) {
+                                Modifier.clickable { onOpenFile(task) }
                             } else {
                                 Modifier
                             }
@@ -136,55 +209,82 @@ fun DownloadTaskItem(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    when (task.status) {
-                        DownloadStatus.PENDING -> {
-                            IconButton(onClick = { currentOnStart(task.id) }) {
+                    // 状态控制按钮（多选模式下不显示）
+                    if (!isMultiSelectMode) {
+                        when (task.status) {
+                            DownloadStatus.PENDING -> {
+                                IconButton(onClick = { currentOnStart(task.id) }) {
+                                    Icon(
+                                        Icons.Default.PlayArrow,
+                                        contentDescription = stringResource(R.string.download_status_pending)
+                                    )
+                                }
+                            }
+                            DownloadStatus.RUNNING -> {
+                                IconButton(onClick = { currentOnPause(task.id) }) {
+                                    Icon(
+                                        Icons.Default.Pause,
+                                        contentDescription = stringResource(R.string.download_status_running)
+                                    )
+                                }
+                            }
+                            DownloadStatus.PAUSED -> {
+                                IconButton(onClick = { currentOnResume(task.id) }) {
+                                    Icon(
+                                        Icons.Default.PlayArrow,
+                                        contentDescription = stringResource(R.string.download_status_paused)
+                                    )
+                                }
+                            }
+                            DownloadStatus.FAILED -> {
+                                IconButton(onClick = { currentOnRetry(task.id) }) {
+                                    Icon(
+                                        Icons.Default.Refresh,
+                                        contentDescription = stringResource(R.string.download_status_failed)
+                                    )
+                                }
+                            }
+                            DownloadStatus.COMPLETED -> {
                                 Icon(
-                                    Icons.Default.PlayArrow,
-                                    contentDescription = stringResource(R.string.download_status_pending)
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = stringResource(R.string.download_status_completed),
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
-                        }
-                        DownloadStatus.RUNNING -> {
-                            IconButton(onClick = { currentOnPause(task.id) }) {
-                                Icon(
-                                    Icons.Default.Pause,
-                                    contentDescription = stringResource(R.string.download_status_running)
-                                )
+                            DownloadStatus.CANCELLED -> {
+                                // 不显示按钮
                             }
-                        }
-                        DownloadStatus.PAUSED -> {
-                            IconButton(onClick = { currentOnResume(task.id) }) {
-                                Icon(
-                                    Icons.Default.PlayArrow,
-                                    contentDescription = stringResource(R.string.download_status_paused)
-                                )
-                            }
-                        }
-                        DownloadStatus.FAILED -> {
-                            IconButton(onClick = { currentOnRetry(task.id) }) {
-                                Icon(
-                                    Icons.Default.Refresh,
-                                    contentDescription = stringResource(R.string.download_status_failed)
-                                )
-                            }
-                        }
-                        DownloadStatus.COMPLETED -> {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                contentDescription = stringResource(R.string.download_status_completed),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        DownloadStatus.CANCELLED -> {
-                            // 不显示按钮
                         }
                     }
                     
+                    // 展开/收起按钮（始终显示）
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
                             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = null
+                        )
+                    }
+                }
+            }
+            
+            if (taskWithProgress.tags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    taskWithProgress.tags.forEach { tag ->
+                        SuggestionChip(
+                            onClick = { },
+                            label = { Text(tag.name) },
+                            icon = {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(tag.color))
+                                )
+                            }
                         )
                     }
                 }
@@ -289,7 +389,7 @@ fun DownloadTaskItem(
                     )
                     CopyableDetailRow(
                         label = stringResource(R.string.download_save_path_label),
-                        value = task.filePath,
+                        value = task.getDisplayLocation(),
                         context = context,
                         onCopied = {
                             Toast.makeText(
@@ -374,6 +474,63 @@ fun DownloadTaskItem(
                 }
             }
         }
+    }
+    
+    // 长按上下文菜单
+    DropdownMenu(
+        expanded = showContextMenu,
+        onDismissRequest = { showContextMenu = false }
+    ) {
+        // 重新下载选项（所有状态都可用）
+        DropdownMenuItem(
+            text = { 
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null)
+                    Text(
+                        if (task.status == DownloadStatus.COMPLETED) {
+                            stringResource(R.string.download_redownload)
+                        } else {
+                            stringResource(R.string.retry)
+                        }
+                    )
+                }
+            },
+            onClick = {
+                currentOnRetry(task.id)
+                showContextMenu = false
+            }
+        )
+        
+        // 删除选项
+        DropdownMenuItem(
+            text = { 
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        text = if (task.status == DownloadStatus.RUNNING) {
+                            stringResource(R.string.download_stop_and_delete)
+                        } else {
+                            stringResource(R.string.delete)
+                        },
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            onClick = {
+                showContextMenu = false
+                showDeleteDialog = true
+            }
+        )
     }
     
     // 删除确认对话框
