@@ -191,6 +191,27 @@
     <string name="multithread_hint">Multithreading improves speed but uses more resources</string>
     <string name="temp_dir_hint">Temporary directory is for this download only and not saved</string>
     
+    <!-- Tags -->
+    <string name="tag_section_title">Tags</string>
+    <string name="tag_manage_button">Manage Tags</string>
+    <string name="tag_filter_all">All Tags</string>
+    <string name="tag_filter_untagged">Untagged</string>
+    <string name="tag_empty_hint">No tags yet, you can quickly create them in the sidebar.</string>
+    <string name="tag_select_hint">No tag selected, will display by current status/search criteria.</string>
+    <string name="tag_management_title">Tag Management</string>
+    <string name="tag_name_label">Tag Name</string>
+    <string name="tag_create_button">Create Tag</string>
+    <string name="tag_stats_format">%1$d tasks • %2$s</string>
+    <string name="tag_manage_dialog_title">Tag Management</string>
+    <string name="tag_create_section_title">Create Tag</string>
+    <string name="tag_edit_dialog_title">Edit Tag</string>
+    <string name="tag_delete_confirm_title">Delete Tag</string>
+    <string name="tag_delete_confirm_message">Are you sure you want to delete tag "%1$s"? Related tasks will remain.</string>
+    <string name="tag_move_up">Move Up</string>
+    <string name="tag_move_down">Move Down</string>
+    <string name="tag_edit_button">Edit Tag</string>
+    <string name="tag_delete_button">Delete Tag</string>
+    
     <!-- Simple Download Dialog -->
     <string name="download_address">Download Address</string>
     <string name="url_example">https://example.com/file.zip</string>

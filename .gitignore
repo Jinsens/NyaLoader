@@ -88,4 +88,8 @@ google-services.json
 # Android Profiling
 *.hprof
 
+# Build outputs (exclude from Git)
+/app/debug/
+/app/release/
+
 96d7dcc (Initial commit)

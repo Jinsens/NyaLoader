@@ -191,6 +191,27 @@
     <string name="multithread_hint">マルチスレッドで速度が向上しますが、リソースを多く使用します</string>
     <string name="temp_dir_hint">一時ディレクトリはこのダウンロードのみに使用され、保存されません</string>
     
+    <!-- タグ -->
+    <string name="tag_section_title">タグ</string>
+    <string name="tag_manage_button">タグ管理</string>
+    <string name="tag_filter_all">すべてのタグ</string>
+    <string name="tag_filter_untagged">未タグ</string>
+    <string name="tag_empty_hint">タグがありません。サイドバーで素早く作成できます。</string>
+    <string name="tag_select_hint">タグが選択されていません。現在のステータス/検索条件で表示されます。</string>
+    <string name="tag_management_title">タグ管理</string>
+    <string name="tag_name_label">タグ名</string>
+    <string name="tag_create_button">タグを作成</string>
+    <string name="tag_stats_format">%1$d 個のタスク • %2$s</string>
+    <string name="tag_manage_dialog_title">タグ管理</string>
+    <string name="tag_create_section_title">新規タグ</string>
+    <string name="tag_edit_dialog_title">タグを編集</string>
+    <string name="tag_delete_confirm_title">タグを削除</string>
+    <string name="tag_delete_confirm_message">タグ"%1$s"を削除してもよろしいですか？関連タスクは保持されます。</string>
+    <string name="tag_move_up">上に移動</string>
+    <string name="tag_move_down">下に移動</string>
+    <string name="tag_edit_button">タグを編集</string>
+    <string name="tag_delete_button">タグを削除</string>
+    
     <!-- シンプルダウンロードダイアログ -->
     <string name="download_address">ダウンロードアドレス</string>
     <string name="url_example">https://example.com/file.zip</string>

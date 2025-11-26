@@ -42,6 +42,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.Job
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
@@ -339,46 +341,99 @@ fun AppNavigation(
     val context = androidx.compose.ui.platform.LocalContext.current
     val activity = context as? MainActivity
     val app = context.applicationContext as LoaderApplication
-    
+
+    // 使用受管理的协程作用域，自动处理生命周期
+    val coroutineScope = rememberCoroutineScope()
+
     // 收集剪贴板监听设置
     val clipboardEnabled by app.appPreferences.clipboardMonitorEnabled.collectAsStateWithLifecycle()
     val hasShownTip by app.appPreferences.hasShownClipboardTip.collectAsStateWithLifecycle()
-    
+
+    // 收集用户配置的默认线程数
+    val defaultThreadCount by app.appPreferences.defaultThreadCount.collectAsStateWithLifecycle()
+
     // 对话框状态
     var showSimpleDialog by remember { mutableStateOf(false) }
     var showClipboardTip by remember { mutableStateOf(false) }
     var clipboardUrl by remember { mutableStateOf("") }
-    
+
+    // 使用 rememberUpdatedState 捕获最新状态，避免闭包问题
+    val currentHasShownTip by rememberUpdatedState(hasShownTip)
+    val currentClipboardEnabled by rememberUpdatedState(clipboardEnabled)
+
     // 监听生命周期，当应用回到前台时检查剪贴板
     val lifecycleOwner = LocalLifecycleOwner.current
-    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
-    
-    // 使用 LaunchedEffect 立即响应生命周期变化
-    LaunchedEffect(lifecycleState, hasShownTip, clipboardEnabled) {
-        if (lifecycleState == Lifecycle.State.RESUMED) {
-            // 首次使用时显示提示
-            if (!hasShownTip) {
-                showClipboardTip = true
-                return@LaunchedEffect
-            }
-            
-            // 如果未启用剪贴板监听，跳过
-            if (!clipboardEnabled) {
-                return@LaunchedEffect
-            }
-            
-            // 检查剪贴板（在IO线程执行）
-            withContext(Dispatchers.IO) {
-                clipboardHandler.checkClipboardForUrl()?.let { url ->
-                    withContext(Dispatchers.Main) {
-                        // 持久化保存
-                        app.appPreferences.saveLastClipboardUrl(clipboardHandler.getLastProcessedUrl())
-                        // 显示对话框
-                        clipboardUrl = url
-                        showSimpleDialog = true
+
+    // 使用 DisposableEffect 监听生命周期事件，只依赖 lifecycleOwner
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            // 当生命周期变为 RESUMED（从后台切换到前台）时检查剪贴板
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                // 首次使用时显示提示（使用 currentHasShownTip 获取最新值）
+                if (!currentHasShownTip) {
+                    showClipboardTip = true
+                    return@LifecycleEventObserver
+                }
+
+                // 如果未启用剪贴板监听，跳过（使用 currentClipboardEnabled 获取最新值）
+                if (!currentClipboardEnabled) {
+                    return@LifecycleEventObserver
+                }
+
+                // 使用受管理的协程作用域执行剪贴板检测
+                coroutineScope.launch(Dispatchers.IO) {
+                    // 检查协程是否已被取消
+                    if (currentCoroutineContext()[Job]?.isActive == false) return@launch
+
+                    // 检查剪贴板（智能检测）
+                    val result = clipboardHandler.checkClipboardForUrl()
+
+                    // 再次检查协程状态
+                    if (currentCoroutineContext()[Job]?.isActive == false) return@launch
+
+                    when (result) {
+                        is com.nyapass.loader.util.ClipboardCheckResult.DirectDownload -> {
+                            // 有明显文件扩展名，直接弹窗
+                            withContext(Dispatchers.Main) {
+                                app.appPreferences.saveLastClipboardUrl(clipboardHandler.getLastProcessedUrl())
+                                clipboardUrl = result.url
+                                showSimpleDialog = true
+                            }
+                        }
+
+                        is com.nyapass.loader.util.ClipboardCheckResult.NeedsValidation -> {
+                            // 检查协程状态后再进行网络请求
+                            if (currentCoroutineContext()[Job]?.isActive == false) return@launch
+
+                            // 复杂参数链接，需要验证
+                            val isDownload = clipboardHandler.validateDownloadUrl(result.url)
+
+                            // 网络请求后再次检查协程状态
+                            if (currentCoroutineContext()[Job]?.isActive == false) return@launch
+
+                            if (isDownload) {
+                                withContext(Dispatchers.Main) {
+                                    app.appPreferences.saveLastClipboardUrl(clipboardHandler.getLastProcessedUrl())
+                                    clipboardUrl = result.url
+                                    showSimpleDialog = true
+                                }
+                            }
+                            // 如果验证失败，不弹窗
+                        }
+
+                        is com.nyapass.loader.util.ClipboardCheckResult.NoUrl,
+                        is com.nyapass.loader.util.ClipboardCheckResult.AlreadyProcessed -> {
+                            // 没有URL或已处理过，不做任何操作
+                        }
                     }
                 }
             }
+        }
+        
+        lifecycleOwner.lifecycle.addObserver(observer)
+        
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
     
@@ -416,7 +471,7 @@ fun AppNavigation(
                 downloadViewModel.createDownloadTask(
                     url = url,
                     fileName = fileName,
-                    threadCount = 32,
+                    threadCount = defaultThreadCount,
                     saveToPublicDir = true,
                     customPath = persistentFolderPath,
                     userAgent = null

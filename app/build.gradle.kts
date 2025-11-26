@@ -16,8 +16,8 @@ android {
         applicationId = "com.nyapass.loader"
         minSdk = 27
         targetSdk = 35
-        versionCode = 5
-        versionName = "2.0.0"
+        versionCode = 6
+        versionName = "2.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
