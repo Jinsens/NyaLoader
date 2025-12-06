@@ -127,7 +127,10 @@
     <string name="lib_serialization_desc">Kotlin multiplatform serialization library</string>
     <string name="lib_workmanager_desc">Android background task scheduler</string>
     <string name="lib_gson_desc">Google JSON serialization library</string>
-    
+    <string name="lib_hilt_desc">Android dependency injection framework</string>
+    <string name="lib_firebase_desc">Google mobile app development platform</string>
+    <string name="lib_guava_desc">Google core Java library extensions</string>
+
     <!-- Main Screen -->
     <string name="menu">Menu</string>
     <string name="search">Search</string>
@@ -336,4 +339,101 @@
     <string name="error_reorder_tag_failed">Failed to reorder tag: %s</string>
     <string name="error_batch_delete_failed">Failed to batch delete: %s</string>
     <string name="error_batch_retry_failed">Failed to batch retry: %s</string>
+    <string name="error_update_task_tags_failed">Failed to update task tags: %s</string>
+
+    <!-- Task Tag Selection Dialog -->
+    <string name="edit_tags">Edit Tags</string>
+    <string name="task_tag_selection_title">Select Tags</string>
+    <string name="task_tag_selection_hint">Tap tags to select or deselect</string>
+    <string name="no_tags_available">No tags available, please create tags first</string>
+
+    <!-- Multi-select mode -->
+    <string name="multi_select_count">%d selected</string>
+    <string name="select_all">Select All</string>
+    <string name="invert_selection">Invert</string>
+
+    <!-- Storage space check -->
+    <string name="disk_space_insufficient">Insufficient storage space, need %s more</string>
+    <string name="disk_space_low">Low storage space, %s remaining</string>
+    <string name="disk_space_sufficient">Sufficient storage space</string>
+    <string name="disk_space_check_failed">Unable to check storage space</string>
+
+    <!-- Duplicate detection -->
+    <string name="duplicate_url_warning">A download task with this URL already exists</string>
+    <string name="duplicate_filename_warning">A file with the same name already exists</string>
+    <string name="duplicate_task_status">Status: %s</string>
+    <string name="continue_anyway">Download Anyway</string>
+    <string name="view_existing">View Existing Task</string>
+
+    <!-- Smart thread count -->
+    <string name="smart_thread_count">Smart Thread Count</string>
+    <string name="smart_thread_count_description">Auto-optimize based on network type and file size</string>
+    <string name="thread_count_auto">Auto</string>
+    <string name="current_network">Current Network</string>
+    <string name="recommended_threads">Recommended Threads</string>
+
+    <!-- Queue management and speed limit -->
+    <string name="max_concurrent_downloads">Max Concurrent Downloads</string>
+    <string name="max_concurrent_downloads_description">Maximum number of simultaneous download tasks</string>
+    <string name="download_speed_limit">Speed Limit</string>
+    <string name="download_speed_limit_description">Limit download speed to save bandwidth</string>
+    <string name="speed_limit_unlimited">Unlimited</string>
+    <string name="queue_position">Queue position: %d</string>
+    <string name="waiting_in_queue">Waiting in queue</string>
+
+    <!-- Share functionality -->
+    <string name="share_link">Share Link</string>
+    <string name="share_file">Share File</string>
+    <string name="share_files">Share %d files</string>
+    <string name="share_failed">Share failed</string>
+    <string name="file_not_exist">File does not exist</string>
+
+    <!-- Download priority -->
+    <string name="priority">Priority</string>
+    <string name="priority_low">Low</string>
+    <string name="priority_normal">Normal</string>
+    <string name="priority_high">High</string>
+    <string name="priority_changed">Priority updated</string>
+
+    <!-- Download statistics -->
+    <string name="statistics_title">Download Statistics</string>
+    <string name="statistics_overview">Overview</string>
+    <string name="total_downloads">Total</string>
+    <string name="completed_downloads">Completed</string>
+    <string name="failed_downloads">Failed</string>
+    <string name="total_downloaded_size">Total Downloaded Size</string>
+    <string name="file_type_distribution">File Type Distribution</string>
+    <string name="file_type_details">Type Details</string>
+    <string name="files_count_unit">files</string>
+    <string name="no_statistics_data">No statistics data</string>
+    <string name="file_type_video">Video</string>
+    <string name="file_type_audio">Audio</string>
+    <string name="file_type_image">Image</string>
+    <string name="file_type_document">Document</string>
+    <string name="file_type_archive">Archive</string>
+    <string name="file_type_application">Application</string>
+    <string name="file_type_other">Other</string>
+    <string name="clear_statistics">Clear Statistics</string>
+    <string name="clear_statistics_title">Clear Statistics Data</string>
+    <string name="clear_statistics_confirm">Are you sure you want to clear all download statistics? This action cannot be undone.</string>
+
+    <!-- Download exception messages -->
+    <string name="error_network_timeout">Network connection timeout, please check your network</string>
+    <string name="error_network_unavailable">Network unavailable, please check your connection</string>
+    <string name="error_connection_reset">Connection reset, please try again later</string>
+    <string name="error_server_error">Server error (HTTP %d), please try again later</string>
+    <string name="error_resource_not_found">Resource not found (404)</string>
+    <string name="error_access_denied">Access denied (403)</string>
+    <string name="error_too_many_requests">Too many requests, please try again later</string>
+    <string name="error_insufficient_storage">Insufficient storage space</string>
+    <string name="error_storage_permission_denied">Storage permission denied, please grant permission</string>
+    <string name="error_file_creation_failed">Failed to create file</string>
+    <string name="error_file_write_failed">Failed to write file</string>
+    <string name="error_file_already_exists">File already exists</string>
+    <string name="error_ssl_certificate">SSL certificate verification failed</string>
+    <string name="error_task_cancelled">Task cancelled</string>
+    <string name="error_range_not_supported">Server does not support resume</string>
+    <string name="error_part_corrupted">Part data corrupted, will re-download</string>
+    <string name="error_integrity_check_failed">File integrity check failed</string>
+    <string name="error_unknown">Unknown error</string>
 </resources>

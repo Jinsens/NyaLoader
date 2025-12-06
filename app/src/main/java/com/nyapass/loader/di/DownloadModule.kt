@@ -3,6 +3,7 @@ package com.nyapass.loader.di
 import android.content.Context
 import com.nyapass.loader.data.dao.DownloadPartDao
 import com.nyapass.loader.data.dao.DownloadTaskDao
+import com.nyapass.loader.data.preferences.AppPreferences
 import com.nyapass.loader.download.DownloadEngine
 import dagger.Module
 import dagger.Provides
@@ -19,7 +20,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DownloadModule {
-    
+
     /**
      * 提供下载引擎
      */
@@ -29,13 +30,15 @@ object DownloadModule {
         @ApplicationContext context: Context,
         taskDao: DownloadTaskDao,
         partDao: DownloadPartDao,
-        okHttpClient: OkHttpClient
+        okHttpClient: OkHttpClient,
+        preferences: AppPreferences
     ): DownloadEngine {
         return DownloadEngine(
             context = context,
             taskDao = taskDao,
             partDao = partDao,
-            okHttpClient = okHttpClient
+            okHttpClient = okHttpClient,
+            preferences = preferences
         )
     }
 }

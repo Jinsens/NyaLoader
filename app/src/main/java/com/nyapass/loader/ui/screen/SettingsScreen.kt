@@ -50,6 +50,8 @@ fun SettingsScreen(
     val clipboardMonitorEnabled by viewModel.clipboardMonitorEnabled.collectAsStateWithLifecycle()
     val firebaseEnabled by viewModel.firebaseEnabled.collectAsStateWithLifecycle()
     val language by viewModel.language.collectAsStateWithLifecycle()
+    val maxConcurrentDownloads by viewModel.maxConcurrentDownloads.collectAsStateWithLifecycle()
+    val downloadSpeedLimit by viewModel.downloadSpeedLimit.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     // 当页面销毁时，清除所有对话框状态
@@ -80,7 +82,10 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(
+                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            )
         ) {
             // 外观设置
             item {
@@ -209,7 +214,30 @@ fun SettingsScreen(
                     onCheckedChange = { viewModel.updateClipboardMonitorEnabled(it) }
                 )
             }
-            
+
+            // 最大并发下载数
+            item {
+                SettingsItemWithSlider(
+                    icon = Icons.Default.DownloadForOffline,
+                    title = stringResource(R.string.max_concurrent_downloads),
+                    value = maxConcurrentDownloads,
+                    valueRange = 1f..10f,
+                    steps = 8,
+                    onValueChange = { viewModel.updateMaxConcurrentDownloads(it.toInt()) },
+                    valueFormatter = { it.toInt().toString() }
+                )
+            }
+
+            // 下载限速
+            item {
+                SpeedLimitSettingsItem(
+                    icon = Icons.Default.Speed,
+                    title = stringResource(R.string.download_speed_limit),
+                    speedLimit = downloadSpeedLimit,
+                    onSpeedLimitChange = { viewModel.updateDownloadSpeedLimit(it) }
+                )
+            }
+
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
             
             // 数据分析

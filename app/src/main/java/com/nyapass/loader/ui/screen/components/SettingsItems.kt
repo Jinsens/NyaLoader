@@ -195,7 +195,9 @@ fun SettingsItemWithSlider(
     title: String,
     value: Int,
     valueRange: ClosedFloatingPointRange<Float>,
-    onValueChange: (Float) -> Unit
+    onValueChange: (Float) -> Unit,
+    steps: Int = 0,
+    valueFormatter: ((Float) -> String)? = null
 ) {
     Column(
         modifier = Modifier
@@ -212,28 +214,29 @@ fun SettingsItemWithSlider(
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
-            
+
             Text(
-                text = value.toString(),
+                text = valueFormatter?.invoke(value.toFloat()) ?: value.toString(),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Slider(
             value = value.toFloat(),
             onValueChange = onValueChange,
             valueRange = valueRange,
+            steps = steps,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -387,6 +390,99 @@ fun getColorForTheme(themeColor: ThemeColor): Color {
         ThemeColor.PINK -> Color(0xFFE91E63)
         ThemeColor.TEAL -> Color(0xFF009688)
         ThemeColor.CUSTOM -> MaterialTheme.colorScheme.primary
+    }
+}
+
+/**
+ * 下载限速设置项
+ * 支持选择常用限速值或自定义
+ */
+@Composable
+fun SpeedLimitSettingsItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    speedLimit: Long,
+    onSpeedLimitChange: (Long) -> Unit
+) {
+    // 预设限速选项 (bytes/s)
+    val presetOptions = listOf(
+        0L to stringResource(R.string.speed_limit_unlimited),
+        512 * 1024L to "512 KB/s",
+        1024 * 1024L to "1 MB/s",
+        2 * 1024 * 1024L to "2 MB/s",
+        5 * 1024 * 1024L to "5 MB/s",
+        10 * 1024 * 1024L to "10 MB/s",
+        20 * 1024 * 1024L to "20 MB/s",
+        50 * 1024 * 1024L to "50 MB/s"
+    )
+
+    // 当前选中的预设索引，如果没有匹配则为-1（自定义）
+    val currentIndex = presetOptions.indexOfFirst { it.first == speedLimit }
+    val isCustom = currentIndex == -1 && speedLimit > 0
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = if (speedLimit == 0L) {
+                        stringResource(R.string.speed_limit_unlimited)
+                    } else {
+                        formatSpeed(speedLimit)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 限速选项芯片
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(presetOptions.size) { index ->
+                val (limit, label) = presetOptions[index]
+                FilterChip(
+                    selected = speedLimit == limit,
+                    onClick = { onSpeedLimitChange(limit) },
+                    label = { Text(label) }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 格式化速度显示
+ */
+private fun formatSpeed(bytesPerSecond: Long): String {
+    return when {
+        bytesPerSecond >= 1024 * 1024 * 1024 -> String.format("%.1f GB/s", bytesPerSecond / (1024.0 * 1024.0 * 1024.0))
+        bytesPerSecond >= 1024 * 1024 -> String.format("%.1f MB/s", bytesPerSecond / (1024.0 * 1024.0))
+        bytesPerSecond >= 1024 -> String.format("%.1f KB/s", bytesPerSecond / 1024.0)
+        else -> "$bytesPerSecond B/s"
     }
 }
 

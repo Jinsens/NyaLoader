@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +31,7 @@ import com.nyapass.loader.R
 import com.nyapass.loader.data.model.DownloadTag
 import com.nyapass.loader.ui.components.AddDownloadDialog
 import com.nyapass.loader.ui.components.DownloadTaskItem
+import com.nyapass.loader.ui.components.SwipeableDownloadTaskItem
 import com.nyapass.loader.ui.components.TagManagementDialog
 import com.nyapass.loader.ui.screen.components.*
 import com.nyapass.loader.viewmodel.DownloadViewModel
@@ -47,7 +50,8 @@ fun DownloadScreen(
     onResetTempFolder: (() -> Unit)? = null,  // 重置临时路径
     onOpenSettings: () -> Unit = {},
     onOpenLicenses: () -> Unit = {},
-    onOpenWebView: () -> Unit = {}
+    onOpenWebView: () -> Unit = {},
+    onOpenStatistics: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     
@@ -129,6 +133,10 @@ fun DownloadScreen(
                 onOpenWebView = {
                     scope.launch { drawerState.close() }
                     onOpenWebView()
+                },
+                onOpenStatistics = {
+                    scope.launch { drawerState.close() }
+                    onOpenStatistics()
                 }
             )
         }
@@ -136,34 +144,79 @@ fun DownloadScreen(
         Scaffold(
             contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             topBar = {
-                if (uiState.isSearching) {
-                    SearchTopBar(
-                        searchQuery = uiState.searchQuery,
-                        onSearchQueryChange = { viewModel.updateSearchQuery(it) },
-                        onCloseSearch = { viewModel.stopSearch() }
-                    )
-                } else {
-                    TopAppBar(
-                        title = { Text("NyaLoader") },
-                        navigationIcon = {
-                            IconButton(onClick = { 
-                                scope.launch { drawerState.open() }
-                            }) {
-                                Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu))
-                            }
-                        },
-                        actions = {
-                            // 搜索按钮
-                            IconButton(onClick = { viewModel.startSearch() }) {
-                                Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        windowInsets = TopAppBarDefaults.windowInsets
-                    )
+                when {
+                    uiState.isSearching -> {
+                        SearchTopBar(
+                            searchQuery = uiState.searchQuery,
+                            onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+                            onCloseSearch = { viewModel.stopSearch() }
+                        )
+                    }
+                    uiState.isMultiSelectMode -> {
+                        // 多选模式顶栏
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    stringResource(
+                                        R.string.multi_select_count,
+                                        uiState.selectedTaskIds.size
+                                    )
+                                )
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { viewModel.exitMultiSelectMode() }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = stringResource(R.string.cancel)
+                                    )
+                                }
+                            },
+                            actions = {
+                                // 全选按钮
+                                IconButton(onClick = { viewModel.selectAllTasks() }) {
+                                    Icon(
+                                        Icons.Default.SelectAll,
+                                        contentDescription = stringResource(R.string.select_all)
+                                    )
+                                }
+                                // 反选按钮
+                                IconButton(onClick = { viewModel.invertSelection() }) {
+                                    Icon(
+                                        Icons.Default.FlipToBack,
+                                        contentDescription = stringResource(R.string.invert_selection)
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            ),
+                            windowInsets = TopAppBarDefaults.windowInsets
+                        )
+                    }
+                    else -> {
+                        TopAppBar(
+                            title = { Text("NyaLoader") },
+                            navigationIcon = {
+                                IconButton(onClick = {
+                                    scope.launch { drawerState.open() }
+                                }) {
+                                    Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu))
+                                }
+                            },
+                            actions = {
+                                // 搜索按钮
+                                IconButton(onClick = { viewModel.startSearch() }) {
+                                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            windowInsets = TopAppBarDefaults.windowInsets
+                        )
+                    }
                 }
             },
             floatingActionButton = {
@@ -171,9 +224,11 @@ fun DownloadScreen(
                 if (uiState.isMultiSelectMode) {
                     // 多选模式：显示批量操作按钮
                     Row(
-                        modifier = Modifier.padding(
-                            bottom = if (totalProgress.showProgress) 110.dp else 0.dp
-                        ),
+                        modifier = Modifier
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(
+                                bottom = if (totalProgress.showProgress) 110.dp else 0.dp
+                            ),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // 批量重试按钮
@@ -205,18 +260,17 @@ fun DownloadScreen(
                     }
                 } else {
                     // 正常模式：显示新建下载按钮
-                    Box(
-                        modifier = Modifier.padding(
-                            bottom = if (totalProgress.showProgress) 110.dp else 0.dp
-                        )
-                    ) {
-                        ExtendedFloatingActionButton(
-                            onClick = { viewModel.showAddDialog() },
-                            expanded = expandedFab,
-                            icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_download)) },
-                            text = { Text(stringResource(R.string.new_download)) }
-                        )
-                    }
+                    ExtendedFloatingActionButton(
+                        onClick = { viewModel.showAddDialog() },
+                        expanded = expandedFab,
+                        icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_download)) },
+                        text = { Text(stringResource(R.string.new_download)) },
+                        modifier = Modifier
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(
+                                bottom = if (totalProgress.showProgress) 110.dp else 0.dp
+                            )
+                    )
                 }
             }
         ) { paddingValues ->
@@ -234,26 +288,34 @@ fun DownloadScreen(
                     onSelectUntagged = { viewModel.selectUntagged() }
                 )
                 
-                // 主要内容区域
-                Box(
+                // 主要内容区域 - 带下拉刷新
+                @OptIn(ExperimentalMaterial3Api::class)
+                PullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.refreshTasks() },
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
                     if (tasks.isEmpty()) {
                         // 空状态
-                        if (uiState.isSearching && uiState.searchQuery.isNotEmpty()) {
-                            // 搜索无结果
-                            SearchEmptyState(
-                                modifier = Modifier.align(Alignment.Center),
-                                searchQuery = uiState.searchQuery
-                            )
-                        } else {
-                            // 正常空状态
-                            EmptyState(
-                                modifier = Modifier.align(Alignment.Center),
-                                filter = uiState.filter
-                            )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState.isSearching && uiState.searchQuery.isNotEmpty()) {
+                                // 搜索无结果
+                                SearchEmptyState(
+                                    modifier = Modifier,
+                                    searchQuery = uiState.searchQuery
+                                )
+                            } else {
+                                // 正常空状态
+                                EmptyState(
+                                    modifier = Modifier,
+                                    filter = uiState.filter
+                                )
+                            }
                         }
                     } else {
                         // 任务列表
@@ -265,7 +327,7 @@ fun DownloadScreen(
                                 start = 16.dp,
                                 end = 16.dp,
                                 top = 16.dp,
-                                bottom = 16.dp
+                                bottom = 16.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                             ),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
@@ -274,7 +336,7 @@ fun DownloadScreen(
                                 key = { it.task.id },
                                 contentType = { "DownloadTaskItem" }
                             ) { taskWithProgress ->
-                                DownloadTaskItem(
+                                SwipeableDownloadTaskItem(
                                     taskWithProgress = taskWithProgress,
                                     onStart = { viewModel.startDownload(it) },
                                     onPause = { viewModel.pauseDownload(it) },
@@ -282,6 +344,9 @@ fun DownloadScreen(
                                     onDelete = { viewModel.deleteTask(it) },
                                     onRetry = { viewModel.retryTask(it) },
                                     onOpenFile = { selectedTask -> viewModel.openFile(context, selectedTask) },
+                                    onUpdateTags = { taskId, tagIds -> viewModel.updateTaskTags(taskId, tagIds) },
+                                    onCreateTag = { showTagManagerDialog = true },
+                                    availableTags = tags,
                                     isMultiSelectMode = uiState.isMultiSelectMode,
                                     isSelected = taskWithProgress.task.id in uiState.selectedTaskIds,
                                     onLongPress = { taskId -> viewModel.enterMultiSelectMode(taskId) },
@@ -322,7 +387,8 @@ fun DownloadScreen(
                 },
                 onSelectFolder = onSelectTempFolder,  // 使用临时目录选择
                 currentTempPath = tempFolderPath,  // 传递当前临时路径
-                availableTags = tags
+                availableTags = tags,
+                onCreateTag = { showTagManagerDialog = true }
             )
         }
 

@@ -55,7 +55,13 @@ class SettingsViewModel @Inject constructor(
     
     // 语言设置
     val language: StateFlow<Language> = preferences.language
-    
+
+    // 最大并发下载数
+    val maxConcurrentDownloads: StateFlow<Int> = preferences.maxConcurrentDownloads
+
+    // 下载限速 (bytes/s, 0 = 无限制)
+    val downloadSpeedLimit: StateFlow<Long> = preferences.downloadSpeedLimit
+
     // UI状态
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -167,7 +173,26 @@ class SettingsViewModel @Inject constructor(
             preferences.saveLanguage(language)
         }
     }
-    
+
+    /**
+     * 更新最大并发下载数
+     */
+    fun updateMaxConcurrentDownloads(count: Int) {
+        viewModelScope.launch {
+            preferences.saveMaxConcurrentDownloads(count)
+        }
+    }
+
+    /**
+     * 更新下载限速
+     * @param speedLimit 速度限制 (bytes/s)，0 表示无限制
+     */
+    fun updateDownloadSpeedLimit(speedLimit: Long) {
+        viewModelScope.launch {
+            preferences.saveDownloadSpeedLimit(speedLimit)
+        }
+    }
+
     /**
      * 显示颜色选择对话框
      */

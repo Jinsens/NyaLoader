@@ -12,12 +12,21 @@ import androidx.activity.result.contract.ActivityResultContracts
  * 统一管理应用的权限请求
  */
 class PermissionHandler(private val activity: ComponentActivity) {
-    
+
     // 权限请求启动器
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
-    
+
     // 所有文件访问权限启动器（Android 11+）
     private lateinit var allFilesAccessLauncher: ActivityResultLauncher<Intent>
+
+    // SharedPreferences 用于记录权限请求状态
+    private val prefs by lazy {
+        activity.getSharedPreferences("permission_prefs", android.content.Context.MODE_PRIVATE)
+    }
+
+    companion object {
+        private const val KEY_ALL_FILES_ACCESS_REQUESTED = "all_files_access_requested"
+    }
     
     /**
      * 初始化权限启动器
@@ -57,6 +66,8 @@ class PermissionHandler(private val activity: ComponentActivity) {
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
+                    // 用户拒绝了权限，记录下来，不再每次启动都请求
+                    prefs.edit().putBoolean(KEY_ALL_FILES_ACCESS_REQUESTED, true).apply()
                     Toast.makeText(
                         activity,
                         "需要所有文件访问权限才能下载到自定义目录",
@@ -77,16 +88,18 @@ class PermissionHandler(private val activity: ComponentActivity) {
             val needRequest = permissions.any { permission ->
                 activity.checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED
             }
-            
+
             if (needRequest) {
                 permissionLauncher.launch(permissions)
                 return
             }
         }
-        
+
         // 2. 如果常规权限已授予，检查所有文件访问权限（Android 11+）
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            if (!PermissionUtils.hasAllFilesAccess()) {
+            // 只有在用户未曾拒绝过且当前没有权限时才请求
+            val hasRequested = prefs.getBoolean(KEY_ALL_FILES_ACCESS_REQUESTED, false)
+            if (!PermissionUtils.hasAllFilesAccess() && !hasRequested) {
                 requestAllFilesAccess()
             }
         }

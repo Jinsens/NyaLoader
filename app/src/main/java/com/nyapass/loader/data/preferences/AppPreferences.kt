@@ -72,6 +72,14 @@ class AppPreferences(context: Context) {
     private val _language = MutableStateFlow(getLanguage())
     val language: StateFlow<Language> = _language.asStateFlow()
 
+    // 最大并发下载数
+    private val _maxConcurrentDownloads = MutableStateFlow(getMaxConcurrentDownloads())
+    val maxConcurrentDownloads: StateFlow<Int> = _maxConcurrentDownloads.asStateFlow()
+
+    // 下载限速 (bytes/s, 0 = 无限制)
+    private val _downloadSpeedLimit = MutableStateFlow(getDownloadSpeedLimit())
+    val downloadSpeedLimit: StateFlow<Long> = _downloadSpeedLimit.asStateFlow()
+
     // 最近一次处理的剪贴板URL（用于避免重复弹窗）
     fun saveLastClipboardUrl(url: String?) {
         if (url.isNullOrBlank()) {
@@ -335,7 +343,39 @@ class AppPreferences(context: Context) {
             Language.SYSTEM
         }
     }
-    
+
+    /**
+     * 保存最大并发下载数
+     */
+    fun saveMaxConcurrentDownloads(count: Int) {
+        val validCount = count.coerceIn(1, 10)
+        prefs.edit().putInt(KEY_MAX_CONCURRENT_DOWNLOADS, validCount).apply()
+        _maxConcurrentDownloads.value = validCount
+    }
+
+    /**
+     * 获取最大并发下载数
+     */
+    private fun getMaxConcurrentDownloads(): Int {
+        return prefs.getInt(KEY_MAX_CONCURRENT_DOWNLOADS, 3)
+    }
+
+    /**
+     * 保存下载限速
+     * @param speedLimit 速度限制 (bytes/s)，0 表示无限制
+     */
+    fun saveDownloadSpeedLimit(speedLimit: Long) {
+        prefs.edit().putLong(KEY_DOWNLOAD_SPEED_LIMIT, speedLimit.coerceAtLeast(0)).apply()
+        _downloadSpeedLimit.value = speedLimit.coerceAtLeast(0)
+    }
+
+    /**
+     * 获取下载限速
+     */
+    private fun getDownloadSpeedLimit(): Long {
+        return prefs.getLong(KEY_DOWNLOAD_SPEED_LIMIT, 0L)
+    }
+
     companion object {
         private const val KEY_THEME_COLOR = "theme_color"
         private const val KEY_DARK_MODE = "dark_mode"
@@ -351,6 +391,8 @@ class AppPreferences(context: Context) {
         private const val KEY_HAS_SHOWN_FIREBASE_TIP = "has_shown_firebase_tip"
         private const val KEY_LANGUAGE = "language"
         private const val KEY_LAST_CLIPBOARD_URL = "last_clipboard_url"
+        private const val KEY_MAX_CONCURRENT_DOWNLOADS = "max_concurrent_downloads"
+        private const val KEY_DOWNLOAD_SPEED_LIMIT = "download_speed_limit"
     }
 }
 

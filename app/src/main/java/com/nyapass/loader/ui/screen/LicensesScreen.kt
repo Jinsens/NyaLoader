@@ -72,7 +72,12 @@ fun LicensesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 16.dp,
+                bottom = 16.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // 应用信息卡片
@@ -323,21 +328,21 @@ fun getOpenSourceLibraries() = listOf(
         name = "Jetpack Compose",
         description = stringResource(R.string.lib_jetpack_compose_desc),
         license = "Apache 2.0",
-        version = "2025.11.00",
+        version = "2025.12.00",
         url = "https://developer.android.com/compose"
     ),
     OpenSourceLibrary(
         name = "Material 3",
         description = stringResource(R.string.lib_material3_desc),
         license = "Apache 2.0",
-        version = "Latest",
+        version = "BOM 2025.12.00",
         url = "https://m3.material.io"
     ),
     OpenSourceLibrary(
         name = "Material Icons Extended",
         description = stringResource(R.string.lib_material_icons_desc),
         license = "Apache 2.0",
-        version = "Latest",
+        version = "BOM 2025.12.00",
         url = "https://fonts.google.com/icons"
     ),
     OpenSourceLibrary(
@@ -351,28 +356,28 @@ fun getOpenSourceLibraries() = listOf(
         name = "Lifecycle Runtime KTX",
         description = stringResource(R.string.lib_lifecycle_desc),
         license = "Apache 2.0",
-        version = "2.9.4",
+        version = "2.10.0",
         url = "https://developer.android.com/topic/libraries/architecture/lifecycle"
     ),
     OpenSourceLibrary(
         name = "Activity Compose",
         description = stringResource(R.string.lib_activity_compose_desc),
         license = "Apache 2.0",
-        version = "1.11.0",
+        version = "1.12.1",
         url = "https://developer.android.com/jetpack/androidx/releases/activity"
     ),
     OpenSourceLibrary(
         name = "ViewModel Compose",
         description = stringResource(R.string.lib_viewmodel_compose_desc),
         license = "Apache 2.0",
-        version = "2.9.4",
+        version = "2.10.0",
         url = "https://developer.android.com/topic/libraries/architecture/viewmodel"
     ),
     OpenSourceLibrary(
         name = "Room Database",
         description = stringResource(R.string.lib_room_desc),
         license = "Apache 2.0",
-        version = "2.8.3",
+        version = "2.8.4",
         url = "https://developer.android.com/training/data-storage/room"
     ),
     OpenSourceLibrary(
@@ -416,6 +421,27 @@ fun getOpenSourceLibraries() = listOf(
         license = "Apache 2.0",
         version = "2.13.2",
         url = "https://github.com/google/gson"
+    ),
+    OpenSourceLibrary(
+        name = "Hilt",
+        description = stringResource(R.string.lib_hilt_desc),
+        license = "Apache 2.0",
+        version = "2.57.2",
+        url = "https://dagger.dev/hilt/"
+    ),
+    OpenSourceLibrary(
+        name = "Firebase",
+        description = stringResource(R.string.lib_firebase_desc),
+        license = "Apache 2.0",
+        version = "BOM 34.6.0",
+        url = "https://firebase.google.com"
+    ),
+    OpenSourceLibrary(
+        name = "Guava",
+        description = stringResource(R.string.lib_guava_desc),
+        license = "Apache 2.0",
+        version = "33.5.0-android",
+        url = "https://github.com/google/guava"
     )
 )
 

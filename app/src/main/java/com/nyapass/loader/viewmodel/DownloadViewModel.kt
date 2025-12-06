@@ -6,9 +6,12 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nyapass.loader.R
+import com.nyapass.loader.data.model.DownloadStatsSummary
 import com.nyapass.loader.data.model.DownloadStatus
 import com.nyapass.loader.data.model.DownloadTag
 import com.nyapass.loader.data.model.DownloadTask
+import com.nyapass.loader.data.model.FileTypeCategory
+import com.nyapass.loader.data.model.FileTypeStats
 import com.nyapass.loader.data.model.TagStatistics
 import com.nyapass.loader.data.model.getProgress
 import com.nyapass.loader.download.DownloadProgress
@@ -71,7 +74,7 @@ class DownloadViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DownloadUiState())
     val uiState: StateFlow<DownloadUiState> = _uiState.asStateFlow()
     
-    // 组合任务和进度
+    // 组合任务和进度（带去重优化）
     val tasksWithProgress: StateFlow<List<TaskWithProgress>> = combine(
         allTasks,
         downloadProgress,
@@ -87,6 +90,21 @@ class DownloadViewModel @Inject constructor(
             )
         }
     }
+        // 进度去重优化：只有当进度变化 >= 1% 或状态变化时才更新 UI
+        .distinctUntilChanged { old, new ->
+            if (old.size != new.size) return@distinctUntilChanged false
+            old.zip(new).all { (oldTask, newTask) ->
+                // 任务ID不同，认为有变化
+                if (oldTask.task.id != newTask.task.id) return@all false
+                // 状态变化，必须更新
+                if (oldTask.task.status != newTask.task.status) return@all false
+                // 标签变化，必须更新
+                if (oldTask.tags != newTask.tags) return@all false
+                // 进度变化小于 1%，认为没有变化
+                val progressDiff = kotlin.math.abs(oldTask.progress - newTask.progress)
+                progressDiff < 1f
+            }
+        }
         .flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,
@@ -425,6 +443,23 @@ class DownloadViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * 更新任务的标签
+     */
+    fun updateTaskTags(taskId: Long, tagIds: List<Long>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.updateTaskTags(taskId, tagIds)
+                Log.i(TAG, "更新任务标签成功: taskId=$taskId, tagIds=$tagIds")
+            } catch (e: Exception) {
+                Log.e(TAG, "更新任务标签失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(error = application.getString(R.string.error_update_task_tags_failed, e.message ?: "")) }
+                }
+            }
+        }
+    }
     
     /**
      * 打开文件
@@ -523,7 +558,7 @@ class DownloadViewModel @Inject constructor(
     fun retrySelectedTasks() {
         val selectedIds = _uiState.value.selectedTaskIds
         if (selectedIds.isEmpty()) return
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 selectedIds.forEach { taskId ->
@@ -540,7 +575,60 @@ class DownloadViewModel @Inject constructor(
             }
         }
     }
-    
+
+    /**
+     * 全选当前过滤后的任务
+     */
+    fun selectAllTasks() {
+        val currentTasks = filteredTasks.value
+        val allTaskIds = currentTasks.map { it.task.id }.toSet()
+        _uiState.update { state ->
+            state.copy(
+                isMultiSelectMode = allTaskIds.isNotEmpty(),
+                selectedTaskIds = allTaskIds
+            )
+        }
+    }
+
+    /**
+     * 反选当前过滤后的任务
+     */
+    fun invertSelection() {
+        val currentTasks = filteredTasks.value
+        val allTaskIds = currentTasks.map { it.task.id }.toSet()
+        val currentSelected = _uiState.value.selectedTaskIds
+        val invertedSelection = allTaskIds - currentSelected
+
+        _uiState.update { state ->
+            if (invertedSelection.isEmpty()) {
+                state.copy(
+                    isMultiSelectMode = false,
+                    selectedTaskIds = emptySet()
+                )
+            } else {
+                state.copy(selectedTaskIds = invertedSelection)
+            }
+        }
+    }
+
+    /**
+     * 刷新任务列表
+     * 重新触发数据流收集，用于下拉刷新
+     */
+    fun refreshTasks() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+            try {
+                // 短暂延迟以显示刷新动画
+                kotlinx.coroutines.delay(500)
+                // 数据会通过 Flow 自动更新，这里只需要等待一下
+                Log.i(TAG, "任务列表刷新完成")
+            } finally {
+                _uiState.update { it.copy(isRefreshing = false) }
+            }
+        }
+    }
+
     /**
      * 获取过滤后的任务
      */
@@ -640,10 +728,87 @@ class DownloadViewModel @Inject constructor(
         initialValue = TotalProgress()
     )
     
+    // ==================== 下载统计 ====================
+
+    private val _statisticsState = MutableStateFlow<StatisticsState>(StatisticsState.Loading)
+    val statisticsState: StateFlow<StatisticsState> = _statisticsState.asStateFlow()
+
+    /**
+     * 加载下载统计数据（使用独立的统计表）
+     */
+    fun loadStatistics() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _statisticsState.value = StatisticsState.Loading
+            try {
+                // 从独立统计表获取持久化的统计数据
+                val statsCount = repository.getStatsCount()
+                val statsTotalSize = repository.getStatsTotalSize()
+                val statsByType = repository.getStatsByFileType()
+
+                // 当前活跃任务中的失败数（用于显示）
+                val activeFailedCount = repository.getActiveFailedCount()
+
+                // 转换为 UI 模型
+                val fileTypeStats = statsByType.map { result ->
+                    FileTypeStats(
+                        type = result.fileType,
+                        count = result.count,
+                        totalSize = result.totalSize
+                    )
+                }
+
+                val summary = DownloadStatsSummary(
+                    totalDownloads = statsCount,
+                    completedDownloads = statsCount, // 统计表只记录已完成的
+                    failedDownloads = activeFailedCount,
+                    totalDownloadedSize = statsTotalSize,
+                    fileTypeStats = fileTypeStats
+                )
+
+                withContext(Dispatchers.Main) {
+                    _statisticsState.value = StatisticsState.Success(summary)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "加载统计数据失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _statisticsState.value = StatisticsState.Error(e.message ?: "Unknown error")
+                }
+            }
+        }
+    }
+
+    /**
+     * 清除所有统计数据
+     */
+    fun clearAllStats() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.clearAllStats()
+                // 重新加载统计数据
+                loadStatistics()
+                Log.i(TAG, "已清除所有下载统计数据")
+            } catch (e: Exception) {
+                Log.e(TAG, "清除统计数据失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(error = application.getString(R.string.error_clear_failed, e.message ?: "")) }
+                }
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         repository.cleanup()
     }
+}
+
+/**
+ * 统计页面状态
+ */
+sealed class StatisticsState {
+    data object Loading : StatisticsState()
+    data class Success(val data: DownloadStatsSummary) : StatisticsState()
+    data class Error(val message: String) : StatisticsState()
 }
 
 /**
@@ -652,6 +817,7 @@ class DownloadViewModel @Inject constructor(
 @Immutable
 data class DownloadUiState(
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val error: String? = null,
     val showAddDialog: Boolean = false,
     val filter: TaskFilter = TaskFilter.ALL,

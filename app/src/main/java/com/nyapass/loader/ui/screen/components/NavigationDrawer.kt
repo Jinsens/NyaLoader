@@ -32,7 +32,8 @@ fun NavigationDrawerContent(
     onClearFailed: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenTagManager: () -> Unit,
-    onOpenWebView: () -> Unit
+    onOpenWebView: () -> Unit,
+    onOpenStatistics: () -> Unit = {}
 ) {
     ModalDrawerSheet {
         Column(
@@ -62,7 +63,8 @@ fun NavigationDrawerContent(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             ToolsSection(
-                onOpenWebView = onOpenWebView
+                onOpenWebView = onOpenWebView,
+                onOpenStatistics = onOpenStatistics
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -198,7 +200,8 @@ private fun ManagementSection(
 
 @Composable
 private fun ToolsSection(
-    onOpenWebView: () -> Unit
+    onOpenWebView: () -> Unit,
+    onOpenStatistics: () -> Unit
 ) {
     Text(
         text = stringResource(R.string.tools),
@@ -212,6 +215,14 @@ private fun ToolsSection(
         label = { Text(stringResource(R.string.webview_title)) },
         selected = false,
         onClick = onOpenWebView,
+        modifier = Modifier.padding(horizontal = 12.dp)
+    )
+
+    NavigationDrawerItem(
+        icon = { Icon(Icons.Default.BarChart, null) },
+        label = { Text(stringResource(R.string.statistics_title)) },
+        selected = false,
+        onClick = onOpenStatistics,
         modifier = Modifier.padding(horizontal = 12.dp)
     )
 }

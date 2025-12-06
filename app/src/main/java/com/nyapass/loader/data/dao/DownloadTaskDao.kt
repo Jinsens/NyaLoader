@@ -55,4 +55,91 @@ interface DownloadTaskDao {
     
     @Query("DELETE FROM download_tasks WHERE status = :status")
     suspend fun deleteTasksByStatus(status: DownloadStatus)
+
+    /**
+     * 根据 URL 查找已存在的任务
+     */
+    @Query("SELECT * FROM download_tasks WHERE url = :url LIMIT 1")
+    suspend fun findByUrl(url: String): DownloadTask?
+
+    /**
+     * 根据文件名查找已存在的任务
+     */
+    @Query("SELECT * FROM download_tasks WHERE fileName = :fileName LIMIT 1")
+    suspend fun findByFileName(fileName: String): DownloadTask?
+
+    /**
+     * 根据 URL 查找所有匹配的任务（可能有多个）
+     */
+    @Query("SELECT * FROM download_tasks WHERE url = :url")
+    suspend fun findAllByUrl(url: String): List<DownloadTask>
+
+    /**
+     * 根据文件名查找所有匹配的任务（可能有多个）
+     */
+    @Query("SELECT * FROM download_tasks WHERE fileName = :fileName")
+    suspend fun findAllByFileName(fileName: String): List<DownloadTask>
+
+    /**
+     * 获取所有任务（按优先级降序、创建时间升序排列）
+     * 高优先级的任务会排在前面，同优先级按创建时间排序
+     */
+    @Query("SELECT * FROM download_tasks ORDER BY priority DESC, createdAt ASC")
+    fun getAllTasksByPriority(): Flow<List<DownloadTask>>
+
+    /**
+     * 获取指定状态的任务（按优先级排序）
+     */
+    @Query("SELECT * FROM download_tasks WHERE status = :status ORDER BY priority DESC, createdAt ASC")
+    fun getTasksByStatusWithPriority(status: DownloadStatus): Flow<List<DownloadTask>>
+
+    /**
+     * 获取待处理任务（PENDING 状态，按优先级排序）
+     */
+    @Query("SELECT * FROM download_tasks WHERE status = 'PENDING' ORDER BY priority DESC, createdAt ASC")
+    suspend fun getPendingTasksByPriority(): List<DownloadTask>
+
+    /**
+     * 更新任务优先级
+     */
+    @Query("UPDATE download_tasks SET priority = :priority, updatedAt = :updatedAt WHERE id = :taskId")
+    suspend fun updatePriority(taskId: Long, priority: Int, updatedAt: Long = System.currentTimeMillis())
+
+    // ==================== 统计查询 ====================
+
+    /**
+     * 获取总下载任务数
+     */
+    @Query("SELECT COUNT(*) FROM download_tasks")
+    suspend fun getTotalDownloadCount(): Int
+
+    /**
+     * 获取已完成任务数
+     */
+    @Query("SELECT COUNT(*) FROM download_tasks WHERE status = 'COMPLETED'")
+    suspend fun getCompletedDownloadCount(): Int
+
+    /**
+     * 获取失败任务数
+     */
+    @Query("SELECT COUNT(*) FROM download_tasks WHERE status = 'FAILED'")
+    suspend fun getFailedDownloadCount(): Int
+
+    /**
+     * 获取总下载大小（已完成的任务）
+     */
+    @Query("SELECT COALESCE(SUM(totalSize), 0) FROM download_tasks WHERE status = 'COMPLETED'")
+    suspend fun getTotalDownloadedSize(): Long
+
+    /**
+     * 获取所有已完成任务（用于统计文件类型）
+     */
+    @Query("SELECT * FROM download_tasks WHERE status = 'COMPLETED'")
+    suspend fun getCompletedTasks(): List<DownloadTask>
+
+    /**
+     * 获取所有任务（用于完整统计）
+     */
+    @Query("SELECT * FROM download_tasks")
+    suspend fun getAllTasksSync(): List<DownloadTask>
 }

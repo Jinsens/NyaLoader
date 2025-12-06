@@ -10,7 +10,8 @@ import androidx.room.PrimaryKey
     tableName = "download_tasks",
     indices = [
         Index(value = ["status"]),
-        Index(value = ["createdAt"])
+        Index(value = ["createdAt"]),
+        Index(value = ["priority"])
     ]
 )
 data class DownloadTask(
@@ -33,8 +34,24 @@ data class DownloadTask(
     val md5: String? = null,
     val saveToPublicDir: Boolean = true, // true=公共Download目录, false=应用私有目录
     val userAgent: String? = null, // 自定义User-Agent
-    val errorMessage: String? = null // 错误信息（失败时）
+    val errorMessage: String? = null, // 错误信息（失败时）
+    val priority: Int = DownloadPriority.NORMAL.value // 下载优先级
 )
+
+/**
+ * 下载优先级枚举
+ */
+enum class DownloadPriority(val value: Int, val displayName: String) {
+    LOW(0, "低"),
+    NORMAL(1, "普通"),
+    HIGH(2, "高");
+
+    companion object {
+        fun fromValue(value: Int): DownloadPriority {
+            return entries.find { it.value == value } ?: NORMAL
+        }
+    }
+}
 
 enum class DownloadStatus {
     PENDING,    // 等待中

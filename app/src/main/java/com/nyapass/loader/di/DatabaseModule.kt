@@ -2,6 +2,7 @@ package com.nyapass.loader.di
 
 import android.content.Context
 import com.nyapass.loader.data.dao.DownloadPartDao
+import com.nyapass.loader.data.dao.DownloadStatsDao
 import com.nyapass.loader.data.dao.DownloadTagDao
 import com.nyapass.loader.data.dao.DownloadTaskDao
 import com.nyapass.loader.data.database.AppDatabase
@@ -54,6 +55,15 @@ object DatabaseModule {
     @Singleton
     fun provideDownloadTagDao(database: AppDatabase): DownloadTagDao {
         return database.downloadTagDao()
+    }
+
+    /**
+     * 提供 DownloadStatsDao
+     */
+    @Provides
+    @Singleton
+    fun provideDownloadStatsDao(database: AppDatabase): DownloadStatsDao {
+        return database.downloadStatsDao()
     }
 }
 

@@ -8,9 +8,11 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nyapass.loader.data.dao.DownloadPartDao
+import com.nyapass.loader.data.dao.DownloadStatsDao
 import com.nyapass.loader.data.dao.DownloadTagDao
 import com.nyapass.loader.data.dao.DownloadTaskDao
 import com.nyapass.loader.data.model.DownloadPartInfo
+import com.nyapass.loader.data.model.DownloadStatsRecord
 import com.nyapass.loader.data.model.DownloadTag
 import com.nyapass.loader.data.model.DownloadTask
 import com.nyapass.loader.data.model.TaskTagCrossRef
@@ -20,17 +22,19 @@ import com.nyapass.loader.data.model.TaskTagCrossRef
         DownloadTask::class,
         DownloadPartInfo::class,
         DownloadTag::class,
-        TaskTagCrossRef::class
+        TaskTagCrossRef::class,
+        DownloadStatsRecord::class
     ],
-    version = 8,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
-    
+
     abstract fun downloadTaskDao(): DownloadTaskDao
     abstract fun downloadPartDao(): DownloadPartDao
     abstract fun downloadTagDao(): DownloadTagDao
+    abstract fun downloadStatsDao(): DownloadStatsDao
     
     companion object {
         @Volatile
@@ -80,7 +84,34 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("UPDATE download_tags SET sortOrder = createdAt WHERE sortOrder = 0")
             }
         }
-        
+
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 添加优先级字段，默认为普通优先级(1)
+                db.execSQL("ALTER TABLE download_tasks ADD COLUMN priority INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_download_tasks_priority ON download_tasks(priority)")
+            }
+        }
+
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 创建下载统计表
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS download_stats (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        fileName TEXT NOT NULL,
+                        fileType TEXT NOT NULL,
+                        fileSize INTEGER NOT NULL,
+                        completedAt INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_download_stats_fileType ON download_stats(fileType)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_download_stats_completedAt ON download_stats(completedAt)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -89,7 +120,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "gdownload_database"
                 )
                     .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                 INSTANCE = instance

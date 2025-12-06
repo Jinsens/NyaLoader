@@ -8,19 +8,28 @@ import android.webkit.MimeTypeMap
 import androidx.documentfile.provider.DocumentFile
 import com.nyapass.loader.R
 import com.nyapass.loader.data.dao.DownloadPartDao
+import com.nyapass.loader.data.dao.DownloadStatsDao
 import com.nyapass.loader.data.dao.DownloadTagDao
 import com.nyapass.loader.data.dao.DownloadTaskDao
+import com.nyapass.loader.data.model.DownloadStatsRecord
 import com.nyapass.loader.data.model.DownloadStatus
 import com.nyapass.loader.data.model.DownloadTag
 import com.nyapass.loader.data.model.DownloadTask
+import com.nyapass.loader.data.model.FileTypeCategory
 import com.nyapass.loader.data.model.TagStatistics
 import com.nyapass.loader.download.DownloadEngine
 import com.nyapass.loader.download.DownloadProgress
 import com.nyapass.loader.util.FileUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.io.File
+import android.os.StatFs
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URLDecoder
@@ -36,12 +45,58 @@ class DownloadRepository(
     private val taskDao: DownloadTaskDao,
     private val partDao: DownloadPartDao,
     private val tagDao: DownloadTagDao,
+    private val statsDao: DownloadStatsDao,
     private val downloadEngine: DownloadEngine,
     private val okHttpClient: OkHttpClient
 ) {
     
     private val TAG = "DownloadRepository"
     private val remoteFileInfoCache = ConcurrentHashMap<String, RemoteFileInfo>()
+    private val statsRecordedTasks = ConcurrentHashMap.newKeySet<Long>() // 防止重复记录统计
+    private val repositoryScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    init {
+        // 启动下载完成监听，用于记录统计
+        startDownloadCompletionListener()
+    }
+
+    /**
+     * 监听下载任务状态变化，当任务完成时自动记录统计
+     */
+    private fun startDownloadCompletionListener() {
+        repositoryScope.launch {
+            // 使用 map + distinctUntilChanged 来检测新完成的任务
+            var previousCompletedIds = emptySet<Long>()
+
+            taskDao.getAllTasks()
+                .map { tasks ->
+                    tasks.filter { it.status == DownloadStatus.COMPLETED }
+                }
+                .collect { completedTasks ->
+                    val currentCompletedIds = completedTasks.map { it.id }.toSet()
+                    // 找出新完成的任务（之前不在完成列表中，现在在）
+                    val newlyCompletedIds = currentCompletedIds - previousCompletedIds
+
+                    for (task in completedTasks) {
+                        if (task.id in newlyCompletedIds && statsRecordedTasks.add(task.id)) {
+                            // 再次检查数据库，确保没有重复记录
+                            val existingCount = statsDao.countByFileNameAndSize(task.fileName, task.totalSize)
+                            if (existingCount == 0) {
+                                try {
+                                    recordDownloadStats(task)
+                                    Log.i(TAG, "已记录新完成任务统计: ${task.fileName}")
+                                } catch (e: Exception) {
+                                    Log.w(TAG, "记录下载统计失败: ${e.message}")
+                                    statsRecordedTasks.remove(task.id)
+                                }
+                            }
+                        }
+                    }
+
+                    previousCompletedIds = currentCompletedIds
+                }
+        }
+    }
     
     /**
      * 获取所有下载任务
@@ -144,6 +199,13 @@ class DownloadRepository(
         if (first != null && second != null) {
             tagDao.swapTagOrder(firstId, first.sortOrder, secondId, second.sortOrder)
         }
+    }
+
+    /**
+     * 更新任务的标签
+     */
+    suspend fun updateTaskTags(taskId: Long, tagIds: List<Long>) {
+        tagDao.replaceTagsForTask(taskId, tagIds)
     }
     
     /**
@@ -434,18 +496,47 @@ class DownloadRepository(
     )
     
     private fun deleteTaskFile(task: DownloadTask) {
-        val safUri = task.finalContentUri ?: task.filePath.takeIf { isSafPath(it) }
-        if (safUri != null && safUri.startsWith("content://")) {
-            DocumentFile.fromSingleUri(context, Uri.parse(safUri))?.let { document ->
-                if (document.exists()) {
-                    document.delete()
+        try {
+            // 优先使用 SAF URI 删除
+            val safUri = task.finalContentUri ?: task.destinationUri?.takeIf { it.startsWith("content://") }
+            if (safUri != null && safUri.startsWith("content://")) {
+                DocumentFile.fromSingleUri(context, Uri.parse(safUri))?.let { document ->
+                    if (document.exists()) {
+                        val deleted = document.delete()
+                        Log.d(TAG, "SAF 文件删除: ${task.fileName}, 成功: $deleted")
+                    }
+                }
+                return
+            }
+
+            // 普通文件路径删除
+            // filePath 可能是目录或完整路径，需要处理两种情况
+            val filePathFile = File(task.filePath)
+            val actualFile = if (filePathFile.isDirectory) {
+                // filePath 是目录，拼接文件名
+                File(filePathFile, task.fileName)
+            } else if (filePathFile.name == task.fileName) {
+                // filePath 已经是完整路径
+                filePathFile
+            } else {
+                // filePath 是目录路径字符串
+                File(task.filePath, task.fileName)
+            }
+
+            if (actualFile.exists()) {
+                val deleted = actualFile.delete()
+                Log.d(TAG, "文件删除: ${actualFile.absolutePath}, 成功: $deleted")
+            } else {
+                Log.w(TAG, "文件不存在: ${actualFile.absolutePath}")
+                // 尝试在缓存目录查找
+                val cacheFile = File(FileUtils.getCacheDirectory(context), task.fileName)
+                if (cacheFile.exists()) {
+                    val deleted = cacheFile.delete()
+                    Log.d(TAG, "缓存文件删除: ${cacheFile.absolutePath}, 成功: $deleted")
                 }
             }
-        } else {
-            val file = File(task.filePath)
-            if (file.exists()) {
-                file.delete()
-            }
+        } catch (e: Exception) {
+            Log.e(TAG, "删除文件失败: ${task.fileName} - ${e.message}")
         }
     }
     
@@ -748,6 +839,234 @@ class DownloadRepository(
      */
     fun cleanup() {
         downloadEngine.cleanup()
+    }
+
+    // ==================== 下载统计 ====================
+
+    /**
+     * 记录下载完成统计
+     * 在下载完成时调用，将统计数据持久化到独立的统计表
+     */
+    suspend fun recordDownloadStats(task: DownloadTask) {
+        val extension = FileTypeCategory.getExtensionFromFileName(task.fileName)
+        val fileType = FileTypeCategory.getCategoryForExtension(extension)
+
+        val record = DownloadStatsRecord(
+            fileName = task.fileName,
+            fileType = fileType,
+            fileSize = task.totalSize,
+            completedAt = System.currentTimeMillis()
+        )
+        statsDao.insertStats(record)
+        Log.d(TAG, "记录下载统计: ${task.fileName}, 类型: $fileType, 大小: ${task.totalSize}")
+    }
+
+    /**
+     * 获取统计记录总数
+     */
+    suspend fun getStatsCount(): Int {
+        return statsDao.getTotalCount()
+    }
+
+    /**
+     * 获取统计总下载大小
+     */
+    suspend fun getStatsTotalSize(): Long {
+        return statsDao.getTotalSize()
+    }
+
+    /**
+     * 获取按文件类型分组的统计
+     */
+    suspend fun getStatsByFileType(): List<com.nyapass.loader.data.dao.FileTypeStatsResult> {
+        return statsDao.getStatsByFileType()
+    }
+
+    /**
+     * 清除所有统计数据
+     */
+    suspend fun clearAllStats() {
+        statsDao.clearAllStats()
+        Log.i(TAG, "已清除所有下载统计数据")
+    }
+
+    /**
+     * 获取当前活跃任务的失败数（用于显示，不是持久化统计）
+     */
+    suspend fun getActiveFailedCount(): Int {
+        return taskDao.getFailedDownloadCount()
+    }
+
+    /**
+     * 检查磁盘空间是否充足
+     *
+     * @param targetPath 目标存储路径
+     * @param requiredSize 所需字节数
+     * @return 磁盘空间检查结果
+     */
+    fun checkDiskSpace(targetPath: File, requiredSize: Long): DiskSpaceResult {
+        return try {
+            // 确保路径存在
+            val checkPath = if (targetPath.exists()) {
+                if (targetPath.isFile) targetPath.parentFile ?: targetPath else targetPath
+            } else {
+                targetPath.parentFile ?: targetPath
+            }
+
+            val statFs = StatFs(checkPath.absolutePath)
+            val availableBytes = statFs.availableBytes
+            val totalBytes = statFs.totalBytes
+
+            when {
+                // 空间不足
+                availableBytes < requiredSize -> {
+                    DiskSpaceResult.InsufficientSpace(
+                        availableBytes = availableBytes,
+                        requiredBytes = requiredSize,
+                        shortfall = requiredSize - availableBytes
+                    )
+                }
+                // 空间紧张（剩余空间不足所需空间的 1.1 倍，或剩余不到 500MB）
+                availableBytes < requiredSize * 1.1 || availableBytes < 500 * 1024 * 1024 -> {
+                    DiskSpaceResult.LowSpace(
+                        availableBytes = availableBytes,
+                        requiredBytes = requiredSize,
+                        totalBytes = totalBytes
+                    )
+                }
+                // 空间充足
+                else -> {
+                    DiskSpaceResult.Sufficient(
+                        availableBytes = availableBytes,
+                        totalBytes = totalBytes
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "检查磁盘空间失败: ${e.message}")
+            // 无法检查时，假设空间充足，让下载正常进行
+            DiskSpaceResult.Unknown(e.message)
+        }
+    }
+
+    /**
+     * 检查是否存在重复的下载任务
+     *
+     * @param url 下载链接
+     * @param fileName 文件名（可选）
+     * @return 重复检查结果
+     */
+    suspend fun checkDuplicateTask(url: String, fileName: String? = null): DuplicateCheckResult {
+        // 1. 检查相同 URL 的任务
+        val existingByUrl = taskDao.findAllByUrl(url)
+
+        // 2. 如果提供了文件名，检查相同文件名的任务
+        val existingByName = if (!fileName.isNullOrBlank()) {
+            taskDao.findAllByFileName(fileName)
+        } else {
+            emptyList()
+        }
+
+        return when {
+            // URL 完全匹配
+            existingByUrl.isNotEmpty() -> {
+                DuplicateCheckResult.UrlExists(existingByUrl)
+            }
+            // 文件名匹配
+            existingByName.isNotEmpty() -> {
+                DuplicateCheckResult.FileNameExists(existingByName)
+            }
+            // 没有重复
+            else -> {
+                DuplicateCheckResult.NoDuplicate
+            }
+        }
+    }
+
+    /**
+     * 根据 URL 获取文件大小（用于预检查空间）
+     * 返回 null 表示无法获取
+     */
+    suspend fun getRemoteFileSize(url: String, userAgent: String? = null): Long? {
+        return try {
+            val requestBuilder = Request.Builder().url(url).head()
+            userAgent?.let { requestBuilder.header("User-Agent", it) }
+
+            okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
+                if (!response.isSuccessful) return null
+                response.header("Content-Length")?.toLongOrNull()
+                    ?: response.body?.contentLength()?.takeIf { it > 0 }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "获取远程文件大小失败: ${e.message}")
+            null
+        }
+    }
+}
+
+/**
+ * 磁盘空间检查结果
+ */
+sealed class DiskSpaceResult {
+    /**
+     * 空间充足
+     */
+    data class Sufficient(
+        val availableBytes: Long,
+        val totalBytes: Long
+    ) : DiskSpaceResult()
+
+    /**
+     * 空间紧张（可以下载但建议警告）
+     */
+    data class LowSpace(
+        val availableBytes: Long,
+        val requiredBytes: Long,
+        val totalBytes: Long
+    ) : DiskSpaceResult()
+
+    /**
+     * 空间不足
+     */
+    data class InsufficientSpace(
+        val availableBytes: Long,
+        val requiredBytes: Long,
+        val shortfall: Long
+    ) : DiskSpaceResult()
+
+    /**
+     * 无法检查
+     */
+    data class Unknown(
+        val reason: String?
+    ) : DiskSpaceResult()
+}
+
+/**
+ * 重复检查结果
+ */
+sealed class DuplicateCheckResult {
+    /**
+     * 没有重复
+     */
+    data object NoDuplicate : DuplicateCheckResult()
+
+    /**
+     * URL 已存在
+     */
+    data class UrlExists(
+        val existingTasks: List<DownloadTask>
+    ) : DuplicateCheckResult() {
+        val firstTask: DownloadTask get() = existingTasks.first()
+    }
+
+    /**
+     * 文件名已存在
+     */
+    data class FileNameExists(
+        val existingTasks: List<DownloadTask>
+    ) : DuplicateCheckResult() {
+        val firstTask: DownloadTask get() = existingTasks.first()
     }
 }
 

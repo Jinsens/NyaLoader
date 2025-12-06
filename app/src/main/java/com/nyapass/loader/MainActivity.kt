@@ -7,6 +7,7 @@
 package com.nyapass.loader
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -33,7 +34,9 @@ import com.nyapass.loader.ui.components.UpdateDialog
 import com.nyapass.loader.ui.screen.DownloadScreen
 import com.nyapass.loader.ui.screen.LicensesScreen
 import com.nyapass.loader.ui.screen.SettingsScreen
+import com.nyapass.loader.ui.screen.StatisticsScreen
 import com.nyapass.loader.ui.screen.WebViewScreen
+import com.nyapass.loader.viewmodel.StatisticsState
 import com.nyapass.loader.ui.theme.getColorScheme
 import com.nyapass.loader.util.*
 import com.nyapass.loader.viewmodel.DownloadViewModel
@@ -63,6 +66,7 @@ class MainActivity : ComponentActivity() {
     
     private var selectedFolderPath by mutableStateOf<String?>(null) // 设置界面的持久化路径
     private var tempFolderPath by mutableStateOf<String?>(null) // 创建下载的临时路径
+    private var intentUrl by mutableStateOf<String?>(null) // 从外部 Intent 接收的下载链接
     
     // 设置界面的文件夹选择器（持久化）
     private val settingsFolderPickerLauncher = registerForActivityResult(
@@ -122,26 +126,72 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // 设置沉浸式状态栏和导航栏
         setupEdgeToEdge()
-        
+
         // 初始化Handler
         permissionHandler = PermissionHandler(this)
         updateHandler = UpdateHandler(this)
         clipboardHandler = ClipboardHandler(this)
-        
+
         permissionHandler.initialize()
-        
+
         // 从设置中恢复最近一次处理的剪贴板URL，避免重启应用后重复弹窗
         clipboardHandler.setLastProcessedUrl(appPreferences.getLastClipboardUrl() ?: "")
-        
+
         // 请求权限
         permissionHandler.requestPermissionsIfNeeded()
-        
+
+        // 处理外部 Intent（系统下载器功能）
+        handleIntent(intent)
+
         setContent {
             MainContent()
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // 处理新的 Intent（应用已在前台时）
+        handleIntent(intent)
+    }
+
+    /**
+     * 处理外部 Intent，提取下载链接
+     */
+    private fun handleIntent(intent: Intent?) {
+        intent ?: return
+
+        val url: String? = when (intent.action) {
+            Intent.ACTION_VIEW -> {
+                // 从浏览器或其他应用打开的链接
+                intent.dataString
+            }
+            Intent.ACTION_SEND -> {
+                // 通过分享功能发送的文本
+                if (intent.type == "text/plain") {
+                    intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
+                        // 提取文本中的 URL
+                        extractUrlFromText(text)
+                    }
+                } else null
+            }
+            else -> null
+        }
+
+        if (!url.isNullOrBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
+            intentUrl = url
+            android.util.Log.i("MainActivity", "从 Intent 接收到下载链接: $url")
+        }
+    }
+
+    /**
+     * 从文本中提取 URL
+     */
+    private fun extractUrlFromText(text: String): String? {
+        val urlPattern = Regex("https?://[^\\s]+")
+        return urlPattern.find(text)?.value
     }
     
     /**
@@ -250,10 +300,17 @@ class MainActivity : ComponentActivity() {
         }
         
         // 当默认保存位置改为自定义且需要选择路径时
-        LaunchedEffect(defaultSaveLocation) {
-            if (defaultSaveLocation == com.nyapass.loader.data.preferences.SaveLocation.CUSTOM && customSavePath == null) {
+        // 添加标志避免应用启动时自动触发
+        var hasCheckedInitialPath by remember { mutableStateOf(false) }
+        LaunchedEffect(defaultSaveLocation, customSavePath) {
+            // 只有在用户主动切换到自定义位置且路径为空时才提示选择
+            // 忽略应用启动时的首次检查
+            if (hasCheckedInitialPath &&
+                defaultSaveLocation == com.nyapass.loader.data.preferences.SaveLocation.CUSTOM &&
+                customSavePath == null) {
                 settingsFolderPickerLauncher.launch(null)
             }
+            hasCheckedInitialPath = true
         }
         
         // 更新selectedFolderPath为设置中的自定义路径
@@ -291,6 +348,8 @@ class MainActivity : ComponentActivity() {
                     settingsViewModel = settingsViewModel,
                     persistentFolderPath = selectedFolderPath,
                     tempFolderPath = tempFolderPath,
+                    intentUrl = intentUrl,
+                    onIntentUrlConsumed = { intentUrl = null },
                     onSelectPersistentFolder = { settingsFolderPickerLauncher.launch(null) },
                     onSelectTempFolder = { tempFolderPickerLauncher.launch(null) },
                     onResetTempFolder = { tempFolderPath = null },
@@ -330,6 +389,8 @@ fun AppNavigation(
     settingsViewModel: SettingsViewModel,
     persistentFolderPath: String?,
     tempFolderPath: String?,
+    intentUrl: String?,
+    onIntentUrlConsumed: () -> Unit,
     onSelectPersistentFolder: () -> Unit,
     onSelectTempFolder: () -> Unit,
     onResetTempFolder: () -> Unit,
@@ -356,6 +417,15 @@ fun AppNavigation(
     var showSimpleDialog by remember { mutableStateOf(false) }
     var showClipboardTip by remember { mutableStateOf(false) }
     var clipboardUrl by remember { mutableStateOf("") }
+
+    // 处理外部 Intent 传入的 URL（系统下载器功能）
+    LaunchedEffect(intentUrl) {
+        if (!intentUrl.isNullOrBlank()) {
+            clipboardUrl = intentUrl
+            showSimpleDialog = true
+            onIntentUrlConsumed()
+        }
+    }
 
     // 使用 rememberUpdatedState 捕获最新状态，避免闭包问题
     val currentHasShownTip by rememberUpdatedState(hasShownTip)
@@ -502,7 +572,8 @@ fun AppNavigation(
                 onResetTempFolder = onResetTempFolder,
                 onOpenSettings = { navController.navigate("settings") },
                 onOpenLicenses = { },
-                onOpenWebView = { navController.navigate("webview") }
+                onOpenWebView = { navController.navigate("webview") },
+                onOpenStatistics = { navController.navigate("statistics") }
             )
         }
 
@@ -604,6 +675,50 @@ fun AppNavigation(
         ) {
             LicensesScreen(
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "statistics",
+            enterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            exitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popEnterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            },
+            popExitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(300)
+                )
+            }
+        ) {
+            val statisticsState by downloadViewModel.statisticsState.collectAsState()
+
+            LaunchedEffect(Unit) {
+                downloadViewModel.loadStatistics()
+            }
+
+            StatisticsScreen(
+                statistics = when (val state = statisticsState) {
+                    is StatisticsState.Success -> state.data
+                    else -> null
+                },
+                isLoading = statisticsState is StatisticsState.Loading,
+                onBackClick = { navController.popBackStack() },
+                onClearStats = { downloadViewModel.clearAllStats() }
             )
         }
     }
