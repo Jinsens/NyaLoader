@@ -1,14 +1,14 @@
 {
-  "versionCode": 6,
-  "versionName": "2.3.0",
-  "updateTime": "2025-11-27",
+  "versionCode": 7,
+  "versionName": "2.8.0",
+  "updateTime": "2025-12-06",
   "forceUpdate": false,
-  "msg": "NyaLoader v2.3.0 性能优化与稳定性提升！\n\n⚡ 性能优化\n• 协程生命周期管理优化，消除内存泄漏风险\n• DisposableEffect 重建次数减少 66%\n• 剪贴板监听响应更快，电量消耗降低 30-40%\n• 网络请求支持协程取消，节省流量和电量\n\n🛡️ 稳定性提升\n• 崩溃率降低 80%，应用更加稳定\n• 修复组件销毁后访问 Context 导致的崩溃\n• 优化协程取消机制，避免无效操作\n• 内存使用更加稳定，减少 OOM 风险\n\n🔧 技术改进\n• 使用 rememberCoroutineScope 管理协程生命周期\n• 使用 rememberUpdatedState 避免闭包捕获过时状态\n• 添加多个协程取消检查点，确保及时响应\n• 网络请求前后检查 ensureActive()，支持取消\n\n✨ 用户体验\n• 应用切换更流畅，无卡顿\n• 后台时自动停止无效操作，更省电\n• 剪贴板监听更智能，减少重复检查\n• 整体响应速度提升，体验更顺滑\n\n本次更新专注于底层优化，不影响现有功能，可放心升级！",
+  "msg": "NyaLoader v2.8.0 功能增强与兼容性更新！\n\n🎉 新功能\n• 系统下载器集成：浏览器点击链接可直接调用 NyaLoader\n• 下载统计功能：可视化饼状图展示文件类型分布\n• 下载限速功能：支持自定义速度限制，节省带宽\n• 两阶段滑动操作：左滑显示按钮，点击执行，避免误触\n\n🔧 问题修复\n• 修复 AWS S3/Cloudflare R2 预签名 URL 下载失败\n• 修复任务卡片展开后无法收起的问题\n• 修复删除任务时文件未被删除的问题\n• 正确解析 Content-Range 获取文件大小\n\n📚 其他更新\n• 许可证页面库版本信息更新\n• 新增 Hilt、Firebase、Guava 库说明\n• 增强下载引擎兼容性和健壮性\n\n本次更新大幅提升云存储兼容性，推荐所有用户升级！",
   "apkUrls": {
-    "universal": "https://github.com/Jinsens/NyaLoader/releases/download/v2.3.0/app-universal-release.apk",
-    "arm64-v8a": "https://github.com/Jinsens/NyaLoader/releases/download/v2.3.0/app-arm64-v8a-release.apk",
-    "armeabi-v7a": "https://github.com/Jinsens/NyaLoader/releases/download/v2.3.0/app-armeabi-v7a-release.apk",
-    "x86": "https://github.com/Jinsens/NyaLoader/releases/download/v2.3.0/app-x86-release.apk",
-    "x86_64": "https://github.com/Jinsens/NyaLoader/releases/download/v2.3.0/app-x86_64-release.apk"
+    "universal": "https://github.com/Jinsens/NyaLoader/releases/download/v2.8.0/app-universal-release.apk",
+    "arm64-v8a": "https://github.com/Jinsens/NyaLoader/releases/download/v2.8.0/app-arm64-v8a-release.apk",
+    "armeabi-v7a": "https://github.com/Jinsens/NyaLoader/releases/download/v2.8.0/app-armeabi-v7a-release.apk",
+    "x86": "https://github.com/Jinsens/NyaLoader/releases/download/v2.8.0/app-x86-release.apk",
+    "x86_64": "https://github.com/Jinsens/NyaLoader/releases/download/v2.8.0/app-x86_64-release.apk"
   }
 }
