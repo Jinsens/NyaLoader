@@ -349,4 +349,4 @@ private val TAG_COLOR_PALETTE = listOf(
     0xFF81C784,
     0xFFFFB74D,
     0xFFA1887F
-).map { it.toLong() }
+)

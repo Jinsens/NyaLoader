@@ -321,28 +321,28 @@ fun getOpenSourceLibraries() = listOf(
         name = "Kotlin",
         description = stringResource(R.string.lib_kotlin_desc),
         license = "Apache 2.0",
-        version = "2.2.21",
+        version = "2.3.0",
         url = "https://kotlinlang.org"
     ),
     OpenSourceLibrary(
         name = "Jetpack Compose",
         description = stringResource(R.string.lib_jetpack_compose_desc),
         license = "Apache 2.0",
-        version = "2025.12.00",
+        version = "2025.12.01",
         url = "https://developer.android.com/compose"
     ),
     OpenSourceLibrary(
         name = "Material 3",
         description = stringResource(R.string.lib_material3_desc),
         license = "Apache 2.0",
-        version = "BOM 2025.12.00",
+        version = "BOM 2025.12.01",
         url = "https://m3.material.io"
     ),
     OpenSourceLibrary(
         name = "Material Icons Extended",
         description = stringResource(R.string.lib_material_icons_desc),
         license = "Apache 2.0",
-        version = "BOM 2025.12.00",
+        version = "BOM 2025.12.01",
         url = "https://fonts.google.com/icons"
     ),
     OpenSourceLibrary(

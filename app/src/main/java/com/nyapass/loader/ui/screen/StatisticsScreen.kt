@@ -402,12 +402,15 @@ private fun LegendItem(
         )
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
         )
         Text(
             text = "($count)",
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.widthIn(min = 32.dp),
+            textAlign = TextAlign.End
         )
     }
 }
@@ -475,7 +478,8 @@ private fun FileTypeDetailItem(
                 )
             }
             Column(
-                horizontalAlignment = Alignment.End
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.widthIn(min = 80.dp)
             ) {
                 Text(
                     text = "${stat.count} ${stringResource(R.string.files_count_unit)}",

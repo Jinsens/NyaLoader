@@ -83,9 +83,9 @@ fun DownloadTaskItem(
     val haptic = LocalHapticFeedback.current
 
     // 使用key确保状态与任务ID关联，避免复用导致的问题
-    // 完成的任务和失败的任务默认展开
+    // 所有任务默认折叠
     var expanded by rememberSaveable(task.id) {
-        mutableStateOf(task.status == DownloadStatus.COMPLETED || task.status == DownloadStatus.FAILED)
+        mutableStateOf(false)
     }
     var showDeleteDialog by remember(task.id) { mutableStateOf(false) }
     var showContextMenu by remember(task.id) { mutableStateOf(false) }
@@ -429,7 +429,7 @@ fun DownloadTaskItem(
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = task.errorMessage ?: stringResource(R.string.download_error_unknown),
+                                    text = task.errorMessage,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
@@ -828,9 +828,9 @@ fun SwipeableDownloadTaskItem(
     val haptic = LocalHapticFeedback.current
 
     // 跟踪展开状态 - 与 DownloadTaskItem 内部的 expanded 状态同步
-    // 完成和失败的任务默认展开
+    // 所有任务默认折叠
     var isExpanded by rememberSaveable(task.id) {
-        mutableStateOf(task.status == DownloadStatus.COMPLETED || task.status == DownloadStatus.FAILED)
+        mutableStateOf(false)
     }
 
     // 滑动状态：是否显示操作按钮
@@ -1475,7 +1475,7 @@ private fun DownloadTaskItemWithExpandCallback(
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = task.errorMessage ?: stringResource(R.string.download_error_unknown),
+                                    text = task.errorMessage,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )

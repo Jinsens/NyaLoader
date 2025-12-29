@@ -118,8 +118,9 @@ object UpdateChecker {
                 Log.e(TAG, "获取版本信息失败: HTTP ${response.code}")
                 return@withContext null
             }
-            
-            val jsonString = response.body?.string() ?: run {
+
+            val jsonString = response.body.string()
+            if (jsonString.isBlank()) {
                 Log.e(TAG, "版本信息为空")
                 return@withContext null
             }

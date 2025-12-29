@@ -995,7 +995,7 @@ class DownloadRepository(
             okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
                 if (!response.isSuccessful) return null
                 response.header("Content-Length")?.toLongOrNull()
-                    ?: response.body?.contentLength()?.takeIf { it > 0 }
+                    ?: response.body.contentLength().takeIf { it > 0 }
             }
         } catch (e: Exception) {
             Log.w(TAG, "获取远程文件大小失败: ${e.message}")

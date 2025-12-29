@@ -206,8 +206,7 @@ class DownloadEngine(
                 okHttpClient.newCall(headRequestBuilder.build()).execute().use { response ->
                     if (response.isSuccessful) {
                         contentLength = response.header("Content-Length")?.toLongOrNull()
-                            ?: response.body?.contentLength()
-                            ?: 0L
+                            ?: response.body.contentLength()
                         acceptRanges = response.header("Accept-Ranges")?.contains("bytes", true) == true
                     } else {
                         // HEAD 请求失败（如 403），标记需要回退
@@ -528,7 +527,7 @@ class DownloadEngine(
                     },
                     BUFFER_SIZE  // 256KB 内核缓冲区
                 ).use { output ->
-                    response.body?.byteStream()?.use { input ->
+                    response.body.byteStream().use { input ->
                         var bytesRead: Int
 
                         while (input.read(buffer).also { bytesRead = it } != -1) {
@@ -688,8 +687,7 @@ class DownloadEngine(
                     } else {
                         // 200 响应（服务器忽略了 Range 头），使用 Content-Length
                         response.header("Content-Length")?.toLongOrNull()
-                            ?: response.body?.contentLength()
-                            ?: 0L
+                            ?: response.body.contentLength()
                     }
 
                     if (length > 0L) {
@@ -728,8 +726,7 @@ class DownloadEngine(
             okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
                 if (response.isSuccessful) {
                     val length = response.header("Content-Length")?.toLongOrNull()
-                        ?: response.body?.contentLength()
-                        ?: 0L
+                        ?: response.body.contentLength()
 
                     if (length > 0L) {
                         // 普通 GET 请求无法确定是否支持 Range，默认设为 false
