@@ -45,6 +45,7 @@ replay_pid*
 local.properties
 .cursor
 .kotlin
+.vscode
 # Built application files
 *.apk
 *.aar
