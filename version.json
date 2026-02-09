@@ -3,7 +3,7 @@
   "versionName": "3.0.0",
   "updateTime": "2026-2-9",
   "forceUpdate": false,
-  "msg": "NyaLoader v3.0.0 重大更新！\n\n✨ 新功能：\n• Cookie 和请求头支持 - 解决云存储认证下载问题\n• WebView 下载自动携带登录 Cookie\n• 支持自定义 Referer 和请求头\n\n🚀 性能优化：\n• KAPT → KSP 迁移，构建速度提升 2-3 倍\n• FileChannel I/O 优化，下载性能提升\n\n🏗️ 代码架构：\n• 提取多个可复用组件\n• 依赖库版本全面更新",
+  "msg": "NyaLoader v3.0.0 重大更新！\n\n✨ 新功能：\n• Cookie 和请求头支持 - 解决云存储认证下载问题\n• WebView 下载自动携带登录 Cookie\n• 支持自定义 Referer 和请求头\n\n🚀 性能优化：\n• KAPT → KSP 迁移，构建速度提升 2-3 倍\n• FileChannel I/O 优化，下载性能提升\n\n🏗️ 代码架构：\n• 提取多个可复用组件\n• 依赖库版本全面更新\n• 如果需要更新，请重新安装软件",
   "apkUrls": {
     "universal": "https://github.com/Jinsens/NyaLoader/releases/download/v3.0.0/app-universal-release.apk",
     "arm64-v8a": "https://github.com/Jinsens/NyaLoader/releases/download/v3.0.0/app-arm64-v8a-release.apk",
